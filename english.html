@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Study App - 英文單字庫</title>
+    <title>cale Study App - 主題英文單字庫</title>
     <style>
         * {
             margin: 0;
@@ -22,55 +22,60 @@
             align-items: center;
         }
 
-        /* 頂部導覽列 */
         .nav-bar {
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .back-btn {
             color: #38bdf8;
             text-decoration: none;
             font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
         }
 
-        .mode-switch {
+        /* 主題選擇下拉選單與按鈕 */
+        .theme-selector-group {
+            width: 100%;
+            max-width: 650px;
             display: flex;
-            background: rgba(255, 255, 255, 0.08);
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        select, button.btn-secondary {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 0.6rem 1rem;
             border-radius: 12px;
-            padding: 4px;
+            font-size: 0.95rem;
+            outline: none;
         }
 
-        .mode-btn {
-            border: none;
-            background: transparent;
-            color: #94a3b8;
-            padding: 0.4rem 0.9rem;
-            font-size: 0.85rem;
-            border-radius: 8px;
+        select {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        button.btn-secondary {
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
-        .mode-btn.active {
-            background: #38bdf8;
-            color: #0b0f19;
-            font-weight: 600;
+        button.btn-secondary:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
         }
 
-        /* 學習卡片區域 */
+        /* 記憶卡片區 */
         .card-container {
             width: 100%;
             max-width: 500px;
-            perspective: 1000px;
-            margin-top: 1rem;
+            margin-top: 0.5rem;
         }
 
         .flashcard {
@@ -78,75 +83,62 @@
             border: 1px solid rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(16px);
             border-radius: 24px;
-            padding: 3rem 2rem;
+            padding: 2.5rem 2rem;
             text-align: center;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            min-height: 280px;
+            min-height: 260px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .flashcard:hover {
-            transform: translateY(-4px);
-            border-color: rgba(56, 189, 248, 0.4);
         }
 
         .word-title {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
 
         .phonetic {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #38bdf8;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
         }
 
         .meaning {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: #e2e8f0;
-            margin-top: 1rem;
-            display: none; /* 預設隱藏，點擊後翻面顯示 */
+            display: none;
         }
 
         .example-sentence {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: #94a3b8;
             margin-top: 0.8rem;
             font-style: italic;
             display: none;
         }
 
-        /* 控制按鈕組合 */
         .controls {
             width: 100%;
             max-width: 500px;
             display: flex;
             justify-content: space-between;
-            margin-top: 2rem;
+            margin-top: 1.5rem;
             gap: 1rem;
         }
 
         .action-btn {
             flex: 1;
-            padding: 0.9rem;
-            border-radius: 14px;
+            padding: 0.8rem;
+            border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
             color: #fff;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .action-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
         }
 
         .action-btn.primary {
@@ -156,12 +148,46 @@
             border: none;
         }
 
-        .action-btn.primary:hover {
-            background: #0284c7;
-            color: #fff;
+        /* 自訂單字彈出視窗 Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
         }
 
-        .hint-text {
+        .modal-content {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 1.8rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            padding: 0.8rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            resize: none;
+        }
+
+        .progress-text {
             font-size: 0.85rem;
             color: #64748b;
             margin-top: 1rem;
@@ -172,57 +198,118 @@
 
     <div class="nav-bar">
         <a href="dashboard.html" class="back-btn">⇠ 返回科目</a>
-        <div class="mode-switch">
-            <button class="mode-btn active" id="btnLearn" onclick="setMode('learn')">學習模式</button>
-            <button class="mode-btn" id="btnQuiz" onclick="setMode('quiz')">測驗模式</button>
-        </div>
+        <div class="progress-text" id="progressText">進度：1 / 5</div>
     </div>
 
-    <!-- 學習單字卡 -->
+    <!-- 主題切換與自訂按鈕 -->
+    <div class="theme-selector-group">
+        <select id="themeSelect" onchange="changeTheme()">
+            <option value="school">🏫 學校與學習 (School & Learning)</option>
+            <option value="food">🍕 飲食與生活 (Food & Daily)</option>
+            <option value="nature">🌿 自然與環境 (Nature & Environment)</option>
+            <option value="custom">✏️ 我的自訂單字庫 (Custom)</option>
+        </select>
+        <button class="btn-secondary" onclick="openCustomModal()">+ 新增/編輯自訂單字</button>
+    </div>
+
+    <!-- 單字卡片 -->
     <div class="card-container">
         <div class="flashcard" onclick="toggleFlip()">
-            <div class="word-title" id="wordText">abandon</div>
-            <div class="phonetic" id="phoneticText">/əˈbændən/</div>
-            <div class="meaning" id="meaningText">v. 放棄；拋棄</div>
-            <div class="example-sentence" id="exampleText">"They had to abandon their car in the snow."</div>
+            <div class="word-title" id="wordText">---</div>
+            <div class="phonetic" id="phoneticText">---</div>
+            <div class="meaning" id="meaningText">---</div>
+            <div class="example-sentence" id="exampleText">---</div>
         </div>
     </div>
 
-    <div class="hint-text">點擊卡片顯示/隱藏中文解析與例句</div>
-
-    <!-- 控制按鈕 -->
     <div class="controls">
         <button class="action-btn" onclick="prevWord()">上一單字</button>
         <button class="action-btn primary" onclick="nextWord()">下一單字 ➔</button>
     </div>
 
-    <script>
-        // Super 2500 示範單字資料庫
-        const vocabList = [
-            { word: "abandon", phonetic: "/əˈbændən/", meaning: "v. 放棄；拋棄", example: "They had to abandon their car in the snow." },
-            { word: "ability", phonetic: "/əˈbɪləti/", meaning: "n. 能力；才能", example: "She has the ability to pass the exam easily." },
-            { word: "absent", phonetic: "/ˈæbsənt/", meaning: "adj. 缺席的；不在場的", example: "He was absent from school yesterday." },
-            { word: "accept", phonetic: "/əkˈsept/", meaning: "v. 接受；答應", example: "I am happy to accept your invitation." },
-            { word: "accident", phonetic: "/ˈæksɪdənt/", meaning: "n. 意外；交通事故", example: "She was injured in a car accident." }
-        ];
+    <!-- 自訂單字彈窗 -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-content">
+            <h3>✏️ 自訂單字輸入</h3>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">
+                格式：單字,音標,中文解釋,例句（每行一組）
+            </p>
+            <textarea id="customInput" placeholder="apple,/ˈæp.əl/,n. 蘋果,An apple a day keeps the doctor away.&#10;book,/bʊk/,n. 書本,I read a book every night."></textarea>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="action-btn" onclick="closeCustomModal()">取消</button>
+                <button class="action-btn primary" onclick="saveCustomWords()">儲存單字庫</button>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        // 內建主題單字庫 (依主題分類)
+        const builtInThemes = {
+            school: [
+                { word: "assignment", phonetic: "/əˈsaɪn.mənt/", meaning: "n. 作業；任務", example: "I have to finish my English assignment tonight." },
+                { word: "curriculum", phonetic: "/kəˈrɪk.jə.ləm/", meaning: "n. 學校課程", example: "The school offers a rich science curriculum." },
+                { word: "knowledge", phonetic: "/ˈnɑː.lɪdʒ/", meaning: "n. 知識；學問", example: "Books are the source of knowledge." },
+                { word: "exam", phonetic: "/ɪɡˈzæm/", meaning: "n. 考試", example: "She spent all weekend studying for the exam." },
+                { word: "vocabulary", phonetic: "/vəˈkæb.jə.ler.i/", meaning: "n. 字彙量；單字", example: "Reading helps increase your vocabulary." }
+            ],
+            food: [
+                { word: "appetite", phonetic: "/ˈæp.ə.taɪt/", meaning: "n. 食慾；胃口", example: "Exercise gave him a healthy appetite." },
+                { word: "delicious", phonetic: "/dɪˈlɪʃ.əs/", meaning: "adj. 美味可口的", example: "This pasta tastes really delicious." },
+                { word: "ingredient", phonetic: "/ɪnˈɡriː.di.ənt/", meaning: "n. 食材；成分", example: "Fresh vegetables are the key ingredient." },
+                { word: "beverage", phonetic: "/ˈbev.ɚ.ɪdʒ/", meaning: "n. 飲料", example: "Hot tea is a popular winter beverage." }
+            ],
+            nature: [
+                { word: "environment", phonetic: "/ɪnˈvaɪ.rən.mənt/", meaning: "n. 自然環境", example: "We should protect our living environment." },
+                { word: "climate", phonetic: "/ˈklaɪ.mət/", meaning: "n. 氣候", example: "Climate change affects animals worldwide." },
+                { word: "ecosystem", phonetic: "/ˈiː.koʊˌsɪs.təm/", meaning: "n. 生態系統", example: "Forests play a huge role in the ecosystem." }
+            ]
+        };
+
+        let currentList = [];
         let currentIndex = 0;
         let isFlipped = false;
 
-        function loadWord() {
-            const item = vocabList[currentIndex];
-            document.getElementById("wordText").innerText = item.word;
-            document.getElementById("phoneticText").innerText = item.phonetic;
-            document.getElementById("meaningText").innerText = item.meaning;
-            document.getElementById("exampleText").innerText = item.example;
+        function changeTheme() {
+            const selected = document.getElementById("themeSelect").value;
+            if (selected === "custom") {
+                const saved = localStorage.getItem("myCustomVocab");
+                currentList = saved ? JSON.parse(saved) : [];
+                if (currentList.length === 0) {
+                    alert("你的自訂單字庫目前是空的，請點擊『新增/編輯自訂單字』來建立！");
+                    openCustomModal();
+                }
+            } else {
+                currentList = builtInThemes[selected] || [];
+            }
+            currentIndex = 0;
+            loadWord();
+        }
 
-            // 切換單字時重置翻頁狀態
+        function loadWord() {
+            if (currentList.length === 0) {
+                document.getElementById("wordText").innerText = "尚無單字";
+                document.getElementById("phoneticText").innerText = "";
+                document.getElementById("meaningText").innerText = "";
+                document.getElementById("exampleText").innerText = "";
+                document.getElementById("progressText").innerText = "進度：0 / 0";
+                return;
+            }
+
+            const item = currentList[currentIndex];
+            document.getElementById("wordText").innerText = item.word;
+            document.getElementById("phoneticText").innerText = item.phonetic || "";
+            document.getElementById("meaningText").innerText = item.meaning || "";
+            document.getElementById("exampleText").innerText = item.example || "";
+
+            document.getElementById("progressText").innerText = `進度：${currentIndex + 1} / ${currentList.length}`;
+
             isFlipped = false;
             document.getElementById("meaningText").style.display = "none";
             document.getElementById("exampleText").style.display = "none";
         }
 
         function toggleFlip() {
+            if (currentList.length === 0) return;
             isFlipped = !isFlipped;
             const displayStyle = isFlipped ? "block" : "none";
             document.getElementById("meaningText").style.display = displayStyle;
@@ -230,11 +317,11 @@
         }
 
         function nextWord() {
-            if (currentIndex < vocabList.length - 1) {
+            if (currentIndex < currentList.length - 1) {
                 currentIndex++;
                 loadWord();
-            } else {
-                alert("恭喜完成本組單字！");
+            } else if (currentList.length > 0) {
+                alert("已完成此主題所有單字！");
             }
         }
 
@@ -245,16 +332,51 @@
             }
         }
 
-        function setMode(mode) {
-            document.getElementById("btnLearn").classList.toggle("active", mode === 'learn');
-            document.getElementById("btnQuiz").classList.toggle("active", mode === 'quiz');
-            if (mode === 'quiz') {
-                alert("測驗模式功能即將上線！");
+        // 自訂單字 Modal 相關操作
+        function openCustomModal() {
+            document.getElementById("customModal").style.display = "flex";
+            const saved = localStorage.getItem("myCustomVocabText");
+            if (saved) {
+                document.getElementById("customInput").value = saved;
             }
         }
 
-        // 頁面載入時載入第一個單字
-        loadWord();
+        function closeCustomModal() {
+            document.getElementById("customModal").style.display = "none";
+        }
+
+        function saveCustomWords() {
+            const rawText = document.getElementById("customInput").value.trim();
+            if (!rawText) {
+                alert("內容不能為空！");
+                return;
+            }
+
+            const lines = rawText.split("\n");
+            const parsedList = lines.map(line => {
+                const parts = line.split(",");
+                return {
+                    word: parts[0]?.trim() || "",
+                    phonetic: parts[1]?.trim() || "",
+                    meaning: parts[2]?.trim() || "",
+                    example: parts[3]?.trim() || ""
+                };
+            }).filter(item => item.word !== "");
+
+            // 存入 LocalStorage 避免重新整理消失
+            localStorage.setItem("myCustomVocabText", rawText);
+            localStorage.setItem("myCustomVocab", JSON.stringify(parsedList));
+
+            alert(`成功新增 ${parsedList.length} 個自訂單字！`);
+            closeCustomModal();
+
+            // 自動切換至自訂單字庫
+            document.getElementById("themeSelect").value = "custom";
+            changeTheme();
+        }
+
+        // 初始化：預設載入學校主題
+        changeTheme();
     </script>
 </body>
 </html>
