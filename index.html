@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Study App</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sacramento&family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <title>cale Study App</title>
     <style>
         * {
             margin: 0;
@@ -25,41 +24,8 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
         }
 
-        .welcome-stage {
-            position: relative;
-            width: 400px;
-            height: 150px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* 語言切換淡入淡出 */
-        .greeting-item {
-            position: absolute;
-            opacity: 0;
-            transition: opacity 0.6s ease;
-        }
-
-        .greeting-item.active {
-            opacity: 1;
-        }
-
-        /* 筆跡遮罩核心：沿著路徑Reveal，無光標、不平移 */
-        .mask-path {
-            stroke: #ffffff;
-            stroke-width: 40;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
-            animation: revealHandwriting 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        @keyframes revealHandwriting {
-            0% { stroke-dashoffset: 1000; }
-            100% { stroke-dashoffset: 0; }
+        canvas {
+            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.7));
         }
 
         .bottom-hint {
@@ -79,56 +45,106 @@
 </head>
 <body onclick="enterApp()">
 
-    <div class="welcome-stage">
-        <!-- 1. Hello (English) -->
-        <div class="greeting-item active" id="g0">
-            <svg width="320" height="120" viewBox="0 0 320 120">
-                <defs>
-                    <mask id="hello-mask">
-                        <path class="mask-path" d="M 30,30 C 30,80 30,100 30,100 M 30,60 C 60,58 75,55 75,30 C 75,100 75,100 75,100 M 80,75 C 95,50 115,50 105,75 M 130,25 L 130,100 M 150,25 L 150,100 M 185,75 C 170,50 205,50 205,75 C 205,95 170,95 185,75" />
-                    </mask>
-                </defs>
-                <text x="30" y="85" font-family="'Sacramento', cursive" font-size="90" fill="#38bdf8" mask="url(#hello-mask)" filter="drop-shadow(0 0 10px rgba(56, 189, 248, 0.6))">Hello.</text>
-            </svg>
-        </div>
-
-        <!-- 2. 你好 (Traditional Chinese) -->
-        <div class="greeting-item" id="g1">
-            <svg width="320" height="120" viewBox="0 0 320 120">
-                <defs>
-                    <mask id="nihao-mask">
-                        <path class="mask-path" d="M 40,30 L 20,90 M 35,50 L 80,50 M 60,20 L 60,100 M 110,30 C 110,60 100,85 80,100 M 105,55 L 160,55 M 135,25 L 135,100" />
-                    </mask>
-                </defs>
-                <text x="30" y="85" font-family="'Noto Sans TC', sans-serif" font-weight="300" font-size="70" fill="#38bdf8" mask="url(#nihao-mask)" filter="drop-shadow(0 0 10px rgba(56, 189, 248, 0.6))">你好.</text>
-            </svg>
-        </div>
-    </div>
+    <!-- Canvas 畫布 -->
+    <canvas id="handwritingCanvas" width="600" height="200"></canvas>
 
     <div class="bottom-hint">點擊畫面任意處進入 ➔</div>
 
     <script>
-        let current = 0;
-        const total = 2;
+        const canvas = document.getElementById("handwritingCanvas");
+        const ctx = canvas.getContext("2d");
 
-        function switchGreeting() {
-            document.getElementById(`g${current}`).classList.remove('active');
-            current = (current + 1) % total;
-            
-            // 重置動畫並顯示
-            const nextItem = document.getElementById(`g${current}`);
-            const path = nextItem.querySelector('.mask-path');
-            
-            // 重新觸發 SVG 動畫
-            path.style.animation = 'none';
-            path.offsetHeight; /* trigger reflow */
-            path.style.animation = null;
+        // 真正的動態筆畫資料 (多語言：Hello, 你好, Bonjour, Hola)
+        const languages = [
+            // Hello
+            [
+                [{x:120, y:60}, {x:120, y:140}], [{x:120, y:100}, {x:160, y:100}], [{x:160, y:60}, {x:160, y:140}], // H
+                [{x:185, y:115}, {x:210, y:115}, {x:210, y:100}, {x:185, y:100}, {x:185, y:125}, {x:210, y:125}], // e
+                [{x:225, y:60}, {x:225, y:140}], // l
+                [{x:240, y:60}, {x:240, y:140}], // l
+                [{x:255, y:115}, {x:280, y:115}, {x:280, y:140}, {x:255, y:140}, {x:255, y:115}]  // o
+            ],
+            // 你好
+            [
+                [{x:160, y:70}, {x:140, y:130}], [{x:150, y:95}, {x:200, y:95}], [{x:185, y:60}, {x:185, y:140}], // 你 (撇/橫/豎)
+                [{x:270, y:60}, {x:240, y:135}], [{x:255, y:95}, {x:310, y:95}], [{x:290, y:60}, {x:290, y:140}]  // 好
+            ]
+        ];
 
-            nextItem.classList.add('active');
+        let langIdx = 0;
+        let strokeIdx = 0;
+        let pointIdx = 0;
+        let progress = 0;
+
+        function drawHandwriting() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = "#38bdf8";
+            ctx.lineWidth = 5;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            const currentLang = languages[langIdx];
+
+            // 畫出已完成的筆劃
+            for (let s = 0; s < strokeIdx; s++) {
+                const stroke = currentLang[s];
+                ctx.beginPath();
+                ctx.moveTo(stroke[0].x, stroke[0].y);
+                for (let p = 1; p < stroke.length; p++) {
+                    ctx.lineTo(stroke[p].x, stroke[p].y);
+                }
+                ctx.stroke();
+            }
+
+            // 動態畫出正在書寫的筆劃
+            if (strokeIdx < currentLang.length) {
+                const stroke = currentLang[strokeIdx];
+                if (pointIdx < stroke.length - 1) {
+                    const start = stroke[pointIdx];
+                    const end = stroke[pointIdx + 1];
+
+                    ctx.beginPath();
+                    // 繪製過去的點
+                    ctx.moveTo(stroke[0].x, stroke[0].y);
+                    for (let p = 1; p <= pointIdx; p++) {
+                        ctx.lineTo(stroke[p].x, stroke[p].y);
+                    }
+                    
+                    // 插值計算當前畫到的位置
+                    const curX = start.x + (end.x - start.x) * progress;
+                    const curY = start.y + (end.y - start.y) * progress;
+                    ctx.lineTo(curX, curY);
+                    ctx.stroke();
+
+                    // 引導發光粒子筆尖
+                    ctx.fillStyle = "#ffffff";
+                    ctx.beginPath();
+                    ctx.arc(curX, curY, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    progress += 0.15;
+                    if (progress >= 1) {
+                        progress = 0;
+                        pointIdx++;
+                    }
+                } else {
+                    pointIdx = 0;
+                    strokeIdx++;
+                }
+                requestAnimationFrame(drawHandwriting);
+            } else {
+                // 當前語言寫完，停留後切換下一個語言
+                setTimeout(() => {
+                    strokeIdx = 0;
+                    pointIdx = 0;
+                    progress = 0;
+                    langIdx = (langIdx + 1) % languages.length;
+                    requestAnimationFrame(drawHandwriting);
+                }, 2000);
+            }
         }
 
-        // 每 3.2 秒切換一次語言
-        setInterval(switchGreeting, 3200);
+        drawHandwriting();
 
         function enterApp() {
             alert("進入主畫面！（下一步我們來做『科目選擇』與『主題單字庫』）");
