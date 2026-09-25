@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cale Study App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -24,8 +25,29 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
         }
 
-        canvas {
-            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.7));
+        .welcome-box {
+            position: relative;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .handwritten-text {
+            font-size: 5rem;
+            color: transparent;
+            background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6));
+            white-space: nowrap;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .handwritten-text.show {
+            opacity: 1;
+            transform: scale(1);
         }
 
         .bottom-hint {
@@ -45,106 +67,37 @@
 </head>
 <body onclick="enterApp()">
 
-    <!-- Canvas 畫布 -->
-    <canvas id="handwritingCanvas" width="600" height="200"></canvas>
+    <div class="welcome-box">
+        <div class="handwritten-text" id="text">Hello.</div>
+    </div>
 
     <div class="bottom-hint">點擊畫面任意處進入 ➔</div>
 
     <script>
-        const canvas = document.getElementById("handwritingCanvas");
-        const ctx = canvas.getContext("2d");
-
-        // 真正的動態筆畫資料 (多語言：Hello, 你好, Bonjour, Hola)
-        const languages = [
-            // Hello
-            [
-                [{x:120, y:60}, {x:120, y:140}], [{x:120, y:100}, {x:160, y:100}], [{x:160, y:60}, {x:160, y:140}], // H
-                [{x:185, y:115}, {x:210, y:115}, {x:210, y:100}, {x:185, y:100}, {x:185, y:125}, {x:210, y:125}], // e
-                [{x:225, y:60}, {x:225, y:140}], // l
-                [{x:240, y:60}, {x:240, y:140}], // l
-                [{x:255, y:115}, {x:280, y:115}, {x:280, y:140}, {x:255, y:140}, {x:255, y:115}]  // o
-            ],
-            // 你好
-            [
-                [{x:160, y:70}, {x:140, y:130}], [{x:150, y:95}, {x:200, y:95}], [{x:185, y:60}, {x:185, y:140}], // 你 (撇/橫/豎)
-                [{x:270, y:60}, {x:240, y:135}], [{x:255, y:95}, {x:310, y:95}], [{x:290, y:60}, {x:290, y:140}]  // 好
-            ]
+        const list = [
+            { text: "Hello.", font: "'Caveat', cursive" },
+            { text: "你好.", font: "'Noto Sans TC', sans-serif" },
+            { text: "Bonjour.", font: "'Caveat', cursive" },
+            { text: "Hola.", font: "'Caveat', cursive" }
         ];
 
-        let langIdx = 0;
-        let strokeIdx = 0;
-        let pointIdx = 0;
-        let progress = 0;
+        let index = 0;
+        const textEl = document.getElementById("text");
 
-        function drawHandwriting() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = "#38bdf8";
-            ctx.lineWidth = 5;
-            ctx.lineCap = "round";
-            ctx.lineJoin = "round";
-
-            const currentLang = languages[langIdx];
-
-            // 畫出已完成的筆劃
-            for (let s = 0; s < strokeIdx; s++) {
-                const stroke = currentLang[s];
-                ctx.beginPath();
-                ctx.moveTo(stroke[0].x, stroke[0].y);
-                for (let p = 1; p < stroke.length; p++) {
-                    ctx.lineTo(stroke[p].x, stroke[p].y);
-                }
-                ctx.stroke();
-            }
-
-            // 動態畫出正在書寫的筆劃
-            if (strokeIdx < currentLang.length) {
-                const stroke = currentLang[strokeIdx];
-                if (pointIdx < stroke.length - 1) {
-                    const start = stroke[pointIdx];
-                    const end = stroke[pointIdx + 1];
-
-                    ctx.beginPath();
-                    // 繪製過去的點
-                    ctx.moveTo(stroke[0].x, stroke[0].y);
-                    for (let p = 1; p <= pointIdx; p++) {
-                        ctx.lineTo(stroke[p].x, stroke[p].y);
-                    }
-                    
-                    // 插值計算當前畫到的位置
-                    const curX = start.x + (end.x - start.x) * progress;
-                    const curY = start.y + (end.y - start.y) * progress;
-                    ctx.lineTo(curX, curY);
-                    ctx.stroke();
-
-                    // 引導發光粒子筆尖
-                    ctx.fillStyle = "#ffffff";
-                    ctx.beginPath();
-                    ctx.arc(curX, curY, 4, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    progress += 0.15;
-                    if (progress >= 1) {
-                        progress = 0;
-                        pointIdx++;
-                    }
-                } else {
-                    pointIdx = 0;
-                    strokeIdx++;
-                }
-                requestAnimationFrame(drawHandwriting);
-            } else {
-                // 當前語言寫完，停留後切換下一個語言
-                setTimeout(() => {
-                    strokeIdx = 0;
-                    pointIdx = 0;
-                    progress = 0;
-                    langIdx = (langIdx + 1) % languages.length;
-                    requestAnimationFrame(drawHandwriting);
-                }, 2000);
-            }
+        function switchGreeting() {
+            textEl.classList.remove("show");
+            
+            setTimeout(() => {
+                const current = list[index];
+                textEl.style.fontFamily = current.font;
+                textEl.innerText = current.text;
+                textEl.classList.add("show");
+                index = (index + 1) % list.length;
+            }, 800);
         }
 
-        drawHandwriting();
+        switchGreeting();
+        setInterval(switchGreeting, 2800);
 
         function enterApp() {
             alert("進入主畫面！（下一步我們來做『科目選擇』與『主題單字庫』）");
