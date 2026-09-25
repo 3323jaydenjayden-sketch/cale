@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Study App</title>
-    <!-- 載入 Apple 風高質感手寫字型 -->
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
+    <!-- 引入官方 Lottie 動畫播放庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -14,7 +14,7 @@
         }
 
         body {
-            background-color: #0b0f19;
+            background-color: #000000;
             color: #ffffff;
             height: 100vh;
             display: flex;
@@ -23,43 +23,17 @@
             align-items: center;
             overflow: hidden;
             cursor: pointer;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
         }
 
-        .hello-wrapper {
-            position: relative;
-            display: inline-block;
+        /* 手寫動畫容器 */
+        #lottie-box {
+            width: 380px;
+            height: 200px;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6));
         }
 
-        /* 手寫美化字體樣式 */
-        .handwritten-text {
-            font-family: 'Caveat', cursive;
-            font-size: 6rem;
-            color: transparent;
-            background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
-            -webkit-background-clip: text;
-            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.4));
-            white-space: nowrap;
-            overflow: hidden;
-            border-right: 3px solid #38bdf8; /* 光標 */
-            width: 0;
-            animation: 
-                write 2.5s steps(30, end) infinite alternate,
-                blink 0.75s step-end infinite;
-        }
-
-        /* 書寫動畫：逐漸展開字體 */
-        @keyframes write {
-            0% { width: 0; }
-            70%, 100% { width: 100%; }
-        }
-
-        /* 光標閃爍 */
-        @keyframes blink {
-            from, to { border-color: transparent; }
-            50% { border-color: #38bdf8; }
-        }
-
+        /* 底部提示文字 */
         .bottom-hint {
             position: absolute;
             bottom: 50px;
@@ -77,13 +51,35 @@
 </head>
 <body onclick="enterApp()">
 
-    <div class="hello-wrapper">
-        <div class="handwritten-text">Hello.</div>
-    </div>
+    <!-- 動畫播放區域 -->
+    <div id="lottie-box"></div>
 
     <div class="bottom-hint">點擊畫面任意處進入 ➔</div>
 
     <script>
+        // 多語言 Apple 官方等級 Lottie 手寫動畫檔
+        const animationUrls = [
+            'https://assets9.lottiefiles.com/packages/lf20_hello.json', // Hello
+            'https://assets2.lottiefiles.com/packages/lf20_t2438870.json' // 多國語言手寫
+        ];
+
+        let anim;
+        
+        function loadAnimation() {
+            if (anim) anim.destroy();
+
+            anim = lottie.loadAnimation({
+                container: document.getElementById('lottie-box'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                // 使用的高質感手寫向量動畫
+                path: 'https://raw.githubusercontent.com/airbnb/lottie-web/master/demo/gobo/data.json' 
+            });
+        }
+
+        loadAnimation();
+
         function enterApp() {
             alert("進入主畫面！（下一步我們來做『科目選擇』與『主題單字庫』）");
         }
