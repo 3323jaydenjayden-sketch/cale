@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study App</title>
+    <style>
+        /* 1. 深色系基礎設定 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 2. 中央 Hello 多語言動畫標題 */
+        .welcome-text {
+            font-size: 4rem;
+            font-weight: 600;
+            letter-spacing: -1px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .welcome-text.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 3. 底部提示文字動畫 */
+        .bottom-hint {
+            position: absolute;
+            bottom: 40px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 中央歡迎文字 -->
+    <div class="welcome-text" id="welcomeText">你好</div>
+
+    <!-- 底部進入按鈕 -->
+    <div class="bottom-hint" onclick="enterApp()">點擊任意處進入 App ➔</div>
+
+    <script>
+        // 多語言列表
+        const greetings = ["你好", "Hello", "Bonjour", "Hola", "こんにちは", "안녕하세요"];
+        let currentIndex = 0;
+        const textElement = document.getElementById("welcomeText");
+
+        // 自動淡入淡出切換文字
+        function updateGreeting() {
+            textElement.classList.remove("show");
+            
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % greetings.length;
+                textElement.innerText = greetings[currentIndex];
+                textElement.classList.add("show");
+            }, 800);
+        }
+
+        // 首次載入顯示
+        setTimeout(() => { textElement.classList.add("show"); }, 100);
+        
+        // 每 2.5 秒切換一次語言
+        setInterval(updateGreeting, 2500);
+
+        // 點擊進入下一個頁面
+        function enterApp() {
+            alert("進入主畫面！（下一步我們來做『科目選擇』與『主題單字庫』）");
+        }
+    </script>
+</body>
+</html>
