@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Study App</title>
-    <!-- 載入 Apple 風格美化字型 -->
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sacramento&family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -26,27 +25,41 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
         }
 
-        .welcome-box {
+        .welcome-stage {
             position: relative;
+            width: 400px;
+            height: 150px;
             display: flex;
-            align-items: center;
             justify-content: center;
-            height: 120px;
+            align-items: center;
         }
 
-        /* 正確美觀的文字樣式 */
-        .handwritten-text {
-            font-size: 5rem;
-            font-weight: 300;
-            color: transparent;
-            background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
-            -webkit-background-clip: text;
-            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6));
-            white-space: nowrap;
-            overflow: hidden;
-            border-right: 3px solid #38bdf8;
-            width: 0;
-            transition: width 0.05s linear;
+        /* 語言切換淡入淡出 */
+        .greeting-item {
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .greeting-item.active {
+            opacity: 1;
+        }
+
+        /* 筆跡遮罩核心：沿著路徑Reveal，無光標、不平移 */
+        .mask-path {
+            stroke: #ffffff;
+            stroke-width: 40;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: revealHandwriting 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes revealHandwriting {
+            0% { stroke-dashoffset: 1000; }
+            100% { stroke-dashoffset: 0; }
         }
 
         .bottom-hint {
@@ -66,49 +79,56 @@
 </head>
 <body onclick="enterApp()">
 
-    <div class="welcome-box">
-        <div class="handwritten-text" id="text">Hello.</div>
+    <div class="welcome-stage">
+        <!-- 1. Hello (English) -->
+        <div class="greeting-item active" id="g0">
+            <svg width="320" height="120" viewBox="0 0 320 120">
+                <defs>
+                    <mask id="hello-mask">
+                        <path class="mask-path" d="M 30,30 C 30,80 30,100 30,100 M 30,60 C 60,58 75,55 75,30 C 75,100 75,100 75,100 M 80,75 C 95,50 115,50 105,75 M 130,25 L 130,100 M 150,25 L 150,100 M 185,75 C 170,50 205,50 205,75 C 205,95 170,95 185,75" />
+                    </mask>
+                </defs>
+                <text x="30" y="85" font-family="'Sacramento', cursive" font-size="90" fill="#38bdf8" mask="url(#hello-mask)" filter="drop-shadow(0 0 10px rgba(56, 189, 248, 0.6))">Hello.</text>
+            </svg>
+        </div>
+
+        <!-- 2. 你好 (Traditional Chinese) -->
+        <div class="greeting-item" id="g1">
+            <svg width="320" height="120" viewBox="0 0 320 120">
+                <defs>
+                    <mask id="nihao-mask">
+                        <path class="mask-path" d="M 40,30 L 20,90 M 35,50 L 80,50 M 60,20 L 60,100 M 110,30 C 110,60 100,85 80,100 M 105,55 L 160,55 M 135,25 L 135,100" />
+                    </mask>
+                </defs>
+                <text x="30" y="85" font-family="'Noto Sans TC', sans-serif" font-weight="300" font-size="70" fill="#38bdf8" mask="url(#nihao-mask)" filter="drop-shadow(0 0 10px rgba(56, 189, 248, 0.6))">你好.</text>
+            </svg>
+        </div>
     </div>
 
     <div class="bottom-hint">點擊畫面任意處進入 ➔</div>
 
     <script>
-        // 設定要播放的語言文字與字型
-        const list = [
-            { text: "Hello.", font: "'Caveat', cursive" },
-            { text: "你好.", font: "'Noto Sans TC', sans-serif" },
-            { text: "Bonjour.", font: "'Caveat', cursive" },
-            { text: "Hola.", font: "'Caveat', cursive" }
-        ];
+        let current = 0;
+        const total = 2;
 
-        let index = 0;
-        const textEl = document.getElementById("text");
-
-        function drawText() {
-            const current = list[index];
-            textEl.style.fontFamily = current.font;
-            textEl.innerText = current.text;
+        function switchGreeting() {
+            document.getElementById(`g${current}`).classList.remove('active');
+            current = (current + 1) % total;
             
-            let width = 0;
-            textEl.style.width = "0px";
+            // 重置動畫並顯示
+            const nextItem = document.getElementById(`g${current}`);
+            const path = nextItem.querySelector('.mask-path');
+            
+            // 重新觸發 SVG 動畫
+            path.style.animation = 'none';
+            path.offsetHeight; /* trigger reflow */
+            path.style.animation = null;
 
-            // 滑順模擬書寫展開
-            const timer = setInterval(() => {
-                width += 8;
-                textEl.style.width = width + "px";
-
-                if (width >= 280) {
-                    clearInterval(timer);
-                    // 停留後切換下一個語言
-                    setTimeout(() => {
-                        index = (index + 1) % list.length;
-                        drawText();
-                    }, 1800);
-                }
-            }, 30);
+            nextItem.classList.add('active');
         }
 
-        drawText();
+        // 每 3.2 秒切換一次語言
+        setInterval(switchGreeting, 3200);
 
         function enterApp() {
             alert("進入主畫面！（下一步我們來做『科目選擇』與『主題單字庫』）");
