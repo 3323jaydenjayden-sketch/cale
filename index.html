@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Study App</title>
     <style>
-        /* 深色極簡風格 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
         }
 
         body {
@@ -23,38 +21,38 @@
             align-items: center;
             overflow: hidden;
             cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
         }
 
-        /* 手寫筆畫外框容器 */
-        .handwriting-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+        .svg-container {
+            width: 320px;
+            height: 120px;
         }
 
-        /* 手寫文字動畫風格 */
-        .typed-text {
-            font-size: 5rem;
-            font-weight: 300;
-            letter-spacing: 2px;
-            color: transparent;
-            background: linear-gradient(135deg, #ffffff 0%, #38bdf8 100%);
-            -webkit-background-clip: text;
-            border-right: 3px solid #38bdf8; /* 光標 */
-            white-space: nowrap;
-            overflow: hidden;
-            animation: blink-cursor 0.75s step-end infinite;
-            padding-right: 8px;
+        /* SVG 筆劃路徑樣式 */
+        .handwritten-path {
+            fill: none;
+            stroke: #38bdf8; /* 高質感發光藍色 */
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            /* 設定長度與偏移，創造一筆一畫寫出來的效果 */
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawStroke 3s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
         }
 
-        /* 光標閃爍 */
-        @keyframes blink-cursor {
-            from, to { border-color: transparent }
-            50% { border-color: #38bdf8; }
+        /* 筆劃順著路線畫出的關鍵影格 */
+        @keyframes drawStroke {
+            0% {
+                stroke-dashoffset: 1000;
+            }
+            80%, 100% {
+                stroke-dashoffset: 0;
+            }
         }
 
-        /* 底部提示文字 */
         .bottom-hint {
             position: absolute;
             bottom: 50px;
@@ -72,54 +70,22 @@
 </head>
 <body onclick="enterApp()">
 
-    <div class="handwriting-container">
-        <span class="typed-text" id="typedText"></span>
+    <!-- 真正的草寫 Hello SVG 筆劃路徑 -->
+    <div class="svg-container">
+        <svg viewBox="0 0 500 150" width="100%" height="100%">
+            <path class="handwritten-path" d="
+                M 30,80 Q 25,30 25,100 M 25,65 Q 55,60 55,30 Q 55,100 55,100 
+                M 85,75 Q 110,40 85,90 Q 70,105 100,90
+                M 120,20 L 120,100
+                M 145,20 L 145,100
+                M 175,70 Q 160,100 190,100 Q 210,100 195,70 Q 175,70 180,100
+            " />
+        </svg>
     </div>
 
     <div class="bottom-hint">點擊畫面任意處進入 ➔</div>
 
     <script>
-        // 要顯示的多語言手寫清單
-        const words = ["Hello.", "你好.", "Bonjour.", "Hola.", "こんにちは."];
-        let wordIndex = 0;
-        let charIndex = 0;
-        let isDeleting = false;
-        const textElement = document.getElementById("typedText");
-
-        function typeEffect() {
-            const currentWord = words[wordIndex];
-            
-            if (isDeleting) {
-                // 逐字刪除
-                textElement.textContent = currentWord.substring(0, charIndex - 1);
-                charIndex--;
-            } else {
-                // 逐字寫出
-                textElement.textContent = currentWord.substring(0, charIndex + 1);
-                charIndex++;
-            }
-
-            // 調整打字與刪除的速度
-            let typeSpeed = isDeleting ? 60 : 120;
-
-            // 當整句話寫完時
-            if (!isDeleting && charIndex === currentWord.length) {
-                typeSpeed = 1800; // 停留時間
-                isDeleting = true;
-            } 
-            // 當刪除完畢時，換下一個語言
-            else if (isDeleting && charIndex === 0) {
-                isDeleting = false;
-                wordIndex = (wordIndex + 1) % words.length;
-                typeSpeed = 400;
-            }
-
-            setTimeout(typeEffect, typeSpeed);
-        }
-
-        // 啟動動畫
-        typeEffect();
-
         function enterApp() {
             alert("進入主畫面！（下一步我們來做『科目選擇』與『主題單字庫』）");
         }
