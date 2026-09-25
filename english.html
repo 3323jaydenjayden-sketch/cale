@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study App - 英文單字庫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 頂部導覽列 */
+        .nav-bar {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn {
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .mode-switch {
+            display: flex;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .mode-btn {
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            background: #38bdf8;
+            color: #0b0f19;
+            font-weight: 600;
+        }
+
+        /* 學習卡片區域 */
+        .card-container {
+            width: 100%;
+            max-width: 500px;
+            perspective: 1000px;
+            margin-top: 1rem;
+        }
+
+        .flashcard {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .flashcard:hover {
+            transform: translateY(-4px);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .word-title {
+            font-size: 2.8rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .phonetic {
+            font-size: 1.1rem;
+            color: #38bdf8;
+            margin-bottom: 1.5rem;
+        }
+
+        .meaning {
+            font-size: 1.3rem;
+            color: #e2e8f0;
+            margin-top: 1rem;
+            display: none; /* 預設隱藏，點擊後翻面顯示 */
+        }
+
+        .example-sentence {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 0.8rem;
+            font-style: italic;
+            display: none;
+        }
+
+        /* 控制按鈕組合 */
+        .controls {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.9rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .action-btn.primary {
+            background: #38bdf8;
+            color: #0b0f19;
+            font-weight: 600;
+            border: none;
+        }
+
+        .action-btn.primary:hover {
+            background: #0284c7;
+            color: #fff;
+        }
+
+        .hint-text {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <a href="dashboard.html" class="back-btn">⇠ 返回科目</a>
+        <div class="mode-switch">
+            <button class="mode-btn active" id="btnLearn" onclick="setMode('learn')">學習模式</button>
+            <button class="mode-btn" id="btnQuiz" onclick="setMode('quiz')">測驗模式</button>
+        </div>
+    </div>
+
+    <!-- 學習單字卡 -->
+    <div class="card-container">
+        <div class="flashcard" onclick="toggleFlip()">
+            <div class="word-title" id="wordText">abandon</div>
+            <div class="phonetic" id="phoneticText">/əˈbændən/</div>
+            <div class="meaning" id="meaningText">v. 放棄；拋棄</div>
+            <div class="example-sentence" id="exampleText">"They had to abandon their car in the snow."</div>
+        </div>
+    </div>
+
+    <div class="hint-text">點擊卡片顯示/隱藏中文解析與例句</div>
+
+    <!-- 控制按鈕 -->
+    <div class="controls">
+        <button class="action-btn" onclick="prevWord()">上一單字</button>
+        <button class="action-btn primary" onclick="nextWord()">下一單字 ➔</button>
+    </div>
+
+    <script>
+        // Super 2500 示範單字資料庫
+        const vocabList = [
+            { word: "abandon", phonetic: "/əˈbændən/", meaning: "v. 放棄；拋棄", example: "They had to abandon their car in the snow." },
+            { word: "ability", phonetic: "/əˈbɪləti/", meaning: "n. 能力；才能", example: "She has the ability to pass the exam easily." },
+            { word: "absent", phonetic: "/ˈæbsənt/", meaning: "adj. 缺席的；不在場的", example: "He was absent from school yesterday." },
+            { word: "accept", phonetic: "/əkˈsept/", meaning: "v. 接受；答應", example: "I am happy to accept your invitation." },
+            { word: "accident", phonetic: "/ˈæksɪdənt/", meaning: "n. 意外；交通事故", example: "She was injured in a car accident." }
+        ];
+
+        let currentIndex = 0;
+        let isFlipped = false;
+
+        function loadWord() {
+            const item = vocabList[currentIndex];
+            document.getElementById("wordText").innerText = item.word;
+            document.getElementById("phoneticText").innerText = item.phonetic;
+            document.getElementById("meaningText").innerText = item.meaning;
+            document.getElementById("exampleText").innerText = item.example;
+
+            // 切換單字時重置翻頁狀態
+            isFlipped = false;
+            document.getElementById("meaningText").style.display = "none";
+            document.getElementById("exampleText").style.display = "none";
+        }
+
+        function toggleFlip() {
+            isFlipped = !isFlipped;
+            const displayStyle = isFlipped ? "block" : "none";
+            document.getElementById("meaningText").style.display = displayStyle;
+            document.getElementById("exampleText").style.display = displayStyle;
+        }
+
+        function nextWord() {
+            if (currentIndex < vocabList.length - 1) {
+                currentIndex++;
+                loadWord();
+            } else {
+                alert("恭喜完成本組單字！");
+            }
+        }
+
+        function prevWord() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadWord();
+            }
+        }
+
+        function setMode(mode) {
+            document.getElementById("btnLearn").classList.toggle("active", mode === 'learn');
+            document.getElementById("btnQuiz").classList.toggle("active", mode === 'quiz');
+            if (mode === 'quiz') {
+                alert("測驗模式功能即將上線！");
+            }
+        }
+
+        // 頁面載入時載入第一個單字
+        loadWord();
+    </script>
+</body>
+</html>
