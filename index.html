@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Study App</title>
     <style>
-        /* 1. 深色系基礎設定 */
+        /* 深色極簡風格 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
         }
 
         body {
-            background-color: #0f172a;
+            background-color: #0b0f19;
             color: #ffffff;
             height: 100vh;
             display: flex;
@@ -22,71 +22,104 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
-        }
-
-        /* 2. 中央 Hello 多語言動畫標題 */
-        .welcome-text {
-            font-size: 4rem;
-            font-weight: 600;
-            letter-spacing: -1px;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .welcome-text.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* 3. 底部提示文字動畫 */
-        .bottom-hint {
-            position: absolute;
-            bottom: 40px;
-            font-size: 0.9rem;
-            color: #94a3b8;
-            animation: pulse 2s infinite;
             cursor: pointer;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 1; }
+        /* 手寫筆畫外框容器 */
+        .handwriting-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* 手寫文字動畫風格 */
+        .typed-text {
+            font-size: 5rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: transparent;
+            background: linear-gradient(135deg, #ffffff 0%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            border-right: 3px solid #38bdf8; /* 光標 */
+            white-space: nowrap;
+            overflow: hidden;
+            animation: blink-cursor 0.75s step-end infinite;
+            padding-right: 8px;
+        }
+
+        /* 光標閃爍 */
+        @keyframes blink-cursor {
+            from, to { border-color: transparent }
+            50% { border-color: #38bdf8; }
+        }
+
+        /* 底部提示文字 */
+        .bottom-hint {
+            position: absolute;
+            bottom: 50px;
+            font-size: 0.95rem;
+            color: #64748b;
+            letter-spacing: 1px;
+            animation: breathe 2.5s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 0.9; transform: translateY(-4px); }
         }
     </style>
 </head>
-<body>
+<body onclick="enterApp()">
 
-    <!-- 中央歡迎文字 -->
-    <div class="welcome-text" id="welcomeText">你好</div>
+    <div class="handwriting-container">
+        <span class="typed-text" id="typedText"></span>
+    </div>
 
-    <!-- 底部進入按鈕 -->
-    <div class="bottom-hint" onclick="enterApp()">點擊任意處進入 App ➔</div>
+    <div class="bottom-hint">點擊畫面任意處進入 ➔</div>
 
     <script>
-        // 多語言列表
-        const greetings = ["你好", "Hello", "Bonjour", "Hola", "こんにちは", "안녕하세요"];
-        let currentIndex = 0;
-        const textElement = document.getElementById("welcomeText");
+        // 要顯示的多語言手寫清單
+        const words = ["Hello.", "你好.", "Bonjour.", "Hola.", "こんにちは."];
+        let wordIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const textElement = document.getElementById("typedText");
 
-        // 自動淡入淡出切換文字
-        function updateGreeting() {
-            textElement.classList.remove("show");
+        function typeEffect() {
+            const currentWord = words[wordIndex];
             
-            setTimeout(() => {
-                currentIndex = (currentIndex + 1) % greetings.length;
-                textElement.innerText = greetings[currentIndex];
-                textElement.classList.add("show");
-            }, 800);
+            if (isDeleting) {
+                // 逐字刪除
+                textElement.textContent = currentWord.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                // 逐字寫出
+                textElement.textContent = currentWord.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            // 調整打字與刪除的速度
+            let typeSpeed = isDeleting ? 60 : 120;
+
+            // 當整句話寫完時
+            if (!isDeleting && charIndex === currentWord.length) {
+                typeSpeed = 1800; // 停留時間
+                isDeleting = true;
+            } 
+            // 當刪除完畢時，換下一個語言
+            else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                wordIndex = (wordIndex + 1) % words.length;
+                typeSpeed = 400;
+            }
+
+            setTimeout(typeEffect, typeSpeed);
         }
 
-        // 首次載入顯示
-        setTimeout(() => { textElement.classList.add("show"); }, 100);
-        
-        // 每 2.5 秒切換一次語言
-        setInterval(updateGreeting, 2500);
+        // 啟動動畫
+        typeEffect();
 
-        // 點擊進入下一個頁面
         function enterApp() {
             alert("進入主畫面！（下一步我們來做『科目選擇』與『主題單字庫』）");
         }
