@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study App - 科目選擇</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        }
 
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 統計小卡片 */
+        .stats-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #38bdf8;
+        }
+
+        /* 科目卡片容器 */
+        .subject-grid {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        /* Apple 風格毛玻璃卡片 */
+        .subject-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-4px);
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.15);
+        }
+
+        .card-info h2 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .card-info p {
+            font-size: 0.88rem;
+            color: #94a3b8;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>學習總覽</h1>
+        <div class="stats-badge">🔥 今日進度 0%</div>
+    </div>
+
+    <div class="subject-grid">
+        <!-- 英文模組入口 -->
+        <a href="english.html" class="subject-card">
+            <div class="card-info">
+                <h2>📘 國中英文 (Super 2500)</h2>
+                <p>核心單字、主題分類卡與 Learn-then-Quiz 測驗</p>
+            </div>
+            <div class="card-icon">➔</div>
+        </a>
+
+        <!-- 國文模組入口 -->
+        <a href="chinese.html" class="subject-card">
+            <div class="card-info">
+                <h2>📕 國文與文言文</h2>
+                <p>會考常考字詞、成語意涵與文章理解</p>
+            </div>
+            <div class="card-icon">➔</div>
+        </a>
+    </div>
+
+</body>
+</html>
