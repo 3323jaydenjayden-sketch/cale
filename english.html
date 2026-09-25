@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cale Study App - 主題英文單字庫</title>
+    <title>AI Study App - 英文單字庫</title>
     <style>
         * {
             margin: 0;
@@ -37,7 +37,6 @@
             font-size: 0.95rem;
         }
 
-        /* 主題選擇下拉選單與按鈕 */
         .theme-selector-group {
             width: 100%;
             max-width: 650px;
@@ -71,7 +70,6 @@
             border-color: #38bdf8;
         }
 
-        /* 記憶卡片區 */
         .card-container {
             width: 100%;
             max-width: 500px;
@@ -148,7 +146,6 @@
             border: none;
         }
 
-        /* 自訂單字彈出視窗 Modal */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -198,21 +195,21 @@
 
     <div class="nav-bar">
         <a href="dashboard.html" class="back-btn">⇠ 返回科目</a>
-        <div class="progress-text" id="progressText">進度：1 / 5</div>
+        <div class="progress-text" id="progressText">進度：0 / 0</div>
     </div>
 
-    <!-- 主題切換與自訂按鈕 -->
+    <!-- 主題選擇與自訂按鈕 -->
     <div class="theme-selector-group">
         <select id="themeSelect" onchange="changeTheme()">
-            <option value="school">🏫 學校與學習 (School & Learning)</option>
-            <option value="food">🍕 飲食與生活 (Food & Daily)</option>
-            <option value="nature">🌿 自然與環境 (Nature & Environment)</option>
-            <option value="custom">✏️ 我的自訂單字庫 (Custom)</option>
+            <option value="cap_a">📘 會考核心單字 (A 開頭)</option>
+            <!-- 未來建立 word-b.js 後取消註解此行： -->
+            <!-- <option value="cap_b">📘 會考核心單字 (B 開頭)</option> -->
+            <option value="custom">✏️ 個人自訂單字庫</option>
         </select>
-        <button class="btn-secondary" onclick="openCustomModal()">+ 新增/編輯自訂單字</button>
+        <button class="btn-secondary" onclick="openCustomModal()">+ 新增個人單字</button>
     </div>
 
-    <!-- 單字卡片 -->
+    <!-- 單字卡片區 -->
     <div class="card-container">
         <div class="flashcard" onclick="toggleFlip()">
             <div class="word-title" id="wordText">---</div>
@@ -227,14 +224,14 @@
         <button class="action-btn primary" onclick="nextWord()">下一單字 ➔</button>
     </div>
 
-    <!-- 自訂單字彈窗 -->
+    <!-- 自訂單字彈窗 Modal -->
     <div class="modal-overlay" id="customModal">
         <div class="modal-content">
-            <h3>✏️ 自訂單字輸入</h3>
+            <h3>✏️ 新增個人自訂單字</h3>
             <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">
                 格式：單字,音標,中文解釋,例句（每行一組）
             </p>
-            <textarea id="customInput" placeholder="apple,/ˈæp.əl/,n. 蘋果,An apple a day keeps the doctor away.&#10;book,/bʊk/,n. 書本,I read a book every night."></textarea>
+            <textarea id="customInput" placeholder="apple,/ˈæp.əl/,n. 蘋果,An apple a day keeps the doctor away."></textarea>
             <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                 <button class="action-btn" onclick="closeCustomModal()">取消</button>
                 <button class="action-btn primary" onclick="saveCustomWords()">儲存單字庫</button>
@@ -242,29 +239,12 @@
         </div>
     </div>
 
-    <script>
-        // 內建主題單字庫 (依主題分類)
-        const builtInThemes = {
-            school: [
-                { word: "assignment", phonetic: "/əˈsaɪn.mənt/", meaning: "n. 作業；任務", example: "I have to finish my English assignment tonight." },
-                { word: "curriculum", phonetic: "/kəˈrɪk.jə.ləm/", meaning: "n. 學校課程", example: "The school offers a rich science curriculum." },
-                { word: "knowledge", phonetic: "/ˈnɑː.lɪdʒ/", meaning: "n. 知識；學問", example: "Books are the source of knowledge." },
-                { word: "exam", phonetic: "/ɪɡˈzæm/", meaning: "n. 考試", example: "She spent all weekend studying for the exam." },
-                { word: "vocabulary", phonetic: "/vəˈkæb.jə.ler.i/", meaning: "n. 字彙量；單字", example: "Reading helps increase your vocabulary." }
-            ],
-            food: [
-                { word: "appetite", phonetic: "/ˈæp.ə.taɪt/", meaning: "n. 食慾；胃口", example: "Exercise gave him a healthy appetite." },
-                { word: "delicious", phonetic: "/dɪˈlɪʃ.əs/", meaning: "adj. 美味可口的", example: "This pasta tastes really delicious." },
-                { word: "ingredient", phonetic: "/ɪnˈɡriː.di.ənt/", meaning: "n. 食材；成分", example: "Fresh vegetables are the key ingredient." },
-                { word: "beverage", phonetic: "/ˈbev.ɚ.ɪdʒ/", meaning: "n. 飲料", example: "Hot tea is a popular winter beverage." }
-            ],
-            nature: [
-                { word: "environment", phonetic: "/ɪnˈvaɪ.rən.mənt/", meaning: "n. 自然環境", example: "We should protect our living environment." },
-                { word: "climate", phonetic: "/ˈklaɪ.mət/", meaning: "n. 氣候", example: "Climate change affects animals worldwide." },
-                { word: "ecosystem", phonetic: "/ˈiː.koʊˌsɪs.təm/", meaning: "n. 生態系統", example: "Forests play a huge role in the ecosystem." }
-            ]
-        };
+    <!-- 依序引入 words/ 資料夾中的 JS 單字檔 -->
+    <script src="words/word-a.js"></script>
+    <!-- 未來新增其它字母時在此處引入，例如： -->
+    <!-- <script src="words/word-b.js"></script> -->
 
+    <script>
         let currentList = [];
         let currentIndex = 0;
         let isFlipped = false;
@@ -275,11 +255,11 @@
                 const saved = localStorage.getItem("myCustomVocab");
                 currentList = saved ? JSON.parse(saved) : [];
                 if (currentList.length === 0) {
-                    alert("你的自訂單字庫目前是空的，請點擊『新增/編輯自訂單字』來建立！");
+                    alert("目前還沒有個人自訂單字，可以點擊『新增個人單字』來添加！");
                     openCustomModal();
                 }
             } else {
-                currentList = builtInThemes[selected] || [];
+                currentList = (window.builtInThemes && window.builtInThemes[selected]) || [];
             }
             currentIndex = 0;
             loadWord();
@@ -332,7 +312,6 @@
             }
         }
 
-        // 自訂單字 Modal 相關操作
         function openCustomModal() {
             document.getElementById("customModal").style.display = "flex";
             const saved = localStorage.getItem("myCustomVocabText");
@@ -363,19 +342,17 @@
                 };
             }).filter(item => item.word !== "");
 
-            // 存入 LocalStorage 避免重新整理消失
             localStorage.setItem("myCustomVocabText", rawText);
             localStorage.setItem("myCustomVocab", JSON.stringify(parsedList));
 
             alert(`成功新增 ${parsedList.length} 個自訂單字！`);
             closeCustomModal();
 
-            // 自動切換至自訂單字庫
             document.getElementById("themeSelect").value = "custom";
             changeTheme();
         }
 
-        // 初始化：預設載入學校主題
+        // 初始化
         changeTheme();
     </script>
 </body>
