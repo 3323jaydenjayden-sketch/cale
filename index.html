@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Study App</title>
+    <!-- 載入 Apple 風格美化字型 -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -24,45 +26,27 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
         }
 
-        .svg-container {
-            width: 320px;
-            height: 140px;
+        .welcome-box {
+            position: relative;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            height: 120px;
         }
 
-        /* 連筆草寫筆劃動畫 */
-        .handwritten-path {
-            fill: none;
-            stroke: #38bdf8;
-            stroke-width: 4.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
-            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.7));
-            animation: strokeDraw 2.2s cubic-bezier(0.45, 0, 0.15, 1) forwards;
-        }
-
-        @keyframes strokeDraw {
-            0% {
-                stroke-dashoffset: 1000;
-            }
-            100% {
-                stroke-dashoffset: 0;
-            }
-        }
-
-        /* 淡出切換效果 */
-        .fade-out {
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        .fade-in {
-            opacity: 1;
-            transition: opacity 0.4s ease;
+        /* 正確美觀的文字樣式 */
+        .handwritten-text {
+            font-size: 5rem;
+            font-weight: 300;
+            color: transparent;
+            background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6));
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 3px solid #38bdf8;
+            width: 0;
+            transition: width 0.05s linear;
         }
 
         .bottom-hint {
@@ -82,51 +66,49 @@
 </head>
 <body onclick="enterApp()">
 
-    <div class="svg-container" id="svgBox">
-        <!-- 預設動態載入 SVG -->
+    <div class="welcome-box">
+        <div class="handwritten-text" id="text">Hello.</div>
     </div>
 
     <div class="bottom-hint">點擊畫面任意處進入 ➔</div>
 
     <script>
-        // 各語言的優化 SVG 手寫筆劃路徑
-        const svgList = [
-            // Hello
-            `<svg viewBox="0 0 300 120" width="100%" height="100%">
-                <path class="handwritten-path" d="M 30,25 C 30,60 28,95 28,95 M 28,60 C 50,58 70,55 70,25 C 70,95 70,95 70,95 M 80,70 C 95,50 115,50 105,70 C 95,90 120,90 130,70 M 145,20 C 145,55 145,95 145,95 M 165,20 C 165,55 165,95 165,95 M 200,70 C 185,50 220,50 220,70 C 220,90 185,90 200,70" />
-            </svg>`,
-            // 你好
-            `<svg viewBox="0 0 300 120" width="100%" height="100%">
-                <path class="handwritten-path" d="M 50,30 L 30,85 M 42,50 C 65,48 85,48 85,48 M 65,25 L 65,95 M 50,95 L 80,95 M 120,30 C 120,60 110,85 95,100 M 115,55 C 140,55 165,55 165,55 M 140,30 L 140,95 M 125,95 L 160,95" />
-            </svg>`,
-            // Bonjour
-            `<svg viewBox="0 0 320 120" width="100%" height="100%">
-                <path class="handwritten-path" d="M 25,30 C 25,60 25,95 25,95 M 25,30 C 55,20 65,50 25,55 M 25,55 C 60,55 70,95 25,95 M 80,70 C 70,90 105,90 100,70 M 115,50 C 115,75 115,95 115,95 M 115,65 C 130,50 145,50 145,70 M 145,70 C 145,95 145,110 130,115 M 160,65 C 160,90 185,90 185,65 M 185,65 C 185,95 185,95 185,95 M 200,50 C 200,75 225,75 225,95 M 240,70 C 230,90 260,90 255,70" />
-            </svg>`,
-            // Hola
-            `<svg viewBox="0 0 260 120" width="100%" height="100%">
-                <path class="handwritten-path" d="M 30,25 C 30,60 30,95 30,95 M 30,60 C 55,58 75,55 75,25 C 75,95 75,95 75,95 M 90,70 C 80,90 115,90 110,70 M 130,20 C 130,55 130,95 130,95 M 165,70 C 150,50 185,50 185,70 M 185,70 C 185,95 185,95 185,95" />
-            </svg>`
+        // 設定要播放的語言文字與字型
+        const list = [
+            { text: "Hello.", font: "'Caveat', cursive" },
+            { text: "你好.", font: "'Noto Sans TC', sans-serif" },
+            { text: "Bonjour.", font: "'Caveat', cursive" },
+            { text: "Hola.", font: "'Caveat', cursive" }
         ];
 
-        let currentIndex = 0;
-        const svgBox = document.getElementById("svgBox");
+        let index = 0;
+        const textEl = document.getElementById("text");
 
-        function renderNextSVG() {
-            svgBox.classList.add("fade-out");
+        function drawText() {
+            const current = list[index];
+            textEl.style.fontFamily = current.font;
+            textEl.innerText = current.text;
             
-            setTimeout(() => {
-                svgBox.innerHTML = svgList[currentIndex];
-                svgBox.classList.remove("fade-out");
-                currentIndex = (currentIndex + 1) % svgList.length;
-            }, 400);
+            let width = 0;
+            textEl.style.width = "0px";
+
+            // 滑順模擬書寫展開
+            const timer = setInterval(() => {
+                width += 8;
+                textEl.style.width = width + "px";
+
+                if (width >= 280) {
+                    clearInterval(timer);
+                    // 停留後切換下一個語言
+                    setTimeout(() => {
+                        index = (index + 1) % list.length;
+                        drawText();
+                    }, 1800);
+                }
+            }, 30);
         }
 
-        // 首次播放
-        renderNextSVG();
-
-        // 每 3.2 秒自動切換下一個語言
-        setInterval(renderNextSVG, 3200);
+        drawText();
 
         function enterApp() {
             alert("進入主畫面！（下一步我們來做『科目選擇』與『主題單字庫』）");
