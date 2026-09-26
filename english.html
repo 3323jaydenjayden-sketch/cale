@@ -256,15 +256,24 @@
 
     <!-- 主題選擇與自訂按鈕 -->
     <div class="theme-selector-group">
-        <select id="themeSelect" onchange="changeTheme()">
-            <option value="cap_a">📘 會考核心單字 (A 開頭)</option>
-            <!-- 未來建立 word-b.js 後取消註解此行： -->
-            <!-- <option value="cap_b">📘 會考核心單字 (B 開頭)</option> -->
-            <option value="custom">✏️ 個人自訂單字庫</option>
-        </select>
-        <button class="btn-secondary" onclick="openCustomModal()">+ 新增個人單字</button>
+    <div class="custom-dropdown" id="themeDropdown">
+        <div class="dropdown-selected" onclick="toggleDropdown()">
+            <span id="selectedOptionText">📘 會考核心單字 (A 開頭)</span>
+            <span class="arrow">▾</span>
+        </div>
+        <div class="dropdown-menu" id="dropdownMenu">
+            <div class="dropdown-item active" onclick="selectTheme('cap_a', '📘 會考核心單字 (A 開頭)')">
+                📘 會考核心單字 (A 開頭)
+            </div>
+            <!-- 未來新增其它字母直接在這邊加項目 -->
+            <!-- <div class="dropdown-item" onclick="selectTheme('cap_b', '📘 會考核心單字 (B 開頭)')">📘 會考核心單字 (B 開頭)</div> -->
+            <div class="dropdown-item" onclick="selectTheme('custom', '✏️ 個人自訂單字庫')">
+                ✏️ 個人自訂單字庫
+            </div>
+        </div>
     </div>
-
+    <button class="btn-secondary" onclick="openCustomModal()">+ 新增個人單字</button>
+</div>
     <!-- 1. 字卡模式區塊 -->
     <div id="cardView" class="container-box">
         <div class="flashcard" onclick="toggleFlip()">
