@@ -54,15 +54,6 @@
         .user-greeting {
             display: flex;
             align-items: center;
-            gap: 0.8rem;
-        }
-
-        .avatar-img {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            border: 2px solid #38bdf8;
-            object-fit: cover;
         }
 
         .app-title {
@@ -247,27 +238,8 @@
             document.body.style.display = "flex";
 
             const currentUser = localStorage.getItem("currentUser") || "學員";
-            const userPicture = localStorage.getItem("userPicture");
 
             document.getElementById("welcomeUser").innerText = `你好，${currentUser} 👋`;
-
-            // 處理 Google 大頭貼（防止破圖）
-            if (userPicture && !document.getElementById("userAvatar")) {
-                const avatarImg = document.createElement("img");
-                avatarImg.id = "userAvatar";
-                avatarImg.src = userPicture;
-                avatarImg.className = "avatar-img";
-                
-                // 若圖片載入失敗則自動隱藏，不會顯示破圖圖示
-                avatarImg.onerror = function() {
-                    this.style.display = "none";
-                };
-
-                const greetingBox = document.querySelector(".user-greeting");
-                if (greetingBox) {
-                    greetingBox.prepend(avatarImg);
-                }
-            }
 
             const savedProgress = localStorage.getItem("todayProgressPercent") || "0";
             document.getElementById("progressValue").innerText = savedProgress;
