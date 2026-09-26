@@ -67,6 +67,7 @@
             color: #0b0f19;
         }
 
+        /* 主題選擇區塊 */
         .theme-selector-group {
             width: 100%;
             max-width: 650px;
@@ -75,24 +76,91 @@
             margin-bottom: 1.5rem;
         }
 
-        select, button.btn-secondary {
-            background: rgba(30, 41, 59, 0.7);
+        /* 自訂 Dropdown 下拉選單樣式 */
+        .custom-dropdown {
+            position: relative;
+            flex: 1;
+        }
+
+        .dropdown-selected {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            padding: 0.65rem 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .dropdown-selected:hover {
+            border-color: #38bdf8;
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .dropdown-selected .arrow {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-selected.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            display: none;
+            overflow: hidden;
+            z-index: 50;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+
+        .dropdown-item.active {
+            background: rgba(56, 189, 248, 0.25);
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        button.btn-secondary {
+            background: rgba(30, 41, 59, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.15);
             color: #fff;
             padding: 0.6rem 1rem;
             border-radius: 12px;
             font-size: 0.95rem;
             outline: none;
-        }
-
-        select {
-            flex: 1;
-            cursor: pointer;
-        }
-
-        button.btn-secondary {
             cursor: pointer;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         button.btn-secondary:hover {
@@ -254,26 +322,27 @@
         <button class="tab-btn" id="quizTab" onclick="switchMode('quiz')">✏️ 選擇題練習</button>
     </div>
 
-    <!-- 主題選擇與自訂按鈕 -->
+    <!-- 美化後的自訂下拉選單 -->
     <div class="theme-selector-group">
-    <div class="custom-dropdown" id="themeDropdown">
-        <div class="dropdown-selected" onclick="toggleDropdown()">
-            <span id="selectedOptionText">📘 會考核心單字 (A 開頭)</span>
-            <span class="arrow">▾</span>
-        </div>
-        <div class="dropdown-menu" id="dropdownMenu">
-            <div class="dropdown-item active" onclick="selectTheme('cap_a', '📘 會考核心單字 (A 開頭)')">
-                📘 會考核心單字 (A 開頭)
+        <div class="custom-dropdown" id="themeDropdown">
+            <div class="dropdown-selected" id="dropdownSelected" onclick="toggleDropdown()">
+                <span id="selectedOptionText">📘 會考核心單字 (A 開頭)</span>
+                <span class="arrow">▼</span>
             </div>
-            <!-- 未來新增其它字母直接在這邊加項目 -->
-            <!-- <div class="dropdown-item" onclick="selectTheme('cap_b', '📘 會考核心單字 (B 開頭)')">📘 會考核心單字 (B 開頭)</div> -->
-            <div class="dropdown-item" onclick="selectTheme('custom', '✏️ 個人自訂單字庫')">
-                ✏️ 個人自訂單字庫
+            <div class="dropdown-menu" id="dropdownMenu">
+                <div class="dropdown-item active" onclick="selectTheme('cap_a', '📘 會考核心單字 (A 開頭)')">
+                    📘 會考核心單字 (A 開頭)
+                </div>
+                <!-- 未來新增 word-b.js 時取消註解下一行即可： -->
+                <!-- <div class="dropdown-item" onclick="selectTheme('cap_b', '📘 會考核心單字 (B 開頭)')">📘 會考核心單字 (B 開頭)</div> -->
+                <div class="dropdown-item" onclick="selectTheme('custom', '✏️ 個人自訂單字庫')">
+                    ✏️ 個人自訂單字庫
+                </div>
             </div>
         </div>
+        <button class="btn-secondary" onclick="openCustomModal()">+ 新增個人單字</button>
     </div>
-    <button class="btn-secondary" onclick="openCustomModal()">+ 新增個人單字</button>
-</div>
+
     <!-- 1. 字卡模式區塊 -->
     <div id="cardView" class="container-box">
         <div class="flashcard" onclick="toggleFlip()">
@@ -324,7 +393,42 @@
         let currentIndex = 0;
         let isFlipped = false;
         let currentMode = 'card';
+        let currentThemeValue = 'cap_a';
         let correctQuizAnswer = '';
+
+        // Dropdown 控制邏輯
+        function toggleDropdown() {
+            const menu = document.getElementById("dropdownMenu");
+            const selected = document.getElementById("dropdownSelected");
+            menu.classList.toggle("show");
+            selected.classList.toggle("open");
+        }
+
+        function selectTheme(value, text) {
+            currentThemeValue = value;
+            document.getElementById("selectedOptionText").innerText = text;
+
+            const menu = document.getElementById("dropdownMenu");
+            const selected = document.getElementById("dropdownSelected");
+            menu.classList.remove("show");
+            selected.classList.remove("open");
+
+            // 更新 active 狀態
+            document.querySelectorAll(".dropdown-item").forEach(item => {
+                item.classList.toggle("active", item.innerText.trim() === text.trim());
+            });
+
+            changeTheme();
+        }
+
+        // 點擊選單以外區塊自動關閉下拉選單
+        window.addEventListener("click", function(e) {
+            const dropdown = document.getElementById("themeDropdown");
+            if (dropdown && !dropdown.contains(e.target)) {
+                document.getElementById("dropdownMenu").classList.remove("show");
+                document.getElementById("dropdownSelected").classList.remove("open");
+            }
+        });
 
         // 模式切換 (字卡 / 練習)
         function switchMode(mode) {
@@ -344,7 +448,7 @@
         }
 
         function changeTheme() {
-            const selected = document.getElementById("themeSelect").value;
+            const selected = currentThemeValue;
             if (selected === "custom") {
                 const saved = localStorage.getItem("myCustomVocab");
                 currentList = saved ? JSON.parse(saved) : [];
@@ -419,14 +523,12 @@
                 return;
             }
 
-            // 隨機選一個作為正確答案
             const correctIndex = Math.floor(Math.random() * currentList.length);
             const target = currentList[correctIndex];
             correctQuizAnswer = target.word;
 
             document.getElementById("quizQuestion").innerText = target.meaning;
 
-            // 隨機挑選 3 個干擾項
             let options = [target.word];
             while (options.length < 4) {
                 const randomWord = currentList[Math.floor(Math.random() * currentList.length)].word;
@@ -435,10 +537,8 @@
                 }
             }
 
-            // 打亂選項順序
             options.sort(() => Math.random() - 0.5);
 
-            // 渲染選項按鈕
             const optionsContainer = document.getElementById("quizOptions");
             optionsContainer.innerHTML = "";
             options.forEach((opt, idx) => {
@@ -498,8 +598,7 @@
             alert(`成功新增 ${parsedList.length} 個自訂單字！`);
             closeCustomModal();
 
-            document.getElementById("themeSelect").value = "custom";
-            changeTheme();
+            selectTheme("custom", "✏️ 個人自訂單字庫");
         }
 
         // 初始化
