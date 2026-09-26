@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cale Study App - 英文單字庫</title>
+    <title>AI Study App - 英文單字庫與練習</title>
     <style>
         * {
             margin: 0;
@@ -35,6 +35,36 @@
             color: #38bdf8;
             text-decoration: none;
             font-size: 0.95rem;
+        }
+
+        /* 模式切換頁籤 (Tabs) */
+        .mode-tabs {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.6rem;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: #38bdf8;
+            color: #0b0f19;
         }
 
         .theme-selector-group {
@@ -70,10 +100,10 @@
             border-color: #38bdf8;
         }
 
-        .card-container {
+        /* 容器通用樣式 */
+        .container-box {
             width: 100%;
             max-width: 500px;
-            margin-top: 0.5rem;
         }
 
         .flashcard {
@@ -146,6 +176,32 @@
             border: none;
         }
 
+        /* 練習測驗 UI 樣式 */
+        .quiz-option-btn {
+            width: 100%;
+            padding: 0.9rem;
+            margin-top: 0.6rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .quiz-option-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+        }
+
+        .quiz-feedback {
+            margin-top: 1rem;
+            font-weight: bold;
+            min-height: 1.5rem;
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -166,11 +222,6 @@
             max-width: 500px;
         }
 
-        .modal-content h3 {
-            margin-bottom: 0.8rem;
-            font-size: 1.2rem;
-        }
-
         textarea {
             width: 100%;
             height: 120px;
@@ -187,7 +238,6 @@
         .progress-text {
             font-size: 0.85rem;
             color: #64748b;
-            margin-top: 1rem;
         }
     </style>
 </head>
@@ -196,6 +246,12 @@
     <div class="nav-bar">
         <a href="dashboard.html" class="back-btn">⇠ 返回科目</a>
         <div class="progress-text" id="progressText">進度：0 / 0</div>
+    </div>
+
+    <!-- 模式切換：字卡模式 vs 練習模式 -->
+    <div class="mode-tabs">
+        <button class="tab-btn active" id="cardTab" onclick="switchMode('card')">📇 字卡學習</button>
+        <button class="tab-btn" id="quizTab" onclick="switchMode('quiz')">✏️ 選擇題練習</button>
     </div>
 
     <!-- 主題選擇與自訂按鈕 -->
@@ -209,19 +265,31 @@
         <button class="btn-secondary" onclick="openCustomModal()">+ 新增個人單字</button>
     </div>
 
-    <!-- 單字卡片區 -->
-    <div class="card-container">
+    <!-- 1. 字卡模式區塊 -->
+    <div id="cardView" class="container-box">
         <div class="flashcard" onclick="toggleFlip()">
             <div class="word-title" id="wordText">---</div>
             <div class="phonetic" id="phoneticText">---</div>
             <div class="meaning" id="meaningText">---</div>
             <div class="example-sentence" id="exampleText">---</div>
         </div>
+        <div class="controls">
+            <button class="action-btn" onclick="prevWord()">上一單字</button>
+            <button class="action-btn primary" onclick="nextWord()">下一單字 ➔</button>
+        </div>
     </div>
 
-    <div class="controls">
-        <button class="action-btn" onclick="prevWord()">上一單字</button>
-        <button class="action-btn primary" onclick="nextWord()">下一單字 ➔</button>
+    <!-- 2. 練習測驗模式區塊 -->
+    <div id="quizView" class="container-box" style="display: none;">
+        <div class="flashcard" style="cursor: default;">
+            <div style="font-size: 0.9rem; color: #38bdf8; margin-bottom: 0.5rem;">請選擇正確的英文單字：</div>
+            <div class="word-title" id="quizQuestion" style="font-size: 1.8rem;">---</div>
+            <div id="quizOptions" style="width: 100%; margin-top: 1rem;"></div>
+            <div class="quiz-feedback" id="quizFeedback"></div>
+        </div>
+        <div class="controls">
+            <button class="action-btn primary" onclick="generateQuizQuestion()">下一題 ➔</button>
+        </div>
     </div>
 
     <!-- 自訂單字彈窗 Modal -->
@@ -241,13 +309,30 @@
 
     <!-- 依序引入 words/ 資料夾中的 JS 單字檔 -->
     <script src="words/word-a.js"></script>
-    <!-- 未來新增其它字母時在此處引入，例如： -->
-    <!-- <script src="words/word-b.js"></script> -->
 
     <script>
         let currentList = [];
         let currentIndex = 0;
         let isFlipped = false;
+        let currentMode = 'card';
+        let correctQuizAnswer = '';
+
+        // 模式切換 (字卡 / 練習)
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById("cardTab").classList.toggle("active", mode === 'card');
+            document.getElementById("quizTab").classList.toggle("active", mode === 'quiz');
+
+            if (mode === 'card') {
+                document.getElementById("cardView").style.display = "block";
+                document.getElementById("quizView").style.display = "none";
+                loadWord();
+            } else {
+                document.getElementById("cardView").style.display = "none";
+                document.getElementById("quizView").style.display = "block";
+                generateQuizQuestion();
+            }
+        }
 
         function changeTheme() {
             const selected = document.getElementById("themeSelect").value;
@@ -262,9 +347,14 @@
                 currentList = (window.builtInThemes && window.builtInThemes[selected]) || [];
             }
             currentIndex = 0;
-            loadWord();
+            if (currentMode === 'card') {
+                loadWord();
+            } else {
+                generateQuizQuestion();
+            }
         }
 
+        // 字卡邏輯
         function loadWord() {
             if (currentList.length === 0) {
                 document.getElementById("wordText").innerText = "尚無單字";
@@ -280,7 +370,6 @@
             document.getElementById("phoneticText").innerText = item.phonetic || "";
             document.getElementById("meaningText").innerText = item.meaning || "";
             document.getElementById("exampleText").innerText = item.example || "";
-
             document.getElementById("progressText").innerText = `進度：${currentIndex + 1} / ${currentList.length}`;
 
             isFlipped = false;
@@ -312,6 +401,58 @@
             }
         }
 
+        // 選擇題練習邏輯
+        function generateQuizQuestion() {
+            document.getElementById("quizFeedback").innerText = "";
+            if (currentList.length < 4) {
+                document.getElementById("quizQuestion").innerText = "單字數量過少（至少需 4 個單字才能開始練習）";
+                document.getElementById("quizOptions").innerHTML = "";
+                return;
+            }
+
+            // 隨機選一個作為正確答案
+            const correctIndex = Math.floor(Math.random() * currentList.length);
+            const target = currentList[correctIndex];
+            correctQuizAnswer = target.word;
+
+            document.getElementById("quizQuestion").innerText = target.meaning;
+
+            // 隨機挑選 3 個干擾項
+            let options = [target.word];
+            while (options.length < 4) {
+                const randomWord = currentList[Math.floor(Math.random() * currentList.length)].word;
+                if (!options.includes(randomWord)) {
+                    options.push(randomWord);
+                }
+            }
+
+            // 打亂選項順序
+            options.sort(() => Math.random() - 0.5);
+
+            // 渲染選項按鈕
+            const optionsContainer = document.getElementById("quizOptions");
+            optionsContainer.innerHTML = "";
+            options.forEach((opt, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "quiz-option-btn";
+                btn.innerText = `${String.fromCharCode(65 + idx)}. ${opt}`;
+                btn.onclick = () => checkQuizAnswer(opt);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkQuizAnswer(selectedWord) {
+            const feedback = document.getElementById("quizFeedback");
+            if (selectedWord === correctQuizAnswer) {
+                feedback.style.color = "#4ade80";
+                feedback.innerText = "🎉 答對了！太棒了！";
+            } else {
+                feedback.style.color = "#f87171";
+                feedback.innerText = `❌ 答錯囉！正確答案是：${correctQuizAnswer}`;
+            }
+        }
+
+        // 自訂單字彈窗
         function openCustomModal() {
             document.getElementById("customModal").style.display = "flex";
             const saved = localStorage.getItem("myCustomVocabText");
