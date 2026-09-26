@@ -73,6 +73,7 @@
             padding: 4px;
             margin-bottom: 1rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 4px;
         }
 
         .tab-btn {
@@ -81,7 +82,7 @@
             border: none;
             background: transparent;
             color: #94a3b8;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
@@ -320,6 +321,36 @@
             40%, 80% { transform: translateX(6px); }
         }
 
+        /* 歷屆試題卡片樣式 */
+        .exam-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .exam-card:hover {
+            border-color: #38bdf8;
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .exam-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .exam-desc {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
         /* 答對飄浮加分效果 (+10 XP) */
         .floating-xp {
             position: absolute;
@@ -395,14 +426,15 @@
         </div>
     </div>
 
-    <!-- 模式切換：字卡模式 vs 練習模式 -->
+    <!-- 模式切換：字卡模式 vs 練習模式 vs 歷屆試題 -->
     <div class="mode-tabs">
         <button class="tab-btn active" id="cardTab" onclick="switchMode('card')">📇 字卡學習</button>
         <button class="tab-btn" id="quizTab" onclick="switchMode('quiz')">✏️ 選擇題練習</button>
+        <button class="tab-btn" id="examTab" onclick="switchMode('exam')">📝 歷屆會考題庫</button>
     </div>
 
-    <!-- 下拉選單 -->
-    <div class="theme-selector-group">
+    <!-- 下拉選單區塊（僅字卡與單字測驗時顯示） -->
+    <div class="theme-selector-group" id="themeSelectorGroup">
         <div class="custom-dropdown" id="themeDropdown">
             <div class="dropdown-selected" id="dropdownSelected" onclick="toggleDropdown()">
                 <span id="selectedOptionText">📘 會考核心單字 (A 開頭)</span>
@@ -448,6 +480,22 @@
         </div>
     </div>
 
+    <!-- 3. 歷屆會考題庫區塊 -->
+    <div id="examView" class="container-box" style="display: none; max-width: 650px;">
+        <div class="exam-card" onclick="alert('載入 112 年國中教育會考英文試題')">
+            <div class="exam-title">📌 112 年國中教育會考 - 英文科試題</div>
+            <div class="exam-desc">含單題字彙語法與閱讀理解題目測驗</div>
+        </div>
+        <div class="exam-card" onclick="alert('載入 111 年國中教育會考英文試題')">
+            <div class="exam-title">📌 111 年國中教育會考 - 英文科試題</div>
+            <div class="exam-desc">含單題字彙語法與閱讀理解題目測驗</div>
+        </div>
+        <div class="exam-card" onclick="alert('載入 110 年國中教育會考英文試題')">
+            <div class="exam-title">📌 110 年國中教育會考 - 英文科試題</div>
+            <div class="exam-desc">含單題字彙語法與閱讀理解題目測驗</div>
+        </div>
+    </div>
+
     <!-- 自訂單字彈窗 Modal -->
     <div class="modal-overlay" id="customModal">
         <div class="modal-content">
@@ -485,7 +533,6 @@
             localStorage.setItem("userXP", userXP);
 
             // 同步計算今日進度 % 並存入 localStorage，給 dashboard 使用
-            // 假設答對 20 題即達到 100% 今日進度
             let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
             localStorage.setItem("todayProgressPercent", progressPercent);
         }
@@ -522,20 +569,32 @@
             }
         });
 
-        // 模式切換 (字卡 / 練習)
+        // 模式切換 (字卡 / 練習 / 歷屆會考)
         function switchMode(mode) {
             currentMode = mode;
             document.getElementById("cardTab").classList.toggle("active", mode === 'card');
             document.getElementById("quizTab").classList.toggle("active", mode === 'quiz');
+            document.getElementById("examTab").classList.toggle("active", mode === 'exam');
+
+            const themeGroup = document.getElementById("themeSelectorGroup");
 
             if (mode === 'card') {
+                themeGroup.style.display = "flex";
                 document.getElementById("cardView").style.display = "block";
                 document.getElementById("quizView").style.display = "none";
+                document.getElementById("examView").style.display = "none";
                 loadWord();
-            } else {
+            } else if (mode === 'quiz') {
+                themeGroup.style.display = "flex";
                 document.getElementById("cardView").style.display = "none";
                 document.getElementById("quizView").style.display = "block";
+                document.getElementById("examView").style.display = "none";
                 generateQuizQuestion();
+            } else if (mode === 'exam') {
+                themeGroup.style.display = "none";
+                document.getElementById("cardView").style.display = "none";
+                document.getElementById("quizView").style.display = "none";
+                document.getElementById("examView").style.display = "block";
             }
         }
 
@@ -554,7 +613,7 @@
             currentIndex = 0;
             if (currentMode === 'card') {
                 loadWord();
-            } else {
+            } else if (currentMode === 'quiz') {
                 generateQuizQuestion();
             }
         }
@@ -652,17 +711,14 @@
             allBtns.forEach(btn => btn.disabled = true);
 
             if (selectedWord === correctQuizAnswer) {
-                // 答對邏輯
                 clickedBtn.classList.add("correct-anim");
                 comboCount++;
                 todayCorrectCount++;
                 
-                // 加分：基礎 10 分 + 連勝加成
                 const gainXP = 10 + Math.min(comboCount * 2, 10);
                 userXP += gainXP;
                 updateXPDisplay();
 
-                // 觸發彩帶紙花特效
                 if (window.confetti) {
                     confetti({
                         particleCount: 50,
@@ -671,10 +727,8 @@
                     });
                 }
 
-                // 飄浮 +XP 動畫
                 showFloatingXP(`+${gainXP} XP`);
 
-                // 連勝顯示
                 if (comboCount >= 2) {
                     document.getElementById("comboBadge").style.display = "flex";
                     document.getElementById("comboCount").innerText = comboCount;
@@ -685,12 +739,10 @@
                     feedback.innerText = `🎉 答對了！ (+${gainXP} XP)`;
                 }
             } else {
-                // 答錯邏輯
                 clickedBtn.classList.add("wrong-anim");
-                comboCount = 0; // 重置連勝
+                comboCount = 0;
                 document.getElementById("comboBadge").style.display = "none";
 
-                // 高亮標示正確答案
                 allBtns.forEach(btn => {
                     if (btn.innerText.includes(correctQuizAnswer)) {
                         btn.classList.add("correct-anim");
