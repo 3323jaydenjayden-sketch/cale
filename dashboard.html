@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Study App - 科目選擇</title>
-    // 讀取在英文練習中完成的今日進度百分比
-const savedProgress = localStorage.getItem("todayProgressPercent") || "0";
-document.querySelector(".streak-badge").innerHTML = `🔥 今日進度 ${savedProgress}%`;
+    <title>cale study app - 學習總覽</title>
     <style>
         * {
             margin: 0;
@@ -19,114 +16,182 @@ document.querySelector(".streak-badge").innerHTML = `🔥 今日進度 ${savedPr
             background-color: #0b0f19;
             color: #ffffff;
             min-height: 100vh;
-            padding: 2rem 1.5rem;
+            padding: 3rem 1.5rem;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .header {
+        .container {
             width: 100%;
-            max-width: 600px;
-            margin-bottom: 2.5rem;
+            max-width: 650px;
+        }
+
+        /* 頂部標頭與進度徽章 */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 2rem;
         }
 
-        .header h1 {
+        .app-title {
             font-size: 1.8rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #ffffff;
         }
 
-        /* 統計小卡片 */
-        .stats-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 0.5rem 1rem;
+        .streak-badge {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.4rem 0.9rem;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
+            font-weight: 600;
             color: #38bdf8;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
-        /* 科目卡片容器 */
-        .subject-grid {
-            width: 100%;
-            max-width: 600px;
+        /* 科目卡片列表 */
+        .subject-list {
             display: flex;
             flex-direction: column;
             gap: 1.2rem;
         }
 
-        /* Apple 風格毛玻璃卡片 */
         .subject-card {
-            background: rgba(30, 41, 59, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
             border-radius: 20px;
-            padding: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 1.5rem 1.8rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             text-decoration: none;
             color: inherit;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
         .subject-card:hover {
-            transform: translateY(-4px);
-            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-3px);
+            background: rgba(30, 41, 59, 0.8);
             border-color: rgba(56, 189, 248, 0.4);
-            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.15);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35);
         }
 
-        .card-info h2 {
+        .subject-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .subject-title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .subject-icon {
             font-size: 1.3rem;
-            font-weight: 500;
-            margin-bottom: 0.3rem;
         }
 
-        .card-info p {
+        .subject-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .subject-desc {
             font-size: 0.88rem;
             color: #94a3b8;
+            margin-left: 2rem;
         }
 
-        .card-icon {
-            font-size: 2rem;
-            opacity: 0.8;
+        .arrow-icon {
+            font-size: 1.2rem;
+            color: #64748b;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .subject-card:hover .arrow-icon {
+            color: #38bdf8;
+            transform: translateX(4px);
+        }
+
+        /* 頁尾品牌名稱 */
+        .footer-brand {
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            color: #475569;
+            text-align: center;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>學習總覽</h1>
-        <div class="stats-badge">🔥 今日進度 0%</div>
+    <div class="container">
+        <!-- 頂部區塊 -->
+        <div class="header">
+            <h1 class="app-title">學習總覽</h1>
+            <div class="streak-badge" id="streakBadge">
+                🔥 今日進度 <span id="progressValue">0</span>%
+            </div>
+        </div>
+
+        <!-- 科目清單 -->
+        <div class="subject-list">
+            
+            <!-- 國中英文 -->
+            <a href="en.html" class="subject-card">
+                <div class="subject-info">
+                    <div class="subject-title-group">
+                        <span class="subject-icon">📘</span>
+                        <span class="subject-title">國中英文 (Super 2500)</span>
+                    </div>
+                    <div class="subject-desc">
+                        核心單字、主題分類卡與 Learn-then-Quiz 測驗
+                    </div>
+                </div>
+                <div class="arrow-icon">➔</div>
+            </a>
+
+            <!-- 國文與文言文 -->
+            <a href="zh.html" class="subject-card">
+                <div class="subject-info">
+                    <div class="subject-title-group">
+                        <span class="subject-icon">📕</span>
+                        <span class="subject-title">國文與文言文</span>
+                    </div>
+                    <div class="subject-desc">
+                        會考常考字詞、成語意涵與文章理解
+                    </div>
+                </div>
+                <div class="arrow-icon">➔</div>
+            </a>
+
+        </div>
+
+        <div class="footer-brand">
+            cale study app
+        </div>
     </div>
 
-    <div class="subject-grid">
-        <!-- 英文模組入口 -->
-        <a href="english.html" class="subject-card">
-            <div class="card-info">
-                <h2>📘 國中英文 (Super 2500)</h2>
-                <p>核心單字、主題分類卡與 Learn-then-Quiz 測驗</p>
-            </div>
-            <div class="card-icon">➔</div>
-        </a>
+    <script>
+        // 自動載入並更新今日進度百分比
+        function loadDashboardStats() {
+            const savedProgress = localStorage.getItem("todayProgressPercent") || "0";
+            document.getElementById("progressValue").innerText = savedProgress;
+        }
 
-        <!-- 國文模組入口 -->
-        <a href="chinese.html" class="subject-card">
-            <div class="card-info">
-                <h2>📕 國文與文言文</h2>
-                <p>會考常考字詞、成語意涵與文章理解</p>
-            </div>
-            <div class="card-icon">➔</div>
-        </a>
-    </div>
-
+        // 進入頁面時自動讀取最新數據
+        loadDashboardStats();
+    </script>
 </body>
 </html>
