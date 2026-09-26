@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cale Study App - 英文單字庫與練習</title>
+    <title>cale study app - 英文單字庫與練習</title>
+    <!-- 引入彩帶紙花特效庫 canvas-confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -35,6 +37,30 @@
             color: #38bdf8;
             text-decoration: none;
             font-size: 0.95rem;
+        }
+
+        .stats-badge-group {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .combo-badge {
+            color: #f97316;
         }
 
         /* 模式切換頁籤 (Tabs) */
@@ -172,6 +198,7 @@
         .container-box {
             width: 100%;
             max-width: 500px;
+            position: relative;
         }
 
         .flashcard {
@@ -188,6 +215,7 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
+            position: relative;
         }
 
         .word-title {
@@ -244,7 +272,7 @@
             border: none;
         }
 
-        /* 練習測驗 UI 樣式 */
+        /* 練習測驗選項按鈕與動畫 */
         .quiz-option-btn {
             width: 100%;
             padding: 0.9rem;
@@ -257,17 +285,65 @@
             cursor: pointer;
             text-align: left;
             transition: all 0.2s ease;
+            position: relative;
         }
 
-        .quiz-option-btn:hover {
+        .quiz-option-btn:hover:not(:disabled) {
             background: rgba(56, 189, 248, 0.2);
             border-color: #38bdf8;
+        }
+
+        .quiz-option-btn.correct-anim {
+            background: rgba(34, 197, 94, 0.25) !important;
+            border-color: #22c55e !important;
+            color: #4ade80 !important;
+            font-weight: bold;
+            animation: pulseCorrect 0.4s ease;
+        }
+
+        .quiz-option-btn.wrong-anim {
+            background: rgba(239, 68, 68, 0.25) !important;
+            border-color: #ef4444 !important;
+            color: #f87171 !important;
+            animation: shakeWrong 0.3s ease;
+        }
+
+        @keyframes pulseCorrect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shakeWrong {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        /* 答對飄浮加分效果 (+10 XP) */
+        .floating-xp {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #fbbf24;
+            font-size: 1.4rem;
+            font-weight: 800;
+            pointer-events: none;
+            opacity: 0;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(10px); }
+            30% { opacity: 1; transform: translateY(-5px); }
+            100% { opacity: 0; transform: translateY(-30px); }
         }
 
         .quiz-feedback {
             margin-top: 1rem;
             font-weight: bold;
             min-height: 1.5rem;
+            font-size: 1.05rem;
         }
 
         .modal-overlay {
@@ -313,7 +389,10 @@
 
     <div class="nav-bar">
         <a href="dashboard.html" class="back-btn">⇠ 返回科目</a>
-        <div class="progress-text" id="progressText">進度：0 / 0</div>
+        <div class="stats-badge-group">
+            <div class="stat-badge combo-badge" id="comboBadge" style="display:none;">🔥 <span id="comboCount">0</span> 連勝</div>
+            <div class="stat-badge">⚡ <span id="xpCount">0</span> XP</div>
+        </div>
     </div>
 
     <!-- 模式切換：字卡模式 vs 練習模式 -->
@@ -322,7 +401,7 @@
         <button class="tab-btn" id="quizTab" onclick="switchMode('quiz')">✏️ 選擇題練習</button>
     </div>
 
-    <!-- 美化後的自訂下拉選單 -->
+    <!-- 下拉選單 -->
     <div class="theme-selector-group">
         <div class="custom-dropdown" id="themeDropdown">
             <div class="dropdown-selected" id="dropdownSelected" onclick="toggleDropdown()">
@@ -333,8 +412,6 @@
                 <div class="dropdown-item active" onclick="selectTheme('cap_a', '📘 會考核心單字 (A 開頭)')">
                     📘 會考核心單字 (A 開頭)
                 </div>
-                <!-- 未來新增 word-b.js 時取消註解下一行即可： -->
-                <!-- <div class="dropdown-item" onclick="selectTheme('cap_b', '📘 會考核心單字 (B 開頭)')">📘 會考核心單字 (B 開頭)</div> -->
                 <div class="dropdown-item" onclick="selectTheme('custom', '✏️ 個人自訂單字庫')">
                     ✏️ 個人自訂單字庫
                 </div>
@@ -353,13 +430,14 @@
         </div>
         <div class="controls">
             <button class="action-btn" onclick="prevWord()">上一單字</button>
+            <div class="progress-text" id="progressText" style="align-self: center;">進度：0 / 0</div>
             <button class="action-btn primary" onclick="nextWord()">下一單字 ➔</button>
         </div>
     </div>
 
     <!-- 2. 練習測驗模式區塊 -->
     <div id="quizView" class="container-box" style="display: none;">
-        <div class="flashcard" style="cursor: default;">
+        <div class="flashcard" id="quizCard" style="cursor: default;">
             <div style="font-size: 0.9rem; color: #38bdf8; margin-bottom: 0.5rem;">請選擇正確的英文單字：</div>
             <div class="word-title" id="quizQuestion" style="font-size: 1.8rem;">---</div>
             <div id="quizOptions" style="width: 100%; margin-top: 1rem;"></div>
@@ -385,7 +463,7 @@
         </div>
     </div>
 
-    <!-- 依序引入 words/ 資料夾中的 JS 單字檔 -->
+    <!-- 引入單字庫 -->
     <script src="words/word-a.js"></script>
 
     <script>
@@ -395,6 +473,22 @@
         let currentMode = 'card';
         let currentThemeValue = 'cap_a';
         let correctQuizAnswer = '';
+        let isAnswered = false;
+
+        // 讀取/初始化 積分與連勝紀錄
+        let userXP = parseInt(localStorage.getItem("userXP") || "0");
+        let comboCount = 0;
+        let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
+
+        function updateXPDisplay() {
+            document.getElementById("xpCount").innerText = userXP;
+            localStorage.setItem("userXP", userXP);
+
+            // 同步計算今日進度 % 並存入 localStorage，給 dashboard 使用
+            // 假設答對 20 題即達到 100% 今日進度
+            let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
+            localStorage.setItem("todayProgressPercent", progressPercent);
+        }
 
         // Dropdown 控制邏輯
         function toggleDropdown() {
@@ -413,7 +507,6 @@
             menu.classList.remove("show");
             selected.classList.remove("open");
 
-            // 更新 active 狀態
             document.querySelectorAll(".dropdown-item").forEach(item => {
                 item.classList.toggle("active", item.innerText.trim() === text.trim());
             });
@@ -421,7 +514,6 @@
             changeTheme();
         }
 
-        // 點擊選單以外區塊自動關閉下拉選單
         window.addEventListener("click", function(e) {
             const dropdown = document.getElementById("themeDropdown");
             if (dropdown && !dropdown.contains(e.target)) {
@@ -514,11 +606,12 @@
             }
         }
 
-        // 選擇題練習邏輯
+        // 選擇題練習邏輯（含積分、連勝與彩帶紙花）
         function generateQuizQuestion() {
+            isAnswered = false;
             document.getElementById("quizFeedback").innerText = "";
             if (currentList.length < 4) {
-                document.getElementById("quizQuestion").innerText = "單字數量過少（至少需 4 個單字才能開始練習）";
+                document.getElementById("quizQuestion").innerText = "單字數量過少（至少需 4 個單字）";
                 document.getElementById("quizOptions").innerHTML = "";
                 return;
             }
@@ -545,20 +638,80 @@
                 const btn = document.createElement("button");
                 btn.className = "quiz-option-btn";
                 btn.innerText = `${String.fromCharCode(65 + idx)}. ${opt}`;
-                btn.onclick = () => checkQuizAnswer(opt);
+                btn.onclick = () => checkQuizAnswer(opt, btn);
                 optionsContainer.appendChild(btn);
             });
         }
 
-        function checkQuizAnswer(selectedWord) {
+        function checkQuizAnswer(selectedWord, clickedBtn) {
+            if (isAnswered) return;
+            isAnswered = true;
+
             const feedback = document.getElementById("quizFeedback");
+            const allBtns = document.querySelectorAll(".quiz-option-btn");
+            allBtns.forEach(btn => btn.disabled = true);
+
             if (selectedWord === correctQuizAnswer) {
-                feedback.style.color = "#4ade80";
-                feedback.innerText = "🎉 答對了！太棒了！";
+                // 答對邏輯
+                clickedBtn.classList.add("correct-anim");
+                comboCount++;
+                todayCorrectCount++;
+                
+                // 加分：基礎 10 分 + 連勝加成
+                const gainXP = 10 + Math.min(comboCount * 2, 10);
+                userXP += gainXP;
+                updateXPDisplay();
+
+                // 觸發彩帶紙花特效
+                if (window.confetti) {
+                    confetti({
+                        particleCount: 50,
+                        spread: 60,
+                        origin: { y: 0.7 }
+                    });
+                }
+
+                // 飄浮 +XP 動畫
+                showFloatingXP(`+${gainXP} XP`);
+
+                // 連勝顯示
+                if (comboCount >= 2) {
+                    document.getElementById("comboBadge").style.display = "flex";
+                    document.getElementById("comboCount").innerText = comboCount;
+                    feedback.style.color = "#4ade80";
+                    feedback.innerText = `🎉 太棒了！${comboCount} 連勝中！ (+${gainXP} XP)`;
+                } else {
+                    feedback.style.color = "#4ade80";
+                    feedback.innerText = `🎉 答對了！ (+${gainXP} XP)`;
+                }
             } else {
+                // 答錯邏輯
+                clickedBtn.classList.add("wrong-anim");
+                comboCount = 0; // 重置連勝
+                document.getElementById("comboBadge").style.display = "none";
+
+                // 高亮標示正確答案
+                allBtns.forEach(btn => {
+                    if (btn.innerText.includes(correctQuizAnswer)) {
+                        btn.classList.add("correct-anim");
+                    }
+                });
+
                 feedback.style.color = "#f87171";
                 feedback.innerText = `❌ 答錯囉！正確答案是：${correctQuizAnswer}`;
             }
+        }
+
+        function showFloatingXP(text) {
+            const card = document.getElementById("quizCard");
+            const xpFloat = document.createElement("div");
+            xpFloat.className = "floating-xp";
+            xpFloat.innerText = text;
+            card.appendChild(xpFloat);
+
+            setTimeout(() => {
+                xpFloat.remove();
+            }, 800);
         }
 
         // 自訂單字彈窗
@@ -602,6 +755,7 @@
         }
 
         // 初始化
+        updateXPDisplay();
         changeTheme();
     </script>
 </body>
