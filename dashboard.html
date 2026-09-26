@@ -4,22 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cale study app - 學習總覽</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    
+    <!-- 1. 強制登入防護：若未登入立刻阻斷並重定向 -->
+    <script>
+        if (localStorage.getItem("isLoggedIn") !== "true") {
+            window.location.replace("login.html");
         }
+    </script>
 
+    <style>
+        /* 預設先隱藏 body，防止未登入時閃爍畫面 */
         body {
+            display: none;
             background-color: #0b0f19;
             color: #ffffff;
             min-height: 100vh;
             padding: 3rem 1.5rem;
-            display: flex;
             flex-direction: column;
             align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         .container {
@@ -27,7 +36,7 @@
             max-width: 650px;
         }
 
-        /* 頂部標頭與進度徽章 */
+        /* 頂部標頭與使用者資訊 */
         .header {
             display: flex;
             justify-content: space-between;
@@ -42,6 +51,12 @@
             color: #ffffff;
         }
 
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
         .streak-badge {
             background: rgba(30, 41, 59, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -51,9 +66,21 @@
             font-weight: 600;
             color: #38bdf8;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
+        }
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
         }
 
         /* 科目卡片列表 */
@@ -124,7 +151,6 @@
             transform: translateX(4px);
         }
 
-        /* 頁尾品牌名稱 */
         .footer-brand {
             margin-top: 3rem;
             font-size: 0.85rem;
@@ -139,9 +165,12 @@
     <div class="container">
         <!-- 頂部區塊 -->
         <div class="header">
-            <h1 class="app-title">學習總覽</h1>
-            <div class="streak-badge" id="streakBadge">
-                🔥 今日進度 <span id="progressValue">0</span>%
+            <h1 class="app-title" id="welcomeUser">學習總覽</h1>
+            <div class="user-panel">
+                <div class="streak-badge" id="streakBadge">
+                    🔥 今日進度 <span id="progressValue">0</span>%
+                </div>
+                <button class="logout-btn" onclick="logout()">登出</button>
             </div>
         </div>
 
@@ -184,13 +213,46 @@
     </div>
 
     <script>
-        // 自動載入並更新今日進度百分比
         function loadDashboardStats() {
+            // 二次確認登入狀態
+            if (localStorage.getItem("isLoggedIn") !== "true") {
+                window.location.replace("login.html");
+                return;
+            }
+
+            // 驗證通過，顯示頁面內容
+            document.body.style.display = "flex";
+
+            const currentUser = localStorage.getItem("currentUser") || "學員";
+            const userPicture = localStorage.getItem("userPicture");
+
+            document.getElementById("welcomeUser").innerText = `你好，${currentUser} 👋`;
+
+            // 若有 Google 大頭貼，顯示頭像
+            if (userPicture && !document.getElementById("userAvatar")) {
+                const avatarImg = document.createElement("img");
+                avatarImg.id = "userAvatar";
+                avatarImg.src = userPicture;
+                avatarImg.style.width = "32px";
+                avatarImg.style.height = "32px";
+                avatarImg.style.borderRadius = "50%";
+                avatarImg.style.border = "1px solid #38bdf8";
+                document.querySelector(".user-panel").prepend(avatarImg);
+            }
+
             const savedProgress = localStorage.getItem("todayProgressPercent") || "0";
             document.getElementById("progressValue").innerText = savedProgress;
         }
 
-        // 進入頁面時自動讀取最新數據
+        function logout() {
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("userPicture");
+            localStorage.removeItem("userEmail");
+            window.location.replace("login.html");
+        }
+
+        // 載入頁面資料
         loadDashboardStats();
     </script>
 </body>
