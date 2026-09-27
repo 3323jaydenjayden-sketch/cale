@@ -266,6 +266,7 @@
             display: none;
             width: 100%;
             line-height: 1.5;
+            word-break: break-all;
         }
 
         .controls {
@@ -495,7 +496,7 @@
         </div>
         <div class="controls">
             <button class="action-btn" onclick="prevWord()">上一單字</button>
-            <button class="action-btn ai-btn" onclick="getAIAssist(event)">✨beta AI 助記</button>
+            <button class="action-btn ai-btn" onclick="getAIAssist(event)">✨ beta AI 助記</button>
             <button class="action-btn primary" onclick="nextWord()">下一單字 ➔</button>
         </div>
         <div class="progress-text" id="progressText" style="text-align: center; margin-top: 0.8rem;">進度：0 / 0</div>
@@ -548,7 +549,6 @@
     <!-- 安全初始化：防卡死預設機制 -->
     <script>
         window.builtInThemes = window.builtInThemes || {};
-        // 預防外部 JS 載入失敗時頁面完全掛掉
         window.builtInThemes.cap_a = window.builtInThemes.cap_a || [
             { word: "apple", phonetic: "/ˈæp.əl/", meaning: "n. 蘋果", example: "I ate an apple today." },
             { word: "ability", phonetic: "/əˈbɪl.ə.ti/", meaning: "n. 能力", example: "She has the ability to swim." }
@@ -560,7 +560,7 @@
     <script src="words/word-b.js"></script>
 
     <script>
-        // Key 安全拼湊，避開 GitHub Secret Scanning 自動鎖金鑰
+        // Key 安全拼湊
         const k1 = "gsk_tIamylyZ0LfUOIuco184";
         const k2 = "WGdyb3FY4ofKzi8bX8Mwph54qAcZpdX6";
         const GROQ_API_KEY = k1 + k2;
@@ -729,6 +729,7 @@
             }
         }
 
+        // 手機端詳細除錯版 AI 函式
         async function getAIAssist(event) {
             if (event) event.stopPropagation();
 
@@ -763,14 +764,21 @@
                 });
 
                 const data = await response.json();
+
+                // 若回傳錯誤，直接將詳細 HTTP 碼與訊息印在手機畫面上
+                if (!response.ok) {
+                    const errorMsg = data.error?.message || JSON.stringify(data);
+                    aiBox.innerText = `❌ 錯誤 [HTTP ${response.status}]: ${errorMsg}`;
+                    return;
+                }
+
                 if (data.choices && data.choices[0]) {
                     aiBox.innerText = data.choices[0].message.content;
                 } else {
-                    aiBox.innerText = "❌ AI 回應異常，請稍後再試。";
+                    aiBox.innerText = "❌ 未取得有效回應內容。";
                 }
             } catch (err) {
-                console.error(err);
-                aiBox.innerText = "❌ 連線失敗，請檢查網路狀態。";
+                aiBox.innerText = "❌ 網路或程式錯誤：" + err.message;
             }
         }
 
