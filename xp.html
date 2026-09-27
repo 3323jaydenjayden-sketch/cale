@@ -236,7 +236,7 @@
         <div class="top-nav">
             <a href="dashboard.html" class="back-btn">➔ 返回控制台</a>
             <div class="page-title">個人成就</div>
-            <div style="width: 80px;"></div> <!-- 排版平衡用 -->
+            <div style="width: 80px;"></div>
         </div>
 
         <!-- 個人資訊與等級卡片 -->
@@ -254,7 +254,7 @@
             </div>
             <div class="xp-stats">
                 <span id="xpCurrentText">0 / 100 XP</span>
-                <span id="xpTotalText">累積經驗：0 XP</span>
+                <span id="xpTotalText">累積經驗：同步中...</span>
             </div>
         </div>
 
@@ -271,8 +271,25 @@
         </div>
     </div>
 
-    <script>
-        function loadXPPage() {
+    <!-- 載入 Firebase 與 Firestore -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
+            authDomain: "cale-study-app-41b9b.firebaseapp.com",
+            projectId: "cale-study-app-41b9b",
+            storageBucket: "cale-study-app-41b9b.firebasestorage.app",
+            messagingSenderId: "819450732167",
+            appId: "1:819450732167:web:a727579df57eb9da33e222",
+            measurementId: "G-GP1XCE9W5E"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadXPPage() {
             if (localStorage.getItem("isLoggedIn") !== "true") {
                 window.location.replace("login.html");
                 return;
@@ -280,7 +297,7 @@
 
             document.body.style.display = "flex";
 
-            // 1. 載入使用者資料
+            // 1. 載入使用者的基本個人資訊
             const currentUser = localStorage.getItem("currentUser") || "學員";
             const userPicture = localStorage.getItem("userPicture");
             const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
@@ -291,15 +308,42 @@
                 document.getElementById("userAvatar").src = userPicture;
             }
 
-            // 2. 讀取 XP 資料 (預設為 0)
+            // 2. 從 Firebase 抓取最新雲端 XP 數據
+            let totalXP = 0;
+            
+            // 先嘗試用本機快取預載，避免畫面空白
             const xpKey = "xp_" + accountKey;
-            let totalXP = parseInt(localStorage.getItem(xpKey)) || 0;
+            totalXP = parseInt(localStorage.getItem(xpKey)) || 0;
+            renderXPData(totalXP);
 
+            try {
+                // 將 accountKey 轉換為安全的 Document ID
+                const safeDocId = accountKey.replace(/[^a-zA-Z0-9_-]/g, "_");
+                const userRef = doc(db, "users", safeDocId);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    if (data.totalXp !== undefined) {
+                        totalXP = data.totalXp;
+                    } else if (data.xp !== undefined) {
+                        totalXP = data.xp;
+                    }
+                    // 同步更新本機快取
+                    localStorage.setItem(xpKey, totalXP);
+                    renderXPData(totalXP);
+                }
+            } catch (error) {
+                console.error("從 Firebase 獲取 XP 失敗，使用本機紀錄:", error);
+            }
+        }
+
+        // 渲染 XP UI 畫面的函式
+        function renderXPData(totalXP) {
             const xpPerLevel = 100;
             const level = Math.floor(totalXP / xpPerLevel) + 1;
             const currentXP = totalXP % xpPerLevel;
 
-            // 稱號與等級設定
             let title = "🌱 初學者";
             if (level >= 5) title = "🌟 單字新星";
             if (level >= 10) title = "⚡ 英語高手";
@@ -313,7 +357,7 @@
             const percent = (currentXP / xpPerLevel) * 100;
             document.getElementById("xpBarFill").style.width = `${percent}%`;
 
-            // 3. 勳章資料與觸發條件判定
+            // 渲染勳章
             const badges = [
                 {
                     icon: "🚀",
@@ -341,7 +385,6 @@
                 }
             ];
 
-            // 4. 渲染勳章 UI
             const badgesContainer = document.getElementById("badgesContainer");
             badgesContainer.innerHTML = "";
 
