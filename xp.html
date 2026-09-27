@@ -289,6 +289,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // 全域相容讀取 LocalStorage 中的 XP
+        function getLocalXP(accountKey) {
+            const specificKey = "xp_" + accountKey;
+            const valSpecific = parseInt(localStorage.getItem(specificKey) || "0", 10);
+            const valUserXP = parseInt(localStorage.getItem("userXP") || "0", 10);
+            const valXP = parseInt(localStorage.getItem("xp") || "0", 10);
+
+            // 抓取所有可能欄位中的最大數值
+            return Math.max(valSpecific, valUserXP, valXP);
+        }
+
+        // 同步將最新 XP 寫回所有本地 Key
+        function setLocalXP(accountKey, xp) {
+            const specificKey = "xp_" + accountKey;
+            localStorage.setItem(specificKey, xp);
+            localStorage.setItem("userXP", xp);
+            localStorage.setItem("xp", xp);
+        }
+
         async function loadXPPage() {
             if (localStorage.getItem("isLoggedIn") !== "true") {
                 window.location.replace("login.html");
@@ -308,29 +327,40 @@
                 document.getElementById("userAvatar").src = userPicture;
             }
 
-            // 2. 從 Firebase 抓取最新雲端 XP 數據
-            let totalXP = 0;
+            // 2. 優先讀取本地 LocalStorage 所有可能存有 XP 的 Key
+            let totalXP = getLocalXP(accountKey);
             
-            // 先嘗試用本機快取預載，避免畫面空白
-            const xpKey = "xp_" + accountKey;
-            totalXP = parseInt(localStorage.getItem(xpKey)) || 0;
+            // 先渲染本地資料，確保速度與防止顯示為 0
             renderXPData(totalXP);
 
+            // 3. 從 Firebase 抓取最新雲端 XP 數據（相容 raw ID 與 safe ID）
             try {
-                // 將 accountKey 轉換為安全的 Document ID
-                const safeDocId = accountKey.replace(/[^a-zA-Z0-9_-]/g, "_");
-                const userRef = doc(db, "users", safeDocId);
-                const userSnap = await getDoc(userRef);
+                const rawDocRef = doc(db, "users", accountKey);
+                let userSnap = await getDoc(rawDocRef);
+
+                // 如果用原始 Key 沒抓到，嘗試 safeDocId 格式
+                if (!userSnap.exists()) {
+                    const safeDocId = accountKey.replace(/[^a-zA-Z0-9_-]/g, "_");
+                    const safeDocRef = doc(db, "users", safeDocId);
+                    userSnap = await getDoc(safeDocRef);
+                }
 
                 if (userSnap.exists()) {
                     const data = userSnap.data();
-                    if (data.totalXp !== undefined) {
-                        totalXP = data.totalXp;
-                    } else if (data.xp !== undefined) {
-                        totalXP = data.xp;
+                    let cloudXP = 0;
+                    if (data.xp !== undefined) {
+                        cloudXP = data.xp;
+                    } else if (data.totalXp !== undefined) {
+                        cloudXP = data.totalXp;
+                    } else if (data.userXP !== undefined) {
+                        cloudXP = data.userXP;
                     }
-                    // 同步更新本機快取
-                    localStorage.setItem(xpKey, totalXP);
+
+                    // 取本地與雲端最大值
+                    totalXP = Math.max(totalXP, cloudXP);
+
+                    // 寫回本地所有 Key 確保同步
+                    setLocalXP(accountKey, totalXP);
                     renderXPData(totalXP);
                 }
             } catch (error) {
