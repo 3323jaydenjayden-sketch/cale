@@ -3,1452 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>國語文言文學習 - 國中學習網</title>
+    <title>國文與文言文 - Cale Study</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome 圖示 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Canvas Confetti (紙花特效) -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root {
-            --primary-color: #8e44ad;
-            --primary-hover: #732d91;
-            --bg-color: #f8f9fa;
-        }
-
         body {
-            background-color: var(--bg-color);
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-            color: #333;
+            background-color: #0b0f19; /* 深色背景 */
+            color: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        /* 頂部狀態列 */
-        .navbar-custom {
-            background-color: #ffffff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .xp-badge {
-            background: linear-gradient(135deg, #f1c40f, #f39c12);
-            color: #fff;
-            font-weight: bold;
-            padding: 6px 16px;
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(243, 156, 18, 0.3);
-        }
-
-        .streak-badge {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: #fff;
-            font-weight: bold;
-            padding: 6px 16px;
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
-        }
-
-        /* 主卡片設計 */
-        .card-custom {
-            border: none;
+        .main-card {
+            background-color: #161e2e;
+            border: 1px solid #273549;
             border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            background: #ffffff;
-            margin-bottom: 24px;
         }
 
-        .article-title {
-            color: var(--primary-color);
-            font-weight: bold;
-            border-bottom: 2px solid #f0e6f6;
-            padding-bottom: 12px;
-        }
-
-        .article-content {
-            font-size: 1.25rem;
-            line-height: 2;
-            letter-spacing: 1px;
-            background-color: #fcfaff;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .translation-box {
-            font-size: 1.05rem;
-            line-height: 1.8;
-            color: #555;
-            background-color: #f1f8ff;
-            border-left: 4px solid #3498db;
-            padding: 16px;
-            border-radius: 8px;
-            display: none; /* 預設隱藏 */
-        }
-
-        /* 註釋卡片 */
-        .note-tag {
-            display: inline-block;
-            background: #f0e6f6;
-            color: var(--primary-color);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        /* 題目區塊 */
-        .option-btn {
-            text-align: left;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            transition: all 0.2s ease;
-            background-color: #fff;
+        /* 下拉選單自訂風格 (模仿圖1) */
+        .custom-dropdown-btn {
+            background-color: #1e293b;
+            border: 1px solid #3b82f6;
+            color: #ffffff;
+            border-radius: 14px;
+            padding: 12px 20px;
             width: 100%;
-            font-size: 1.05rem;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
         }
 
-        .option-btn:hover:not(:disabled) {
-            border-color: var(--primary-color);
-            background-color: #f0e6f6;
+        .custom-dropdown-btn:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
         }
 
-        .option-btn.correct {
-            background-color: #d4edda !important;
-            border-color: #28a745 !important;
-            color: #155724 !important;
-            font-weight: bold;
+        .custom-dropdown-menu {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 8px;
+            padding: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
 
-        .option-btn.wrong {
-            background-color: #f8d7da !important;
-            border-color: #dc3545 !important;
-            color: #721c24 !important;
+        .custom-dropdown-item {
+            color: #e2e8f0;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
         }
 
-        /* 動態 XP 動畫 */
-        .float-xp {
-            position: fixed;
-            font-weight: bold;
-            font-size: 2rem;
-            color: #f39c12;
-            pointer-events: none;
-            animation: floatUp 1.2s ease-out forwards;
-            z-index: 9999;
+        .custom-dropdown-item:hover {
+            background-color: #334155;
+            color: #ffffff;
         }
 
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            50% { transform: translateY(-30px) scale(1.3); }
-            100% { opacity: 0; transform: translateY(-60px) scale(1); }
+        .custom-dropdown-item.active {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        /* 內容區塊 */
+        .content-box {
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .text-highlight {
+            color: #60a5fa;
+        }
+
+        /* 隨堂測驗選項按鈕 */
+        .quiz-option {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            text-align: left;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .quiz-option:hover {
+            border-color: #3b82f6;
+            background-color: #273549;
         }
     </style>
 </head>
 <body>
 
-    <!-- 頂部導覽列 -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top py-3">
-        <div class="container">
-            <a class="btn btn-outline-secondary rounded-pill me-2" href="dashboard.html">
-                <i class="fa-solid fa-arrow-left me-1"></i> 返回控制台
-            </a>
-            <span class="navbar-brand fw-bold fs-4 text-purple">
-                <i class="fa-solid fa-book-bookmark me-2" style="color: var(--primary-color);"></i>國語文言文
-            </span>
-
-            <div class="ms-auto d-flex align-items-center gap-2">
-                <div class="streak-badge">
-                    <i class="fa-solid fa-fire me-1"></i><span id="userStreak">0</span> 天
-                </div>
-                <div class="xp-badge">
-                    <i class="fa-solid fa-bolt me-1"></i><span id="userXP">0</span> XP
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- 主要內容區 -->
-    <div class="container my-4" style="max-width: 900px;">
+    <div class="container py-4" style="max-width: 600px;">
         
-        <!-- 文章選擇器 -->
-        <div class="card card-custom p-3">
-            <div class="row align-items-center">
-                <div class="col-md-3 font-weight-bold mb-2 mb-md-0">
-                    <i class="fa-solid fa-list me-2" style="color: var(--primary-color);"></i>選擇文章篇章：
-                </div>
-                <div class="col-md-9">
-                    <select id="articleSelect" class="form-select form-select-lg" onchange="loadArticle(this.value)">
-                        <!-- JS 動態渲染選單 -->
-                    </select>
-                </div>
-            </div>
+        <!-- 頂部返回區塊 -->
+        <div class="d-flex align-items-center mb-4">
+            <a href="index.html" class="text-secondary me-3 fs-4"><i class="bi bi-chevron-left"></i></a>
+            <h4 class="mb-0 fw-bold">國文與文言文</h4>
         </div>
 
-        <!-- 文言文閱讀主體 -->
-        <div class="card card-custom p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h2 class="article-title mb-1" id="artTitle">加載中...</h2>
-                    <span class="text-muted" id="artAuthor">作者</span>
-                </div>
-                <button class="btn btn-outline-primary rounded-pill" onclick="toggleTranslation()">
-                    <i class="fa-solid fa-language me-1"></i><span id="transBtnText">顯示白話翻譯</span>
-                </button>
-            </div>
-
-            <!-- 原文區 -->
-            <div class="article-content mb-3" id="artContent">
-                正文載入中...
-            </div>
-
-            <!-- 白話翻譯區 -->
-            <div class="translation-box mb-4" id="artTranslation">
-                翻譯載入中...
-            </div>
-
-            <!-- 重點字詞與註釋區 -->
-            <h5 class="fw-bold text-secondary mb-3">
-                <i class="fa-solid fa-pen-nib me-2" style="color: var(--primary-color);"></i>重點字詞註釋
-            </h5>
-            <div class="row g-2 mb-2" id="artNotes">
-                <!-- 動態注入註釋 -->
-            </div>
+        <!-- 1: 自訂下拉選單 (選文章) -->
+        <div class="dropdown mb-4">
+            <button class="custom-dropdown-btn dropdown-toggle" type="button" id="articleDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <span>📘 <span id="selected-title">載入中...</span></span>
+            </button>
+            <ul class="dropdown-menu custom-dropdown-menu" id="dropdown-list" aria-labelledby="articleDropdown">
+                <!-- 由 JS 動態生成 50 篇選單 -->
+            </ul>
         </div>
 
-        <!-- 閱讀理解測驗區 -->
-        <div class="card card-custom p-4">
-            <h4 class="fw-bold mb-3">
-                <i class="fa-solid fa-circle-question me-2" style="color: #27ae60;"></i>閱讀理解測驗
-            </h4>
-            <div id="quizContainer">
-                <!-- 動態注入題目 -->
-            </div>
+        <!-- 文章展示卡片 -->
+        <div id="article-display">
+            <!-- 由 JS 動態填入選中的文章 -->
         </div>
 
     </div>
 
-    <!-- Firebase 與核心邏輯腳本 -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        // TODO: 請替換為您的 Firebase 配置 (與 dashboard.html 相同)
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // 全域同步 XP 與 Streak 機制
-        let currentXP = parseInt(localStorage.getItem('userXP') || localStorage.getItem('xp') || '0');
-        let currentStreak = parseInt(localStorage.getItem('userStreak') || '0');
-        const username = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'student';
-
-        function updateUI() {
-            document.getElementById('userXP').innerText = currentXP;
-            document.getElementById('userStreak').innerText = currentStreak;
-        }
-
-        // 本地雙向鎖定 + Firebase 雲端同步
-        window.addXP = function(amount, event) {
-            currentXP += amount;
-            
-            // 寫入 LocalStorage 多重 Key 鎖定
-            localStorage.setItem('userXP', currentXP);
-            localStorage.setItem('xp', currentXP);
-            updateUI();
-
-            // 觸發浮動特效
-            if(event) showFloatXP(`+${amount} XP`, event);
-
-            // 自動備份回傳至 Firebase (取最大值邏輯)
-            if (username) {
-                const userRef = ref(db, 'users/' + username + '/xp');
-                get(userRef).then((snapshot) => {
-                    const cloudXP = snapshot.val() || 0;
-                    const maxXP = Math.max(cloudXP, currentXP);
-                    set(userRef, maxXP);
-                    localStorage.setItem('userXP', maxXP);
-                    localStorage.setItem('xp', maxXP);
-                    currentXP = maxXP;
-                    updateUI();
-                }).catch(err => console.error("Firebase Sync Error:", err));
-            }
-        };
-
-        // 浮動 XP 特效
-        function showFloatXP(text, e) {
-            const el = document.createElement('div');
-            el.className = 'float-xp';
-            el.innerText = text;
-            el.style.left = `${e.clientX - 20}px`;
-            el.style.top = `${e.clientY - 30}px`;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1200);
-        }
-
-        // 初始化載入
-        updateUI();
-    </script>
+    <!-- 引入資料檔 cale/ch50.js -->
+    <script src="cale/ch50.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
 
     <script>
-        // 50 篇文章與題庫資料
-        const articles = [
-            {
-                id: "article_1",
-                title: "世說新語 · 詠雪",
-                author: "劉義慶",
-                content: "謝太傅寒雪日內集，與兒女講論文義。俄而雪驟，公欣然曰：「白雪紛紛何所似？」兄子胡兒曰：「撒鹽空中差可擬。」兄女曰：「未若柳絮因風起。」公大笑樂。",
-                translation: "謝太傅在寒冷的雪天舉行家庭聚會，和子姪輩講解討論文章的義理。不久雪下得急了，太傅高興地說：「紛紛揚揚的白雪像什麼呢？」哥哥的兒子胡兒說：「把鹽撒在空中大致可以相比。」哥哥的女兒說：「不如比作柳絮乘風飛舞。」太傅高興得大笑。",
-                notes: [
-                    { word: "內集", detail: "家庭聚會。" },
-                    { word: "兒女", detail: "子姪輩。" },
-                    { word: "俄而", detail: "不久、一會兒。" },
-                    { word: "欣然", detail: "高興的樣子。" },
-                    { word: "差可擬", detail: "大致可以相比。" },
-                    { word: "未若", detail: "不如。" },
-                    { word: "因", detail: "憑藉、順著。" }
-                ],
-                questions: [
-                    {
-                        q: "「未若柳絮因風起」中的「因」最適合解釋為？",
-                        options: ["因為", "憑藉、順著", "原因", "於是"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_2",
-                title: "世說新語 · 陳太丘與友期行",
-                author: "劉義慶",
-                content: "陳太丘與友期行，期日中。過中不至，太丘捨去，去後乃至。元方時年七歲，門外戲。客問元方：「尊君在不？」答曰：「待君久不至，已去。」友人便怒曰：「非人哉！與人期行，相委而去。」元方曰：「君與家君期日中。日中不至，則是無信；對子罵父，則是無禮。」友人慚，下車引之。元方入門不顧。",
-                translation: "陳太丘和朋友約定同行，約定中午出發。過了中午朋友還沒到，陳太丘便離開了，離開後朋友才到。元方當時七歲，正在門外玩耍。朋友問元方：「你的父親在嗎？」元方回答：「等您很久都沒來，他已經離開了。」朋友便生氣地說：「真不是人啊！和別人約好同行，卻丟下我離開。」元方說：「您和我父親約定中午。中午不到，就是沒有信用；在孩子面前罵他的父親，就是沒有禮貌。」朋友感到慚愧，下車想拉元方。元方進門，頭也不回。",
-                notes: [
-                    { word: "期", detail: "約定。" },
-                    { word: "日中", detail: "正午。" },
-                    { word: "捨去", detail: "丟下他離開。" },
-                    { word: "乃", detail: "才。" },
-                    { word: "尊君", detail: "對別人父親的尊稱。" },
-                    { word: "無信", detail: "沒有信用。" },
-                    { word: "無禮", detail: "沒有禮貌。" },
-                    { word: "引", detail: "拉、牽。" }
-                ],
-                questions: [
-                    {
-                        q: "元方認為朋友最大的問題是什麼？",
-                        options: ["沒有帶禮物", "沒有守約且出言無禮", "沒有等待太丘", "不喜歡孩子"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_3",
-                title: "論語 · 學而",
-                author: "孔子",
-                content: "學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？",
-                translation: "學習了知識，並且按時溫習，不也是很愉快的事嗎？有志同道合的朋友從遠方來，不也是很快樂的事嗎？別人不了解自己，自己卻不因此生氣，不也是君子嗎？",
-                notes: [
-                    { word: "時習", detail: "按時溫習。" },
-                    { word: "說", detail: "通「悅」，愉快。" },
-                    { word: "朋", detail: "志同道合的朋友。" },
-                    { word: "慍", detail: "生氣、惱怒。" },
-                    { word: "君子", detail: "品德高尚的人。" }
-                ],
-                questions: [
-                    {
-                        q: "「人不知而不慍」強調的是哪一種修養？",
-                        options: ["不斷追求名利", "不因別人不了解自己而生氣", "要求別人稱讚自己", "避免與朋友往來"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_4",
-                title: "論語 · 為政",
-                author: "孔子",
-                content: "溫故而知新，可以為師矣。",
-                translation: "溫習已經學過的知識，從中得到新的理解，就可以憑這個成為老師了。",
-                notes: [
-                    { word: "溫故", detail: "溫習舊有的知識。" },
-                    { word: "知新", detail: "得到新的體會。" },
-                    { word: "為", detail: "成為。" }
-                ],
-                questions: [
-                    {
-                        q: "「溫故而知新」主要強調什麼學習方法？",
-                        options: ["完全不必複習", "從複習舊知識中得到新體會", "只學習新知識", "只背誦不思考"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_5",
-                title: "論語 · 述而",
-                author: "孔子",
-                content: "三人行，必有我師焉。擇其善者而從之，其不善者而改之。",
-                translation: "三個人一起走路，其中一定有可以作為我老師的人。選擇他的優點來學習，看到他的缺點就反省自己並改正。",
-                notes: [
-                    { word: "三人行", detail: "幾個人同行，泛指多人相處。" },
-                    { word: "必", detail: "一定。" },
-                    { word: "焉", detail: "於此、在其中。" },
-                    { word: "擇", detail: "選擇。" },
-                    { word: "從", detail: "跟從、學習。" }
-                ],
-                questions: [
-                    {
-                        q: "這段話主要表達孔子什麼樣的學習態度？",
-                        options: ["自以為是", "善於向他人學習並反省自己", "拒絕接受批評", "只向老師學習"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_6",
-                title: "論語 · 里仁",
-                author: "孔子",
-                content: "見賢思齊焉，見不賢而內自省也。",
-                translation: "看見賢能的人，就想著向他看齊；看見不賢能的人，就在內心反省自己。",
-                notes: [
-                    { word: "賢", detail: "賢能、有德行的人。" },
-                    { word: "思齊", detail: "想著向他看齊。" },
-                    { word: "內", detail: "內心。" },
-                    { word: "省", detail: "反省、檢討。" }
-                ],
-                questions: [
-                    {
-                        q: "「見不賢而內自省也」是指？",
-                        options: ["批評別人的缺點", "看到別人的缺點並反省自己", "逃避別人的缺點", "只注意自己的優點"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_7",
-                title: "魚我所欲也",
-                author: "孟子",
-                content: "魚，我所欲也；熊掌，亦我所欲也。二者不可得兼，舍魚而取熊掌者也。生，亦我所欲也；義，亦我所欲也。二者不可得兼，舍生而取義者也。",
-                translation: "魚是我所喜愛的，熊掌也是我所喜愛的。如果兩者不能同時得到，我就捨棄魚而選取熊掌。生命是我所喜愛的，道義也是我所喜愛的。如果兩者不能同時得到，我就捨棄生命而選取道義。",
-                notes: [
-                    { word: "欲", detail: "想要、喜愛。" },
-                    { word: "兼", detail: "同時得到。" },
-                    { word: "舍", detail: "捨棄。" },
-                    { word: "義", detail: "合乎正義的道德原則。" }
-                ],
-                questions: [
-                    {
-                        q: "孟子以魚和熊掌比喻什麼？",
-                        options: ["兩種食物", "兩種無法兼得的選擇", "生活中的困難", "飲食習慣"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_8",
-                title: "生於憂患，死於安樂",
-                author: "孟子",
-                content: "故天將降大任於是人也，必先苦其心志，勞其筋骨，餓其體膚，空乏其身，行拂亂其所為，所以動心忍性，曾益其所不能。",
-                translation: "所以，上天將要把重大責任降給這個人，一定先使他的內心痛苦，使他的筋骨勞累，使他的身體挨餓，使他陷入貧困，使他的行動受到阻礙，以此來震動他的心志，使他的性情堅忍，增加他原本所沒有的能力。",
-                notes: [
-                    { word: "降大任", detail: "賦予重大責任。" },
-                    { word: "勞", detail: "使……勞累。" },
-                    { word: "空乏", detail: "使資財缺乏。" },
-                    { word: "拂", detail: "違背、阻礙。" },
-                    { word: "曾益", detail: "增加；曾通「增」。" }
-                ],
-                questions: [
-                    {
-                        q: "孟子認為困境對人的主要作用是什麼？",
-                        options: ["使人放棄努力", "磨鍊人的心志與能力", "使人更加安逸", "使人逃避責任"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_9",
-                title: "得道多助，失道寡助",
-                author: "孟子",
-                content: "天時不如地利，地利不如人和。三里之城，七里之郭，環而攻之而不勝。夫環而攻之，必有得天時者矣；然而不勝者，是天時不如地利也。",
-                translation: "有利的天時不如有利的地勢，有利的地勢又不如人心的團結。方圓三里的城和七里的外城，四面包圍攻打卻不能取勝。四面包圍攻打，一定有得到有利天時的時候；然而仍然不能取勝，這就是天時比不上地利。",
-                notes: [
-                    { word: "天時", detail: "有利的時機、氣候等條件。" },
-                    { word: "地利", detail: "有利的地勢。" },
-                    { word: "人和", detail: "人心團結。" },
-                    { word: "郭", detail: "外城。" },
-                    { word: "環", detail: "包圍。" }
-                ],
-                questions: [
-                    {
-                        q: "本文認為最重要的成功條件是什麼？",
-                        options: ["武器", "財富", "人心團結", "城牆高度"],
-                        answer: 2
-                    }
-                ]
-            },
-            {
-                id: "article_10",
-                title: "曹劌論戰",
-                author: "《左傳》",
-                content: "十年春，齊師伐我。公將戰，曹劌請見。其鄉人曰：「肉食者鄙，未能遠謀。」劌曰：「肉食者鄙，未能遠謀。」乃入見。問：「何以戰？」公曰：「小大之獄，雖不能察，必以情。」對曰：「忠之屬也。可以一戰。戰則請從。」",
-                translation: "魯莊公十年的春天，齊國軍隊攻打魯國。莊公準備迎戰，曹劌請求拜見莊公。他的同鄉說：「那些做官的人見識短淺，不能深謀遠慮。」曹劌說：「做官的人見識短淺，不能深謀遠慮。」於是進宮拜見莊公。他問：「您憑什麼作戰？」莊公說：「大大小小的案件，即使不能一一明察，也一定按照實情處理。」曹劌回答：「這是盡職的一類，可以憑此一戰。如果作戰，請讓我跟隨您。」",
-                notes: [
-                    { word: "伐", detail: "攻打。" },
-                    { word: "鄙", detail: "見識短淺。" },
-                    { word: "遠謀", detail: "深遠的謀略。" },
-                    { word: "獄", detail: "案件。" },
-                    { word: "情", detail: "實情。" }
-                ],
-                questions: [
-                    {
-                        q: "曹劌認為魯莊公可以作戰的原因是什麼？",
-                        options: ["軍隊人數最多", "國家財富最多", "能夠公平處理案件", "城牆非常堅固"],
-                        answer: 2
-                    }
-                ]
-            },
-            {
-                id: "article_11",
-                title: "出師表",
-                author: "諸葛亮",
-                content: "先帝創業未半而中道崩殂，今天下三分，益州疲弊，此誠危急存亡之秋也。然侍衛之臣不懈於內，忠志之士忘身於外者，蓋追先帝之殊遇，欲報之於陛下也。",
-                translation: "先帝創建事業還沒有完成一半，就中途去世了。如今天下分成三國，益州疲弱困乏，這確實是國家危急存亡的時刻。然而宮中的侍衛之臣毫不懈怠，外面的忠臣志士奮不顧身，大概是追念先帝的特殊恩遇，想要報答給陛下。",
-                notes: [
-                    { word: "崩殂", detail: "帝王去世。" },
-                    { word: "疲弊", detail: "疲弱困乏。" },
-                    { word: "秋", detail: "時候。" },
-                    { word: "蓋", detail: "大概是。" },
-                    { word: "殊遇", detail: "特殊的待遇。" }
-                ],
-                questions: [
-                    {
-                        q: "諸葛亮認為當時蜀漢的局勢如何？",
-                        options: ["國力強盛", "危急存亡", "天下太平", "沒有任何危機"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_12",
-                title: "桃花源記",
-                author: "陶淵明",
-                content: "晉太元中，武陵人捕魚為業。緣溪行，忘路之遠近。忽逢桃花林，夾岸數百步，中無雜樹，芳草鮮美，落英繽紛。",
-                translation: "東晉太元年間，有個武陵人以捕魚為業。他沿著溪流划船前進，忘記了路程的遠近。忽然遇到一片桃花林，桃花林生長在溪流兩岸，長達幾百步，中間沒有其他樹木，芳香的青草鮮豔美麗，落花繁多。",
-                notes: [
-                    { word: "緣", detail: "沿著。" },
-                    { word: "逢", detail: "遇到。" },
-                    { word: "夾岸", detail: "分布在兩岸。" },
-                    { word: "鮮美", detail: "鮮豔美麗。" },
-                    { word: "落英", detail: "落花。" }
-                ],
-                questions: [
-                    {
-                        q: "桃花源中的景色有何特色？",
-                        options: ["荒涼破敗", "桃花繁盛、環境優美", "高樓林立", "戰火頻繁"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_13",
-                title: "陋室銘",
-                author: "劉禹錫",
-                content: "山不在高，有仙則名。水不在深，有龍則靈。斯是陋室，惟吾德馨。苔痕上階綠，草色入簾青。",
-                translation: "山不一定要高，有仙人就出名；水不一定要深，有龍就顯得神奇。這是一間簡陋的屋子，只是我的品德高尚。青苔爬上台階，一片碧綠；草色映入簾中，滿眼青翠。",
-                notes: [
-                    { word: "名", detail: "出名、有名。" },
-                    { word: "靈", detail: "神奇、有靈氣。" },
-                    { word: "斯", detail: "這。" },
-                    { word: "惟", detail: "只是。" },
-                    { word: "馨", detail: "能遠播的香氣，比喻品德高尚。" }
-                ],
-                questions: [
-                    {
-                        q: "「惟吾德馨」表達作者什麼觀念？",
-                        options: ["重視房屋大小", "認為品德比外在環境重要", "喜歡華麗房屋", "追求金錢財富"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_14",
-                title: "愛蓮說",
-                author: "周敦頤",
-                content: "水陸草木之花，可愛者甚蕃。晉陶淵明獨愛菊。李唐來世人甚愛牡丹。予獨愛蓮之出淤泥而不染，濯清漣而不妖，中通外直，不蔓不枝。",
-                translation: "水中、陸地上的草木花卉，可愛的非常多。晉朝陶淵明唯獨喜愛菊花。唐朝以來世人非常喜愛牡丹。我唯獨喜愛蓮花從淤泥裡長出卻不受污染，在清水中洗滌卻不顯得妖媚，內部貫通、外表挺直，不牽牽連連，也不旁生枝節。",
-                notes: [
-                    { word: "蕃", detail: "多。" },
-                    { word: "染", detail: "受到污染。" },
-                    { word: "濯", detail: "洗滌。" },
-                    { word: "妖", detail: "妖媚。" },
-                    { word: "蔓", detail: "藤蔓。" }
-                ],
-                questions: [
-                    {
-                        q: "作者喜愛蓮花主要是因為它象徵什麼？",
-                        options: ["財富", "高潔正直的品格", "權力", "華麗外表"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_15",
-                title: "記承天寺夜遊",
-                author: "蘇軾",
-                content: "元豐六年十月十二日夜，解衣欲睡，月色入戶，欣然起行。念無與為樂者，遂至承天寺尋張懷民。懷民亦未寢，相與步於中庭。",
-                translation: "元豐六年十月十二日晚上，我脫下衣服準備睡覺，月光照進門裡，我高興地起身出門。想到沒有人可以一起欣賞這美景，於是到承天寺尋找張懷民。張懷民也還沒睡，於是我們一起在庭院中散步。",
-                notes: [
-                    { word: "戶", detail: "門。" },
-                    { word: "欣然", detail: "高興的樣子。" },
-                    { word: "遂", detail: "於是。" },
-                    { word: "寢", detail: "睡覺。" },
-                    { word: "相與", detail: "共同、一起。" }
-                ],
-                questions: [
-                    {
-                        q: "蘇軾為何前往承天寺？",
-                        options: ["拜訪朋友並一起賞月", "處理政務", "尋找食物", "逃避追兵"],
-                        answer: 0
-                    }
-                ]
-            },
-            {
-                id: "article_16",
-                title: "三峽",
-                author: "酈道元",
-                content: "自三峽七百里中，兩岸連山，略無闕處。重巖疊嶂，隱天蔽日，自非亭午夜分，不見曦月。",
-                translation: "在三峽七百里的範圍內，兩岸都是連綿的山，一點空隙也沒有。重重的岩石和層層的山峰，遮蔽了天空和太陽，如果不是正午和半夜，是看不見太陽和月亮 的。",
-                notes: [
-                    { word: "略無", detail: "完全沒有。" },
-                    { word: "闕", detail: "空隙，同「缺」。" },
-                    { word: "嶂", detail: "高聳如屏障的山峰。" },
-                    { word: "曦", detail: "日光，指太陽。" }
-                ],
-                questions: [
-                    {
-                        q: "「隱天蔽日」主要描寫三峽什麼特色？",
-                        options: ["水流緩慢", "山勢高峻連綿", "居民眾多", "土地肥沃"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_17",
-                title: "答謝中書書",
-                author: "陶弘景",
-                content: "高峰入雲，清流見底。兩岸石壁，五色交輝。青林翠竹，四時俱備。曉霧將歇，猿鳥亂鳴；夕日欲頹，沉鱗競躍。",
-                translation: "高高的山峰直插雲霄，清澈的溪流可以看見水底。兩岸的石壁色彩交相輝映。青翠的樹林和竹子，四季都有。清晨的薄霧將要消散時，猿猴和鳥兒爭相鳴叫；夕陽將要落下時，水中的魚兒爭相跳躍。",
-                notes: [
-                    { word: "交輝", detail: "交相輝映。" },
-                    { word: "四時", detail: "四季。" },
-                    { word: "歇", detail: "消散。" },
-                    { word: "頹", detail: "墜落。" },
-                    { word: "沉鱗", detail: "潛游在水中的魚。" }
-                ],
-                questions: [
-                    {
-                        q: "本文主要描寫什麼？",
-                        options: ["戰爭場面", "山水自然美景", "宮廷生活", "農村生活"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_18",
-                title: "與朱元思書",
-                author: "吳均",
-                content: "風煙俱淨，天山共色。從流飄蕩，任意東西。自富陽至桐廬一百許里，奇山異水，天下獨絕。",
-                translation: "煙霧都消散了，天空和遠山呈現相同的顏色。我乘船隨著江流漂蕩，任意向東向西。從富陽到桐廬大約一百里，奇特的山和異常美麗的水，是天下獨一無二的景色。",
-                notes: [
-                    { word: "俱", detail: "都。" },
-                    { word: "共色", detail: "呈現相同的顏色。" },
-                    { word: "從流", detail: "隨著水流。" },
-                    { word: "許", detail: "表示約數。" },
-                    { word: "獨絕", detail: "獨一無二、無與倫比。" }
-                ],
-                questions: [
-                    {
-                        q: "「天下獨絕」表達作者對景色什麼樣的感受？",
-                        options: ["厭惡", "讚嘆景色極為獨特", "恐懼", "冷漠"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_19",
-                title: "岳陽樓記",
-                author: "范仲淹",
-                content: "慶曆四年春，滕子京謫守巴陵郡。越明年，政通人和，百廢具興。乃重修岳陽樓，增其舊制，刻唐賢今人詩賦於其上。",
-                translation: "慶曆四年春天，滕子京被貶官到巴陵郡任太守。到了第二年，政務順利、百姓和樂，各種荒廢的事業都興辦起來。於是重新修建岳陽樓，擴大原有的規模，並把唐代賢人和當代人的詩賦刻在樓上。",
-                notes: [
-                    { word: "謫", detail: "封建時代官員被降職或遠調。" },
-                    { word: "越", detail: "到了。" },
-                    { word: "具", detail: "通「俱」，全、都。" },
-                    { word: "制", detail: "規模、制度。" }
-                ],
-                questions: [
-                    {
-                        q: "滕子京治理巴陵郡後呈現什麼情況？",
-                        options: ["政通人和", "民不聊生", "戰亂頻繁", "經濟崩潰"],
-                        answer: 0
-                    }
-                ]
-            },
-            {
-                id: "article_20",
-                title: "醉翁亭記",
-                author: "歐陽脩",
-                content: "環滁皆山也。其西南諸峰，林壑尤美，望之蔚然而深秀者，琅琊也。山行六七里，漸聞水聲潺潺，而瀉出於兩峰之間者，釀泉也。",
-                translation: "環繞滁州的都是山。西南方的各座山峰，樹林和山谷尤其美麗。遠望去草木茂盛而幽深秀麗的，是琅琊山。沿山路走六七里，漸漸聽到水聲潺潺，從兩座山峰之間流出的，是釀泉。",
-                notes: [
-                    { word: "環", detail: "環繞。" },
-                    { word: "壑", detail: "山谷。" },
-                    { word: "蔚然", detail: "草木茂盛的樣子。" },
-                    { word: "潺潺", detail: "水流聲。" },
-                    { word: "瀉", detail: "水流迅速向下。" }
-                ],
-                questions: [
-                    {
-                        q: "作者首先描寫醉翁亭附近的什麼景物？",
-                        options: ["山水景色", "城市街道", "宮殿", "戰場"],
-                        answer: 0
-                    }
-                ]
-            },
-            {
-                id: "article_21",
-                title: "愛蓮說（君子之德）",
-                author: "周敦頤",
-                content: "亭亭淨植，可遠觀而不可褻玩焉。",
-                translation: "蓮花潔淨挺立，可以從遠處觀賞，卻不能輕慢地玩弄它。",
-                notes: [
-                    { word: "亭亭", detail: "挺立的樣子。" },
-                    { word: "植", detail: "立、挺立。" },
-                    { word: "褻玩", detail: "輕慢地玩弄。" },
-                    { word: "焉", detail: "語氣助詞。" }
-                ],
-                questions: [
-                    {
-                        q: "「可遠觀而不可褻玩」主要表達什麼？",
-                        options: ["蓮花不能靠近", "對高潔品格的尊重", "蓮花非常危險", "作者不喜歡蓮花"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_22",
-                title: "愚公移山",
-                author: "《列子》",
-                content: "太行、王屋二山，方七百里，高萬仞，本在冀州之南，河陽之北。北山愚公者，年且九十，面山而居。",
-                translation: "太行山和王屋山，方圓七百里，高達萬仞，本來位於冀州南面、黃河北岸。北山有一位愚公，年紀將近九十歲，面對著山居住。",
-                notes: [
-                    { word: "方", detail: "方圓。" },
-                    { word: "仞", detail: "古代長度單位。" },
-                    { word: "且", detail: "將近。" },
-                    { word: "面山", detail: "面對著山。" }
-                ],
-                questions: [
-                    {
-                        q: "愚公移山故事最主要強調什麼精神？",
-                        options: ["半途而廢", "堅持不懈", "追求財富", "逃避困難"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_23",
-                title: "兩小兒辯日",
-                author: "《列子》",
-                content: "孔子東遊，見兩小兒辯鬥，問其故。一兒曰：「我以日始出時去人近，而日中時遠也。」一兒以日初出遠，而日中時近也。",
-                translation: "孔子向東遊歷，看見兩個孩子在爭論，便問他們爭論的原因。一個孩子說：「我認為太陽剛升起時離人比較近，中午時離人比較遠。」另一個孩子認為太陽剛升起時離人遠，中午時離人近。",
-                notes: [
-                    { word: "遊", detail: "遊歷。" },
-                    { word: "辯鬥", detail: "爭辯。" },
-                    { word: "故", detail: "原因。" },
-                    { word: "去", detail: "距離。" },
-                    { word: "以", detail: "認為。" }
-                ],
-                questions: [
-                    {
-                        q: "兩個孩子爭論的主題是什麼？",
-                        options: ["月亮大小", "太陽距離人的遠近", "天氣冷熱", "孔子的年齡"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_24",
-                title: "刻舟求劍",
-                author: "《呂氏春秋》",
-                content: "楚人有涉江者，其劍自舟中墜於水，遽契其舟，曰：「是吾劍之所從墜。」舟止，從其所契者入水求之。",
-                translation: "楚國有個人渡江，他的劍從船上掉進水裡，急忙在船身上刻下一個記號，說：「這是我的劍掉下去的地方。」船停下來後，他從刻記號的地方下水尋找劍。",
-                notes: [
-                    { word: "涉", detail: "渡過。" },
-                    { word: "遽", detail: "急忙。" },
-                    { word: "契", detail: "刻。" },
-                    { word: "所從墜", detail: "掉下去的地方。" }
-                ],
-                questions: [
-                    {
-                        q: "刻舟求劍的故事主要諷刺什麼？",
-                        options: ["勇於嘗試", "拘泥成法、不知變通", "努力學習", "珍惜物品"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_25",
-                title: "守株待兔",
-                author: "《韓非子》",
-                content: "宋人有耕田者。田中有株，兔走觸株，折頸而死。因釋其耒而守株，冀復得兔。兔不可復得，而身為宋國笑。",
-                translation: "宋國有個農夫在耕田。田裡有一個樹樁，一隻兔子奔跑時撞到樹樁，折斷脖子死了。於是農夫放下農具守著樹樁，希望再次得到兔子。兔子不可能再次得到，他自己反而成為宋國人的笑柄。",
-                notes: [
-                    { word: "株", detail: "樹樁。" },
-                    { word: "走", detail: "奔跑。" },
-                    { word: "釋", detail: "放下。" },
-                    { word: "耒", detail: "古代耕田工具。" },
-                    { word: "冀", detail: "希望。" }
-                ],
-                questions: [
-                    {
-                        q: "守株待兔主要告訴我們什麼道理？",
-                        options: ["應該等待機會", "不能把偶然事件當成必然，應懂得變通", "努力一定沒用", "農具非常重要"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_26",
-                title: "揠苗助長",
-                author: "《孟子》",
-                content: "宋人有閔其苗之不長而揠之者，芒芒然歸，謂其人曰：「今日病矣！予助苗長矣！」其子趨而往視之，苗則槁矣。",
-                translation: "宋國有個人嫌自己田裡的禾苗長得太慢，就把禾苗一棵棵往上拔，疲憊地回家，對家人說：「今天累壞了！我幫助禾苗生長了！」他的兒子趕快到田裡查看，禾苗卻都枯死了。",
-                notes: [
-                    { word: "閔", detail: "憂慮。" },
-                    { word: "揠", detail: "拔起。" },
-                    { word: "芒芒然", detail: "疲倦的樣子。" },
-                    { word: "病", detail: "疲累。" },
-                    { word: "槁", detail: "枯乾。" }
-                ],
-                questions: [
-                    {
-                        q: "揠苗助長告訴我們什麼道理？",
-                        options: ["凡事都要加快", "不能違反事物發展規律", "努力一定會失敗", "農業非常困難"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_27",
-                title: "鄒忌諷齊王納諫",
-                author: "《戰國策》",
-                content: "鄒忌修八尺有餘，而形貌昳麗。朝服衣冠，窺鏡，謂其妻曰：「我孰與城北徐公美？」其妻曰：「君美甚，徐公何能及君也？」",
-                translation: "鄒忌身高八尺多，而且容貌俊美。早晨穿戴好衣帽，照著鏡子，問妻子：「我和城北的徐公誰比較漂亮？」妻子說：「您漂亮得多，徐公哪裡比得上您呢？」",
-                notes: [
-                    { word: "修", detail: "長，指身高。" },
-                    { word: "有", detail: "通「又」。" },
-                    { word: "昳麗", detail: "光艷美麗。" },
-                    { word: "服", detail: "穿戴。" },
-                    { word: "孰與", detail: "與……相比，哪一個更……。" }
-                ],
-                questions: [
-                    {
-                        q: "鄒忌透過自己的經驗想向齊王說明什麼？",
-                        options: ["鏡子的用法", "人容易因親近者的偏愛而聽不到真話", "徐公非常英俊", "妻子不會說真話"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_28",
-                title: "五十步笑百步",
-                author: "孟子",
-                content: "填然鼓之，兵刃既接，棄甲曳兵而走。或百步而後止，或五十步而後止。以五十步笑百步，則何如？",
-                translation: "戰鼓聲響起，兩軍兵器交鋒後，有人丟下鎧甲拖著兵器逃跑。有的人逃了一百步才停下，有的人逃了五十步才停下。如果逃五十步的人去嘲笑逃一百步的人，那麼怎麼樣呢？",
-                notes: [
-                    { word: "鼓", detail: "擊鼓。" },
-                    { word: "接", detail: "交鋒。" },
-                    { word: "曳", detail: "拖著。" },
-                    { word: "走", detail: "逃跑。" },
-                    { word: "或", detail: "有的人。" }
-                ],
-                questions: [
-                    {
-                        q: "「五十步笑百步」比喻什麼？",
-                        options: ["兩人差距很大", "自己和別人犯了相同性質的錯誤卻嘲笑對方", "勇敢面對敵人", "跑步速度不同"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_29",
-                title: "廉頗藺相如列傳",
-                author: "司馬遷",
-                content: "廉頗曰：「我為趙將，有攻城野戰之大功，而藺相如徒以口舌為勞，而位居我上。且相如素賤人，吾羞，不忍為之下。」",
-                translation: "廉頗說：「我是趙國將軍，有攻城作戰的大功勞，而藺相如只憑言語建立功勞，地位卻在我之上。而且藺相如本來出身卑微，我感到羞恥，不甘心地位在他之下。」",
-                notes: [
-                    { word: "徒", detail: "只、僅僅。" },
-                    { word: "口舌", detail: "言語。" },
-                    { word: "素", detail: "向來。" },
-                    { word: "賤人", detail: "地位低微的人。" },
-                    { word: "為之下", detail: "居於他的下位。" }
-                ],
-                questions: [
-                    {
-                        q: "廉頗一開始對藺相如抱持什麼態度？",
-                        options: ["敬佩", "不滿與羞恥", "恐懼", "完全不在意"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_30",
-                title: "鴻門宴",
-                author: "司馬遷",
-                content: "項伯乃夜馳之沛公軍，私見張良，具告以事，欲呼張良與俱去。曰：「毋從俱死也。」張良曰：「秦時與臣遊，項伯殺人，臣活之；今事有急，故幸來告良。」",
-                translation: "項伯於是連夜騎馬到沛公軍中，私下拜見張良，把事情全部告訴他，想叫張良跟自己一起離開，說：「不要跟著一起送死。」張良說：「秦朝時我和您交往，您殺了人，我救了您一命；如今事情危急，所以幸虧您來告訴我。」",
-                notes: [
-                    { word: "馳", detail: "騎馬快速奔跑。" },
-                    { word: "之", detail: "到、往。" },
-                    { word: "具", detail: "詳細、全部。" },
-                    { word: "活", detail: "使……活下來。" },
-                    { word: "幸", detail: "幸虧。" }
-                ],
-                questions: [
-                    {
-                        q: "項伯連夜找張良的主要原因是什麼？",
-                        options: ["邀請張良喝酒", "提醒張良避開危險", "要求張良投降", "商量攻打秦國"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_31",
-                title: "廉恥",
-                author: "顧炎武",
-                content: "五代史宦者傳論曰：「自古宦者亂人之國，其源深於女禍。」夫宦者之為患，非一日矣。智伯之臣曰程申，漢之曹節、侯覽，唐之仇士良、田令孜，其流之所從來也遠矣。",
-                translation: "《五代史·宦者傳論》說：「自古以來宦官禍亂國家，其根源比女子造成的禍害還深。」宦官造成禍患，並不是一天形成的。從古代到漢、唐都有類似的情況，這種禍患的源頭由來已久。",
-                notes: [
-                    { word: "宦者", detail: "古代宮廷中的宦官。" },
-                    { word: "禍", detail: "災禍。" },
-                    { word: "患", detail: "禍害。" },
-                    { word: "源", detail: "根源。" }
-                ],
-                questions: [
-                    {
-                        q: "這段文字主要討論什麼問題？",
-                        options: ["宦官造成政治禍患", "農業發展", "軍事戰爭", "女性教育"],
-                        answer: 0
-                    }
-                ]
-            },
-            {
-                id: "article_32",
-                title: "勸學",
-                author: "荀子",
-                content: "君子曰：學不可以已。青，取之於藍，而青於藍；冰，水為之，而寒於水。木直中繩，輮以為輪，其曲中規。",
-                translation: "君子說：學習不可以停止。青色染料從藍草中取得，卻比藍草更青；冰是由水凝結而成，卻比水更寒冷。木材筆直合乎墨線，經過烘烤使它彎曲成車輪，彎曲的程度符合圓規。",
-                notes: [
-                    { word: "已", detail: "停止。" },
-                    { word: "於", detail: "從、比。" },
-                    { word: "輮", detail: "使木材彎曲。" },
-                    { word: "中繩", detail: "符合墨線。" },
-                    { word: "中規", detail: "符合圓規。" }
-                ],
-                questions: [
-                    {
-                        q: "「學不可以已」的意思是？",
-                        options: ["學習不能停止", "學習很容易", "不用學習", "只學一次即可"],
-                        answer: 0
-                    }
-                ]
-            },
-            {
-                id: "article_33",
-                title: "勸學（跬步）",
-                author: "荀子",
-                content: "故不積跬步，無以至千里；不積小流，無以成江海。騏驥一躍，不能十步；駑馬十駕，功在不舍。",
-                translation: "所以不累積一步一步的行走，就無法到達千里之外；不累積細小的水流，就無法形成江海。千里馬跳躍一次，也不能跳十步遠；劣馬拉車走十天，卻能到達很遠的地方，功效就在於不放棄。",
-                notes: [
-                    { word: "跬步", detail: "半步，泛指很小的步伐。" },
-                    { word: "無以", detail: "沒有用來……的方法。" },
-                    { word: "騏驥", detail: "千里馬。" },
-                    { word: "駑馬", detail: "劣馬。" },
-                    { word: "舍", detail: "停止、放棄。" }
-                ],
-                questions: [
-                    {
-                        q: "本文強調成功最重要的條件之一是？",
-                        options: ["天賦", "持續累積與不放棄", "運氣", "速度"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_34",
-                title: "逍遙遊",
-                author: "莊子",
-                content: "北冥有魚，其名為鯤。鯤之大，不知其幾千里也。化而為鳥，其名為鵬。鵬之背，不知其幾千里也。怒而飛，其翼若垂天之雲。",
-                translation: "北方的大海有一條魚，名字叫鯤。鯤非常巨大，不知道有幾千里長。它變化成鳥，名字叫鵬。鵬的背部不知道有幾千里大。當它奮力飛起時，翅膀就像垂掛在天空的雲。",
-                notes: [
-                    { word: "冥", detail: "通「溟」，大海。" },
-                    { word: "鯤", detail: "傳說中的大魚。" },
-                    { word: "鵬", detail: "傳說中的大鳥。" },
-                    { word: "怒", detail: "奮力、振翅。" },
-                    { word: "垂天", detail: "像垂掛在天空。" }
-                ],
-                questions: [
-                    {
-                        q: "本文中的鵬具有什麼特色？",
-                        options: ["體型巨大、志向高遠", "非常弱小", "不能飛行", "只生活在陸地"],
-                        answer: 0
-                    }
-                ]
-            },
-            {
-                id: "article_35",
-                title: "五十步笑百步",
-                author: "孟子",
-                content: "王好戰，請以戰喻。填然鼓之，兵刃既接，棄甲曳兵而走。或百步而後止，或五十步而後止。",
-                translation: "大王喜歡戰爭，那就讓我用戰爭作比喻。戰鼓響起後，兩軍兵器交鋒，有人丟下鎧甲拖著兵器逃跑。有的人逃了一百步才停，有的人逃五十步才停。",
-                notes: [
-                    { word: "喻", detail: "比喻、說明。" },
-                    { word: "填然", detail: "鼓聲盛大的樣子。" },
-                    { word: "曳", detail: "拖著。" },
-                    { word: "走", detail: "逃跑。" }
-                ],
-                questions: [
-                    {
-                        q: "孟子使用五十步和百步的例子主要是為了說明？",
-                        options: ["逃跑速度的重要", "程度不同但本質相同的錯誤不能互相嘲笑", "戰爭的殘酷", "軍隊的訓練"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_36",
-                title: "促織",
-                author: "蒲松齡",
-                content: "宣德間，宮中尚促織之戲，歲徵民間。此物故非西產；有華陰令欲媚上官，以一頭進，試使鬥而才，因責常供。",
-                translation: "宣德年間，宮中流行鬥蟋蟀的遊戲，每年都向民間徵收蟋蟀。這種東西本來不是西部地區的特產；有一位華陰縣令想討好上級官員，進獻一隻蟋蟀，試著讓它鬥而且很有才能，於是便要求百姓經常進貢。",
-                notes: [
-                    { word: "尚", detail: "崇尚、喜愛。" },
-                    { word: "促織", detail: "蟋蟀。" },
-                    { word: "徵", detail: "徵收。" },
-                    { word: "媚", detail: "討好。" },
-                    { word: "進", detail: "進獻。" }
-                ],
-                questions: [
-                    {
-                        q: "故事中的「促織」指的是什麼？",
-                        options: ["螢火蟲", "蟋蟀", "蝴蝶", "螞蟻"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_37",
-                title: "師說",
-                author: "韓愈",
-                content: "古之學者必有師。師者，所以傳道受業解惑也。人非生而知之者，孰能無惑？惑而不從師，其為惑也，終不解矣。",
-                translation: "古代求學的人一定有老師。老師，是用來傳授道理、教授學業、解答疑惑的人。人不是生來就知道一切的，誰能沒有疑惑呢？有疑惑卻不跟從老師學習，那些疑惑最終也無法解決。",
-                notes: [
-                    { word: "學者", detail: "求學的人。" },
-                    { word: "受", detail: "通「授」，傳授。" },
-                    { word: "孰", detail: "誰。" },
-                    { word: "從師", detail: "跟從老師學習。" }
-                ],
-                questions: [
-                    {
-                        q: "韓愈認為老師 Important 的功能是什麼？",
-                        options: ["提供財富", "傳道、授業、解惑", "管理學生", "提供娛樂"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_38",
-                title: "阿房宮賦",
-                author: "杜牧",
-                content: "六王畢，四海一；蜀山兀，阿房出。覆壓三百餘里，隔離天日。驪山北構而西折，直走咸陽。",
-                translation: "六國滅亡，天下統一；蜀地的山被砍伐得光禿禿的，阿房宮建造出來。它覆蓋三百多里，遮蔽了天空和太陽。宮殿從驪山北面建起，再向西轉折，一直通向咸陽。",
-                notes: [
-                    { word: "畢", detail: "完結，指六國滅亡。" },
-                    { word: "一", detail: "統一。" },
-                    { word: "兀", detail: "高而上平，文中指山被砍伐光禿。" },
-                    { word: "構", detail: "建造。" },
-                    { word: "走", detail: "通向。" }
-                ],
-                questions: [
-                    {
-                        q: "阿房宮的規模在文中被描寫得如何？",
-                        options: ["十分狹小", "規模宏大、氣勢壯觀", "非常破舊", "只是一座小屋"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_39",
-                title: "赤壁賦",
-                author: "蘇軾",
-                content: "壬戌之秋，七月既望，蘇子與客泛舟遊於赤壁之下。清風徐來，水波不興。舉酒屬客，誦明月之詩，歌窈窕之章。",
-                translation: "壬戌年的秋天，七月十六日，蘇軾和客人乘船遊覽赤壁之下。清風徐徐吹來，水面沒有掀起波浪。蘇軾舉起酒杯勸客人飲酒，吟誦《詩經》中歌詠明月的詩篇，唱著描寫美好女子的篇章。",
-                notes: [
-                    { word: "既望", detail: "農曆十六日。" },
-                    { word: "泛舟", detail: "乘船遊覽。" },
-                    { word: "興", detail: "興起，起波。" },
-                    { word: "屬", detail: "勸酒。" },
-                    { word: "窈窕", detail: "美好、文靜的樣子。" }
-                ],
-                questions: [
-                    {
-                        q: "「清風徐來，水波不興」營造出什麼樣的氛圍？",
-                        options: ["平靜優美", "緊張危險", "喧鬧混亂", "悲慘淒涼"],
-                        answer: 0
-                    }
-                ]
-            },
-            {
-                id: "article_40",
-                title: "蘭亭集序",
-                author: "王羲之",
-                content: "永和九年，歲在癸丑，暮春之初，會於會稽山陰之蘭亭，修禊事也。群賢畢至，少長咸集。此地有崇山峻嶺，茂林修竹。",
-                translation: "永和九年，正值癸丑年，暮春開始的時候，我們在會稽山陰的蘭亭聚會，舉行修禊活動。眾多賢人全部到來，年輕的和年長的都聚集在一起。這個地方有高山峻嶺、茂密的森林和修長的竹子。",
-                notes: [
-                    { word: "會", detail: "聚會。" },
-                    { word: "修禊", detail: "古代春季臨水祭祀、祓除不祥的活動。" },
-                    { word: "畢", detail: "全、都。" },
-                    { word: "咸", detail: "都。" },
-                    { word: "修竹", detail: "長竹。" }
-                ],
-                questions: [
-                    {
-                        q: "蘭亭聚會的參加者有何特色？",
-                        options: ["只有年輕人", "群賢畢至、少長咸集", "只有官員", "只有王羲之一人"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_41",
-                title: "滕王閣序",
-                author: "王勃",
-                content: "時維九月，序屬三秋。潦水盡而寒潭清，煙光凝而暮山紫。儼驂騑於上路，訪風景於崇阿。",
-                translation: "時值九月，正是秋季的第三個月。積水退盡，寒潭清澈；煙霧和日光凝聚，傍晚的山呈現紫色。我駕著車馬走上高路，到高峻的山嶺中尋訪美景。",
-                notes: [
-                    { word: "維", detail: "語氣助詞，無實義。" },
-                    { word: "序", detail: "時序。" },
-                    { word: "潦水", detail: "雨後積水。" },
-                    { word: "凝", detail: "凝聚。" },
-                    { word: "崇阿", detail: "高大的山陵。" }
-                ],
-                questions: [
-                    {
-                        q: "這段文字主要描寫哪個季節的景色？",
-                        options: ["春季", "夏季", "秋季", "冬季"],
-                        answer: 2
-                    }
-                ]
-            },
-            {
-                id: "article_42",
-                title: "陳情表",
-                author: "李密",
-                content: "逮奉聖朝，沐浴清化。前太守臣逵察臣孝廉，後刺史臣榮舉臣秀才。臣以險釁，夙遭閔凶，既無伯叔，終鮮兄弟。",
-                translation: "到了奉行聖明朝廷的時候，我受到清明教化的薰陶。以前太守舉薦我為孝廉，後來刺史又舉薦我為秀才。我因為命運艱難，早年遭遇不幸，既沒有伯父叔父，也沒有兄弟。",
-                notes: [
-                    { word: "逮", detail: "等到。" },
-                    { word: "察", detail: "考察、舉薦。" },
-                    { word: "險釁", detail: "艱難的命運。" },
-                    { word: "夙", detail: "早年。" },
-                    { word: "鮮", detail: "少。" }
-                ],
-                questions: [
-                    {
-                        q: "李密在文章中強調自己的家庭狀況主要是為了？",
-                        options: ["說明自己富有", "說明需要奉養祖母等家庭責任", "炫耀家世", "批評朝廷"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_43",
-                title: "諫太宗十思疏",
-                author: "魏徵",
-                content: "凡百元首，承天景命，莫不殷憂而道著，功成而德衰，有善始者實繁，能克終者蓋寡。豈其取之易守之難乎？蓋在殷憂必竭誠以待下，既得志則縱情以傲物。",
-                translation: "所有歷代君主承受上天重大使命，沒有不是在深切憂慮時治理得好，功業成功後品德反而衰退。開始做得好的實在很多，能夠堅持到底的卻很少。難道是取得天下容易而守住天下困難嗎？大概是在憂患時一定竭盡誠意對待臣民，取得成功後就放縱情欲、傲慢對待他人。",
-                notes: [
-                    { word: "景命", detail: "重大使命。" },
-                    { word: "殷憂", detail: "深切的憂慮。" },
-                    { word: "克終", detail: "能夠堅持到底。" },
-                    { word: "縱情", detail: "放縱自己的情欲。" },
-                    { word: "傲物", detail: "傲慢對待他人。" }
-                ],
-                questions: [
-                    {
-                        q: "魏徵認為君主最容易在哪種情況下失去德行？",
-                        options: ["遇到困難時", "功成之後放縱自己", "尚未成功時", "學習時"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_44",
-                title: "廉頗藺相如列傳 · 負荊請罪",
-                author: "司馬遷",
-                content: "於是舍人相與諫曰：「臣所以去親戚而事君者，徒慕君之高義也。今君與廉頗同列，廉君宣惡言，而君畏匿之，恐懼殊甚。且庸人尚羞之，況於將相乎！」",
-                translation: "於是門客們一起勸藺相如說：「我們離開親人來侍奉您的原因，只是仰慕您的高尚品德。如今您和廉頗地位相同，廉將軍公開說您的壞話，而您卻害怕躲避他，實在太過害怕了。普通人尚且以此為羞恥，更何況將相呢！」",
-                notes: [
-                    { word: "舍人", detail: "門客。" },
-                    { word: "親戚", detail: "親人。" },
-                    { word: "徒", detail: "只是。" },
-                    { word: "匿", detail: "躲避。" },
-                    { word: "庸人", detail: "普通人。" }
-                ],
-                questions: [
-                    {
-                        q: "藺相如避讓廉頗的主要原因是什麼？",
-                        options: ["害怕死亡", "以國家利益為重", "不敢說話", "不想當官"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_45",
-                title: "世說新語 · 管寧割席",
-                author: "劉義慶",
-                content: "管寧、華歆共園中鋤菜。見地有片金，管揮鋤與瓦石不異，華捉而擲去之。又嘗同席讀書，有乘軒冕過門者，寧讀如故，歆廢書出看。寧割席分坐，曰：「子非吾友也。」",
-                translation: "管寧和華歆一起在園中鋤菜，看見地上有一片金子，管寧揮動鋤頭，對待金子和瓦片石頭沒有不同；華歆卻撿起金子再丟掉。又有一次兩人同席讀書，有乘著華麗車馬、戴著高貴帽子的人經過門前，管寧照常讀書，華歆卻放下書出去觀看。管寧便割開席子分開坐，說：「你不是我的朋友。」",
-                notes: [
-                    { word: "鋤", detail: "用鋤頭耕作。" },
-                    { word: "捉", detail: "拾取、拿取。" },
-                    { word: "擲", detail: "丟棄。" },
-                    { word: "軒冕", detail: "華貴的車馬與官帽，代指顯貴人物。" },
-                    { word: "割席", detail: "割開席子，表示絕交。" }
-                ],
-                questions: [
-                    {
-                        q: "管寧與華歆最後絕交的主要原因是什麼？",
-                        options: ["金子不夠多", "兩人的價值觀與志趣不同", "兩人家境不同", "華歆不會讀書"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_46",
-                title: "世說新語 · 華歆與王朗",
-                author: "劉義慶",
-                content: "華歆、王朗俱乘船避難，有一人欲依附，歆輒難之。朗曰：「幸尚寬，何為不可？」後賊追至，王欲捨所攜人。歆曰：「本所以疑，正為此耳。既已納其自託，寧可以急相棄邪？」遂攜拯如初。",
-                translation: "華歆和王朗一起乘船逃難，有個人想依附他們，華歆總是感到為難。王朗說：「船還算寬敞，有什麼不可以呢？」後來賊人追來，王朗想丟下那個人。華歆說：「我當初之所以猶豫，正是因為想到這種情況。既然已經接受他託付自己，難道可以因為情勢危急就拋棄他嗎？」於是仍然像一開始一樣帶著他。",
-                notes: [
-                    { word: "俱", detail: "一起。" },
-                    { word: "避難", detail: "逃避災難。" },
-                    { word: "輒", detail: "總是。" },
-                    { word: "捨", detail: "丟棄。" },
-                    { word: "拯", detail: "救助。" }
-                ],
-                questions: [
-                    {
-                        q: "華歆最後堅持救助同行者，主要表現什麼品格？",
-                        options: ["重承諾、負責任", "貪圖利益", "害怕敵人", "喜歡冒險"],
-                        answer: 0
-                    }
-                ]
-            },
-            {
-                id: "article_47",
-                title: "岳陽樓記 · 先天下之憂而憂",
-                author: "范仲淹",
-                content: "不以物喜，不以己悲。居廟堂之高則憂其民；處江湖之遠則憂其君。是進亦憂，退亦憂。然則何時而樂耶？其必曰：「先天下之憂而憂，後天下之樂而樂」歟！",
-                translation: "不因外在環境的好壞而高興，也不因自己的得失而悲傷。在朝廷做官就擔憂百姓；退居江湖就擔憂君主。這樣進仕也憂慮，退居也憂慮。那麼什麼時候才快樂呢？大概一定要說：「在天下人憂慮之前先憂慮，在天下人享樂之後才享樂」吧！",
-                notes: [
-                    { word: "以", detail: "因為。" },
-                    { word: "廟堂", detail: "朝廷。" },
-                    { word: "江湖", detail: "民間、退隱之地。" },
-                    { word: "進", detail: "入朝為官。" },
-                    { word: "退", detail: "退居民間。" }
-                ],
-                questions: [
-                    {
-                        q: "「先天下之憂而憂，後天下之樂而樂」表達什麼精神？",
-                        options: ["只顧自己", "以天下人民為先的責任感", "追求享樂", "逃避政治"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_48",
-                title: "岳陽樓記 · 淫雨霏霏",
-                author: "范仲淹",
-                content: "若夫淫雨霏霏，連月不開，陰風怒號，濁浪排空；日星隱曜，山岳潛形；商旅不行，檣傾楫摧。",
-                translation: "如果遇上連綿不斷的雨，接連幾個月都不放晴，陰冷的風怒吼，混濁的浪濤衝向天空；太陽和星星隱藏光芒，山嶽也隱沒形體；商人和旅客無法通行，桅杆倒下，船槳折斷。",
-                notes: [
-                    { word: "淫雨", detail: "連綿不斷的雨。" },
-                    { word: "霏霏", detail: "雨雪繁密的樣子。" },
-                    { word: "開", detail: "放晴。" },
-                    { word: "曜", detail: "光芒。" },
-                    { word: "檣", detail: "船的桅杆。" },
-                    { word: "楫", detail: "船槳。" }
-                ],
-                questions: [
-                    {
-                        q: "這段描寫的天氣有何特色？",
-                        options: ["晴朗溫暖", "陰雨連綿、風浪猛烈", "乾燥炎熱", "風平浪靜"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_49",
-                title: "桃花源記 · 黃髮垂髫",
-                author: "陶淵明",
-                content: "土地平曠，屋舍儼然，有良田、美池、桑竹之屬。阡陌交通，雞犬相聞。其中往來種作，男女衣著，悉如外人。黃髮垂髫，並怡然自樂。",
-                translation: "土地平坦開闊，房屋整齊，有肥沃的田地、美麗的池塘，以及桑樹竹林之類。田間小路交錯相通，雞鳴狗叫的聲音彼此可以聽見。人們在其中來來往往耕種，男女的穿著都和外面的人一樣。老人和孩子都安適愉快，自得其樂。",
-                notes: [
-                    { word: "儼然", detail: "整齊的樣子。" },
-                    { word: "屬", detail: "類。" },
-                    { word: "阡陌", detail: "田間小路。" },
-                    { word: "悉", detail: "都、全。" },
-                    { word: "黃髮", detail: "老人。" },
-                    { word: "垂髫", detail: "兒童。" }
-                ],
-                questions: [
-                    {
-                        q: "「黃髮垂髫，並怡然自樂」描寫桃花源居民什麼樣的生活？",
-                        options: ["貧困悲慘", "安定快樂", "戰亂不安", "忙於戰爭"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: "article_50",
-                title: "木蘭詩",
-                author: "《樂府詩集》",
-                content: "唧唧復唧唧，木蘭當戶織。不聞機杼聲，唯聞女歎息。問女何所思，問女何所憶。女亦無所思，女亦無所憶。昨夜見軍帖，可汗大點兵。",
-                translation: "織布機聲唧唧又唧唧，木蘭對著門織布。聽不見織布機的聲音，只聽見女兒的歎息聲。問女兒在想什麼，問女兒在思念什麼。女兒說自己沒有想什麼，也沒有思念什麼。昨天晚上看到軍隊徵召的文書，可汗正在大規模徵兵。",
-                notes: [
-                    { word: "當戶", detail: "對著門。" },
-                    { word: "機杼", detail: "織布機。" },
-                    { word: "憶", detail: "思念。" },
-                    { word: "軍帖", detail: "軍隊徵召的文書。" },
-                    { word: "可汗", detail: "古代北方民族對君主的稱呼。" }
-                ],
-                questions: [
-                    {
-                        q: "木蘭為什麼開始準備從軍？",
-                        options: ["想追求功名", "因為軍隊徵兵且家中沒有合適的人代父從軍", "想離開家鄉遊玩", "受到朋友邀請"],
-                        answer: 1
-                    }
-                ]
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof articles !== 'undefined' && articles.length > 0) {
+                initDropdown();
+                loadArticle(0); // 預設載入第一篇
             }
-        ];
-
-        // 頁面動態渲染邏輯
-        let currentArticleIndex = 0;
-
-        window.onload = function() {
-            initSelectMenu();
-            loadArticle(0);
-        };
+        });
 
         // 初始化下拉選單
-        function initSelectMenu() {
-            const select = document.getElementById('articleSelect');
-            select.innerHTML = '';
-            articles.forEach((art, idx) => {
-                const opt = document.createElement('option');
-                opt.value = idx;
-                opt.innerText = `${idx + 1}. ${art.title} (${art.author})`;
-                select.appendChild(opt);
-            });
+        function initDropdown() {
+            const listContainer = document.getElementById('dropdown-list');
+            listContainer.innerHTML = articles.map((art, index) => `
+                <li>
+                    <div class="custom-dropdown-item ${index === 0 ? 'active' : ''}" onclick="selectArticle(${index})">
+                        📘 ${art.title}
+                    </div>
+                </li>
+            `).join('');
         }
 
-        // 載入文章內容
-        window.loadArticle = function(index) {
-            currentArticleIndex = index;
+        // 切換文章
+        function selectArticle(index) {
+            // 更新選單標題
+            document.getElementById('selected-title').innerText = articles[index].title;
+            
+            // 更新選單 active 狀態
+            const items = document.querySelectorAll('.custom-dropdown-item');
+            items.forEach((item, i) => {
+                if (i === index) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+
+            // 渲染內容
+            loadArticle(index);
+        }
+
+        // 渲染單篇文章內容
+        function loadArticle(index) {
             const art = articles[index];
+            const displayArea = document.getElementById('article-display');
 
-            document.getElementById('artTitle').innerText = art.title;
-            document.getElementById('artAuthor').innerText = `作者：${art.author}`;
-            document.getElementById('artContent').innerText = art.content;
-            document.getElementById('artTranslation').innerText = art.translation;
+            displayArea.innerHTML = `
+                <div class="main-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold mb-0 text-white">${art.title}</h4>
+                        <span class="badge bg-primary px-3 py-2 rounded-pill">${art.author}</span>
+                    </div>
 
-            // 預設隱藏翻譯
-            document.getElementById('artTranslation').style.display = 'none';
-            document.getElementById('transBtnText').innerText = '顯示白話翻譯';
+                    <!-- 原文 -->
+                    <div class="mb-3">
+                        <label class="text-secondary small fw-bold mb-1">【原文】</label>
+                        <div class="content-box fs-5 lh-lg text-white">
+                            ${art.content}
+                        </div>
+                    </div>
 
-            // 渲染註釋
-            const notesContainer = document.getElementById('artNotes');
-            notesContainer.innerHTML = '';
-            art.notes.forEach(note => {
-                const div = document.createElement('div');
-                div.className = 'col-md-6';
-                div.innerHTML = `<div class="p-2 border rounded bg-white"><span class="note-tag">${note.word}</span> ${note.detail}</div>`;
-                notesContainer.appendChild(div);
-            });
+                    <!-- 翻譯 -->
+                    <div class="mb-3">
+                        <label class="text-secondary small fw-bold mb-1">【白話文翻譯】</label>
+                        <div class="content-box text-secondary fs-6 lh-base" style="background-color: #121926;">
+                            ${art.translation}
+                        </div>
+                    </div>
 
-            // 渲染測驗題
-            renderQuiz(art.questions);
+                    <!-- 註釋 -->
+                    ${art.notes && art.notes.length > 0 ? `
+                        <div class="mb-3">
+                            <label class="text-secondary small fw-bold mb-2">【字詞釋義】</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                ${art.notes.map(n => `
+                                    <span class="badge bg-dark text-light border border-secondary p-2 font-monospace fs-6">
+                                        <span class="text-highlight">${n.word}</span>：${n.detail}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- 隨堂測驗 -->
+                    ${art.questions && art.questions.length > 0 ? `
+                        <div class="mt-4 pt-3 border-top border-secondary">
+                            <label class="text-warning small fw-bold mb-2"><i class="bi bi-pencil-square"></i> 隨堂測驗</label>
+                            ${art.questions.map((q, qIndex) => `
+                                <p class="fw-bold mb-2 text-white">${q.q}</p>
+                                <div class="d-grid gap-2">
+                                    ${q.options.map((opt, optIndex) => `
+                                        <button class="quiz-option" onclick="checkAnswer(${index},${qIndex}, ${optIndex},${q.answer}, this)">
+                                            ${optIndex + 1}.${opt}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
         }
 
-        // 開關翻譯
-        window.toggleTranslation = function() {
-            const transBox = document.getElementById('artTranslation');
-            const btnText = document.getElementById('transBtnText');
-            if (transBox.style.display === 'none') {
-                transBox.style.display = 'block';
-                btnText.innerText = '隱藏白話翻譯';
+        // 簡單的答題判斷
+        function checkAnswer(artIndex, qIndex, selectedIndex, correctIndex, btn) {
+            const parent = btn.parentElement;
+            const buttons = parent.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedIndex === correctIndex) {
+                btn.style.backgroundColor = '#15803d';
+                btn.style.borderColor = '#22c55e';
+                btn.innerText += '  ✓ 正確！';
             } else {
-                transBox.style.display = 'none';
-                btnText.innerText = '顯示白話翻譯';
-            }
-        }
-
-        // 渲染測驗
-        function renderQuiz(questions) {
-            const container = document.getElementById('quizContainer');
-            container.innerHTML = '';
-
-            questions.forEach((q, qIdx) => {
-                const qDiv = document.createElement('div');
-                qDiv.className = 'mb-4';
-                qDiv.innerHTML = `<p class="fw-bold fs-5 mb-3">${qIdx + 1}. ${q.q}</p>`;
-
-                const optionsDiv = document.createElement('div');
-                q.options.forEach((opt, optIdx) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'option-btn';
-                    btn.innerText = opt;
-                    btn.onclick = (e) => checkAnswer(e, btn, optIdx, q.answer, optionsDiv);
-                    optionsDiv.appendChild(btn);
-                });
-
-                qDiv.appendChild(optionsDiv);
-                container.appendChild(qDiv);
-            });
-        }
-
-        // 檢查答案
-        function checkAnswer(event, selectedBtn, selectedIdx, correctIdx, optionsContainer) {
-            const allBtns = optionsContainer.querySelectorAll('.option-btn');
-            allBtns.forEach(btn => btn.disabled = true);
-
-            if (selectedIdx === correctIdx) {
-                selectedBtn.classList.add('correct');
-                // 觸發紙花與加 XP
-                confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-                if (window.addXP) {
-                    window.addXP(10, event); // 答對獲得 +10 XP
-                }
-            } else {
-                selectedBtn.classList.add('wrong');
-                allBtns[correctIdx].classList.add('correct');
+                btn.style.backgroundColor = '#b91c1c';
+                btn.style.borderColor = '#ef4444';
+                btn.innerText += '  ✗ 錯誤';
+                
+                // 標示正確答案
+                buttons[correctIndex].style.backgroundColor = '#15803d';
             }
         }
     </script>
