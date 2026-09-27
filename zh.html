@@ -21,7 +21,21 @@
             border-radius: 16px;
         }
 
-        /* 自訂下拉選單風格 (匹配 UI 圖案) */
+        /* XP 標籤 */
+        .xp-badge {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: #f59e0b;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 下拉選單風格 */
         .custom-dropdown-btn {
             background-color: #1e293b;
             border: 1px solid #3b82f6;
@@ -37,10 +51,6 @@
             cursor: pointer;
         }
 
-        .custom-dropdown-btn:focus {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
-        }
-
         .custom-dropdown-menu {
             background-color: #1e293b;
             border: 1px solid #334155;
@@ -51,7 +61,7 @@
             margin-top: 8px;
             padding: 8px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            display: none; /* 預設隱藏 */
+            display: none;
             position: absolute;
             z-index: 1000;
         }
@@ -89,21 +99,68 @@
             color: #60a5fa;
         }
 
-        /* 測驗選項 */
+        /* 測驗選項風格 */
         .quiz-option {
             background-color: #1e293b;
             border: 1px solid #334155;
             color: #e2e8f0;
-            border-radius: 10px;
-            padding: 10px 14px;
+            border-radius: 12px;
+            padding: 14px 18px;
             text-align: left;
             width: 100%;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .quiz-option:hover:not(:disabled) {
+            border-color: #3b82f6;
+            background-color: #273549;
+        }
+
+        .quiz-option.correct {
+            background-color: rgba(34, 197, 94, 0.15) !important;
+            border: 2px solid #22c55e !important;
+            color: #4ade80 !important;
+            font-weight: bold;
+        }
+
+        .quiz-option.wrong {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+            border: 2px solid #ef4444 !important;
+            color: #f87171 !important;
+        }
+
+        /* 答對回饋提示 */
+        .feedback-msg {
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-top: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* 下一題按鈕 */
+        .btn-next {
+            background-color: #38bdf8;
+            color: #0f172a;
+            font-weight: bold;
+            border-radius: 12px;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            margin-top: 15px;
+            font-size: 1.05rem;
             transition: all 0.2s;
         }
 
-        .quiz-option:hover {
-            border-color: #3b82f6;
-            background-color: #273549;
+        .btn-next:hover {
+            background-color: #7dd3fc;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -111,49 +168,58 @@
 
     <div class="container py-4" style="max-width: 600px;">
         
-        <!-- 頂部返回區塊 -->
-        <div class="d-flex align-items-center mb-4">
-            <a href="index.html" class="text-secondary me-3 fs-4"><i class="bi bi-chevron-left"></i></a>
-            <h4 class="mb-0 fw-bold">國文與文言文</h4>
+        <!-- 頂部導覽列 + XP 顯示 -->
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <a href="index.html" class="text-secondary me-3 fs-4"><i class="bi bi-chevron-left"></i></a>
+                <h4 class="mb-0 fw-bold">國文與文言文</h4>
+            </div>
+            <div class="xp-badge">
+                ⚡ <span id="xp-display">0</span> XP
+            </div>
         </div>
 
-        <!-- 自訂下拉選單區塊 -->
+        <!-- 文章選單 -->
         <div class="position-relative mb-4">
             <button class="custom-dropdown-btn" type="button" id="articleDropdown" onclick="toggleDropdown()">
                 <span>📘 <span id="selected-title">載入中...</span></span>
                 <i class="bi bi-caret-down-fill text-secondary"></i>
             </button>
-            <div class="custom-dropdown-menu" id="dropdown-list">
-                <!-- 由 JS 動態生成 -->
-            </div>
+            <div class="custom-dropdown-menu" id="dropdown-list"></div>
         </div>
 
-        <!-- 文章內容展示區 -->
-        <div id="article-display">
-            <!-- 由 JS 動態填入 -->
-        </div>
+        <!-- 文章內容與測驗區 -->
+        <div id="article-display"></div>
 
     </div>
 
-    <!-- 引入資料檔 -->
-    <script src="ch50.js"></script>
+    <!-- 引入資料檔（修正為根目錄路徑，並加上版本號） -->
+    <script src="ch50.js?v=2"></script>
 
     <script>
         let currentArticles = [];
         let isDropdownOpen = false;
+        let userXP = parseInt(localStorage.getItem("user_xp") || "0");
 
         document.addEventListener("DOMContentLoaded", () => {
+            updateXPDisplay();
             initDataCheck();
         });
 
-        // 輪詢檢查資料，確保讀取到 window.articles 或 articles
+        // 更新 XP 畫面與儲存
+        function updateXPDisplay() {
+            document.getElementById("xp-display").innerText = userXP;
+            localStorage.setItem("user_xp", userXP);
+        }
+
+        // 讀取文章資料
         function initDataCheck() {
             const data = (typeof window.articles !== 'undefined') ? window.articles : (typeof articles !== 'undefined' ? articles : null);
 
             if (data && data.length > 0) {
                 currentArticles = data;
                 initDropdownMenu();
-                loadArticle(0); // 預設顯示第 1 篇
+                loadArticle(0);
             } else {
                 setTimeout(initDataCheck, 100);
             }
@@ -173,23 +239,18 @@
             document.getElementById('selected-title').innerText = currentArticles[0].title;
         }
 
-        // 開啟/關閉下拉選單
         function toggleDropdown() {
             const dropdownMenu = document.getElementById('dropdown-list');
             isDropdownOpen = !isDropdownOpen;
             dropdownMenu.style.display = isDropdownOpen ? 'block' : 'none';
         }
 
-        // 選擇特定文章
         function selectArticle(index) {
-            const art = currentArticles[index];
-            
-            document.getElementById('selected-title').innerText = art.title;
+            document.getElementById('selected-title').innerText = currentArticles[index].title;
 
             const items = document.querySelectorAll('.custom-dropdown-item');
             items.forEach((item, i) => {
-                if (i === index) item.classList.add('active');
-                else item.classList.remove('active');
+                item.classList.toggle('active', i === index);
             });
 
             isDropdownOpen = false;
@@ -198,7 +259,7 @@
             loadArticle(index);
         }
 
-        // 渲染文章內容
+        // 載入文章與測驗
         function loadArticle(index) {
             const art = currentArticles[index];
             const displayArea = document.getElementById('article-display');
@@ -240,19 +301,20 @@
                         </div>
                     ` : ''}
 
-                    <!-- 隨堂測驗 -->
+                    <!-- 隨堂測驗區塊 -->
                     ${art.questions && art.questions.length > 0 ? `
                         <div class="mt-4 pt-3 border-top border-secondary">
                             <label class="text-warning small fw-bold mb-2"><i class="bi bi-pencil-square"></i> 隨堂測驗</label>
                             ${art.questions.map((q, qIndex) => `
-                                <p class="fw-bold mb-2 text-white">${q.q}</p>
-                                <div class="d-grid gap-2">
+                                <p class="fw-bold mb-3 text-white fs-5">${q.q}</p>
+                                <div class="d-grid gap-2" id="quiz-container-${qIndex}">
                                     ${q.options.map((opt, optIndex) => `
                                         <button class="quiz-option" onclick="checkAnswer(${index},${qIndex}, ${optIndex},${q.answer}, this)">
-                                            ${optIndex + 1}.${opt}
+                                            ${String.fromCharCode(65 + optIndex)}.${opt}
                                         </button>
                                     `).join('')}
                                 </div>
+                                <div id="feedback-${qIndex}"></div>
                             `).join('')}
                         </div>
                     ` : ''}
@@ -260,26 +322,49 @@
             `;
         }
 
-        // 隨堂測驗判斷
+        // 答題判斷 + 加 XP 功能
         function checkAnswer(artIndex, qIndex, selectedIndex, correctIndex, btn) {
-            const parent = btn.parentElement;
-            const buttons = parent.querySelectorAll('button');
+            const container = document.getElementById(`quiz-container-${qIndex}`);
+            const buttons = container.querySelectorAll('button');
+            const feedbackDiv = document.getElementById(`feedback-${qIndex}`);
+
+            // 停用所有按鈕防止重複點擊
             buttons.forEach(b => b.disabled = true);
 
             if (selectedIndex === correctIndex) {
-                btn.style.backgroundColor = '#15803d';
-                btn.style.borderColor = '#22c55e';
-                btn.innerText += '  ✓ 正確！';
-            } else {
-                btn.style.backgroundColor = '#b91c1c';
-                btn.style.borderColor = '#ef4444';
-                btn.innerText += '  ✗ 錯誤';
+                // 答對處理
+                btn.classList.add('correct');
                 
-                buttons[correctIndex].style.backgroundColor = '#15803d';
+                // 增加 XP (預設 +10)
+                const addedXP = 10;
+                userXP += addedXP;
+                updateXPDisplay();
+
+                // 顯示答對訊息與下一題按鈕
+                feedbackDiv.innerHTML = `
+                    <div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>
+                    <button class="btn-next" onclick="nextArticle(${artIndex})">下一題 ➔</button>
+                `;
+            } else {
+                // 答錯處理
+                btn.classList.add('wrong');
+                buttons[correctIndex].classList.add('correct'); // 標示正確答案
+                
+                feedbackDiv.innerHTML = `
+                    <div class="feedback-msg text-danger">❌ 答錯了，再接再厲！</div>
+                    <button class="btn-next" onclick="nextArticle(${artIndex})">下一題 ➔</button>
+                `;
             }
         }
 
-        // 點擊選單外部時自動關閉下拉選單
+        // 切換至下一篇文章/題目
+        function nextArticle(currentIndex) {
+            const nextIndex = (currentIndex + 1) % currentArticles.length;
+            selectArticle(nextIndex);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 點擊外面時收合選單
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('dropdown-list');
             const button = document.getElementById('articleDropdown');
