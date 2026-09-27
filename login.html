@@ -8,9 +8,6 @@
     <!-- 網站 Favicon 圖示 -->
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png">
 
-    <!-- 引入 Google 官方 SDK -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-
     <style>
         * {
             margin: 0;
@@ -55,12 +52,33 @@
             margin-bottom: 1.8rem;
         }
 
-        /* Google 登入按鈕容器 */
-        .google-btn-wrapper {
+        /* Custom Google 登入按鈕 */
+        .google-btn {
+            width: 100%;
             display: flex;
+            align-items: center;
             justify-content: center;
+            gap: 10px;
+            background: #ffffff;
+            color: #1f2937;
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
             margin-bottom: 1.5rem;
-            min-height: 44px;
+        }
+
+        .google-btn:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
+        .google-btn img {
+            width: 20px;
+            height: 20px;
         }
 
         .divider {
@@ -157,32 +175,21 @@
         <h1 class="brand-title">cale study app</h1>
         <p class="subtitle" id="pageSubTitle">歡迎回來！請選擇登入方式</p>
 
-        <!-- 1. Google 快捷登入區域 -->
-        <div class="google-btn-wrapper">
-            <div id="g_id_onload"
-                data-client_id="48507491429-i6c5cac9cr358iqbp8sv0mv3h67h051t.apps.googleusercontent.com"
-                data-callback="handleCredentialResponse"
-                data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin"
-                data-type="standard"
-                data-size="large"
-                data-theme="filled_black"
-                data-text="sign_in_with"
-                data-shape="rectangular"
-                data-logo_alignment="left">
-            </div>
-        </div>
+        <!-- Google 快捷登入按鈕 -->
+        <button type="button" class="google-btn" id="googleLoginBtn">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Icon">
+            使用 Google 帳號登入
+        </button>
 
         <div class="divider">
             <span>或使用一般帳號</span>
         </div>
 
-        <!-- 2. 一般帳密登入表單 -->
+        <!-- 一般帳密登入表單 -->
         <form id="authForm">
             <div class="form-group">
-                <label for="username">帳號</label>
-                <input type="text" id="username" class="form-control" placeholder="請輸入帳號" required>
+                <label for="username">帳號 / Email</label>
+                <input type="text" id="username" class="form-control" placeholder="請輸入帳號或 Email" required>
             </div>
             <div class="form-group">
                 <label for="password">密碼</label>
@@ -195,92 +202,120 @@
         <div class="error-msg" id="errorMsg"></div>
 
         <div class="toggle-mode" id="toggleText">
-            還沒有帳號嗎？<span onclick="toggleMode()">立即註冊</span>
+            還沒有帳號嗎？<span id="toggleBtn">開啟註冊</span>
         </div>
     </div>
 
-    <script>
+    <!-- Firebase 模組腳本 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            setDoc 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Firebase 配置資訊（請更換為你自己的 Firebase 金鑰）
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         let isLoginMode = true;
 
-        // 若已經登入，自動前往 dashboard
-        if (localStorage.getItem("isLoggedIn") === "true") {
-            window.location.href = "dashboard.html";
-        }
+        // 監聽登入狀態：一旦使用者成功登入，確保雲端有其個人檔案後轉址
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
 
-        // 解析 Google 回傳的 JWT Token 資訊
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        }
+                // 如果是新註冊用戶，建立初始 Firebase 成就記錄
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        displayName: user.displayName || user.email.split('@')[0],
+                        email: user.email,
+                        photoURL: user.photoURL || '',
+                        level: 1,
+                        xp: 0,
+                        totalXp: 0,
+                        badges: []
+                    });
+                }
+                window.location.href = "dashboard.html";
+            }
+        });
 
-        // Google 登入成功後的回調函數
-        function handleCredentialResponse(response) {
-            const responsePayload = parseJwt(response.credential);
+        // 處理 Google 彈窗登入
+        document.getElementById("googleLoginBtn").addEventListener("click", async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                document.getElementById("errorMsg").innerText = "Google 登入失敗: " + error.message;
+            }
+        });
 
-            // 儲存 Google 使用者資訊到 localStorage
-            localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("currentUser", responsePayload.name);
-            localStorage.setItem("userPicture", responsePayload.picture);
-            localStorage.setItem("userEmail", responsePayload.email);
-            
-            // 關鍵：將 Email 作為帳號唯一 Key 用於經驗值 (XP) 統計
-            localStorage.setItem("accountKey", responsePayload.email);
-
-            window.location.href = "dashboard.html";
-        }
+        // 切換 登入 / 註冊 模式
+        document.getElementById("toggleBtn").addEventListener("click", toggleMode);
 
         function toggleMode() {
             isLoginMode = !isLoginMode;
             document.getElementById("pageSubTitle").innerText = isLoginMode ? "歡迎回來！請選擇登入方式" : "建立新帳號以開始學習";
             document.getElementById("submitBtn").innerText = isLoginMode ? "登入" : "註冊帳號";
             document.getElementById("toggleText").innerHTML = isLoginMode 
-                ? '還沒有帳號嗎？<span onclick="toggleMode()">立即註冊</span>' 
-                : '已有帳號？<span onclick="toggleMode()">返回登入</span>';
+                ? '還沒有帳號嗎？<span id="toggleBtn">立即註冊</span>' 
+                : '已有帳號？<span id="toggleBtn">返回登入</span>';
             document.getElementById("errorMsg").innerText = "";
+
+            // 重新綁定事件
+            document.getElementById("toggleBtn").addEventListener("click", toggleMode);
         }
 
-        document.getElementById("authForm").addEventListener("submit", function(e) {
+        // 一般帳密登入 / 註冊 表單送出
+        document.getElementById("authForm").addEventListener("submit", async function(e) {
             e.preventDefault();
-            const user = document.getElementById("username").value.trim();
+            const inputUser = document.getElementById("username").value.trim();
             const pass = document.getElementById("password").value.trim();
             const errorMsg = document.getElementById("errorMsg");
 
-            if (!user || !pass) {
-                errorMsg.innerText = "請填寫所有欄位！";
-                return;
-            }
+            // 如果只輸入帳號名稱，自動補齊格式成為 Email
+            const email = inputUser.includes("@") ? inputUser : `${inputUser}@caleapp.com`;
 
-            let users = JSON.parse(localStorage.getItem("cale_app_users") || "{}");
-            if (!users["cale"]) users["cale"] = "123456";
+            errorMsg.innerText = "處理中...";
 
-            if (isLoginMode) {
-                if (users[user] && users[user] === pass) {
-                    localStorage.setItem("isLoggedIn", "true");
-                    localStorage.setItem("currentUser", user);
-                    localStorage.setItem("accountKey", user); // 將使用者帳號作為唯一 Key
-                    localStorage.removeItem("userPicture");
-                    localStorage.removeItem("userEmail");
-                    window.location.href = "dashboard.html";
+            try {
+                if (isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, pass);
                 } else {
-                    errorMsg.innerText = "帳號或密碼錯誤！";
+                    await createUserWithEmailAndPassword(auth, email, pass);
                 }
-            } else {
-                if (users[user]) {
+            } catch (error) {
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                    errorMsg.innerText = "帳號或密碼錯誤！";
+                } else if (error.code === 'auth/email-already-in-use') {
                     errorMsg.innerText = "該帳號已被註冊！";
+                } else if (error.code === 'auth/weak-password') {
+                    errorMsg.innerText = "密碼長度至少需要 6 個字元！";
                 } else {
-                    users[user] = pass;
-                    localStorage.setItem("cale_app_users", JSON.stringify(users));
-                    localStorage.setItem("isLoggedIn", "true");
-                    localStorage.setItem("currentUser", user);
-                    localStorage.setItem("accountKey", user); // 將使用者帳號作為唯一 Key
-                    localStorage.removeItem("userPicture");
-                    localStorage.removeItem("userEmail");
-                    alert("註冊成功！自動為您登入");
-                    window.location.href = "dashboard.html";
+                    errorMsg.innerText = "登入失敗：" + error.message;
                 }
             }
         });
