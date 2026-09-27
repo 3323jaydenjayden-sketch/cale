@@ -576,26 +576,37 @@
         let comboCount = 0;
         let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
 
+        // 1. 取得與登入系統 (Google Login) 完全一致的帳號 Key
         function getXPKey() {
-            const currentUser = localStorage.getItem("currentUser") || "學員";
-            const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
-            return "xp_" + accountKey;
+            const userKey = localStorage.getItem("accountKey") 
+                         || localStorage.getItem("userEmail") 
+                         || localStorage.getItem("currentUser") 
+                         || "default_user";
+            return "xp_" + userKey;
         }
 
+        // 2. 讀取 XP（包含多重備援機制）
         function getUserXP() {
             const key = getXPKey();
-            return parseInt(localStorage.getItem(key)) 
-                || parseInt(localStorage.getItem("userXP")) 
-                || parseInt(localStorage.getItem("user_xp")) 
-                || parseInt(localStorage.getItem("xp")) 
-                || 0;
+            const xpVal = localStorage.getItem(key) 
+                       || localStorage.getItem("userXP") 
+                       || localStorage.getItem("xp") 
+                       || "0";
+            return parseInt(xpVal, 10);
         }
 
+        // 3. 更新與同步寫入 XP，確保 dashboard.html 一定讀得到
         function updateXPDisplay() {
             const currentXP = getUserXP();
+            
             document.getElementById("xpCount").innerText = currentXP;
-            localStorage.setItem(getXPKey(), currentXP);
 
+            // 多重連動寫入
+            localStorage.setItem(getXPKey(), currentXP);
+            localStorage.setItem("userXP", currentXP);
+            localStorage.setItem("xp", currentXP);
+
+            // 同步每日進度
             let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
             localStorage.setItem("todayProgressPercent", progressPercent);
         }
@@ -729,7 +740,7 @@
             }
         }
 
-        // 使用 Groq 目前運作中的模型 openai/gpt-oss-120b
+        // AI 助記：已更新為最新可用模型 openai/gpt-oss-120b
         async function getAIAssist(event) {
             if (event) event.stopPropagation();
 
@@ -748,11 +759,11 @@
                         "Authorization": `Bearer ${GROQ_API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: "openai/gpt-oss-120b", // 已更新為可用模型
+                        model: "openai/gpt-oss-120b",
                         messages: [
                             {
                                 role: "system",
-                                content: "你是一位親切的國中英文會考助教。請用繁體中文回答，簡短提供：1. 趣味諧音或拆解記憶法 2. 一句適合國中程度的生活例句與翻譯 3.減少*的出現"
+                                content: "你是一位親切的國中英文會考助教。請用繁體中文回答，簡短提供：1. 趣味諧音或拆解記憶法 2. 一句適合國中程度的生活例句與翻譯。"
                             },
                             {
                                 role: "user",
@@ -835,7 +846,6 @@
                 
                 let currentXP = getUserXP();
                 currentXP += gainXP;
-                localStorage.setItem(getXPKey(), currentXP);
                 
                 updateXPDisplay();
 
