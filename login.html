@@ -52,7 +52,6 @@
             margin-bottom: 1.8rem;
         }
 
-        /* Custom Google 登入按鈕 */
         .google-btn {
             width: 100%;
             display: flex;
@@ -175,7 +174,7 @@
         <h1 class="brand-title">cale study app</h1>
         <p class="subtitle" id="pageSubTitle">歡迎回來！請選擇登入方式</p>
 
-        <!-- Google 快捷登入按鈕 -->
+        <!-- Google 登入按鈕 -->
         <button type="button" class="google-btn" id="googleLoginBtn">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Icon">
             使用 Google 帳號登入
@@ -185,7 +184,7 @@
             <span>或使用一般帳號</span>
         </div>
 
-        <!-- 一般帳密登入表單 -->
+        <!-- 一般帳密表單 -->
         <form id="authForm">
             <div class="form-group">
                 <label for="username">帳號 / Email</label>
@@ -202,13 +201,14 @@
         <div class="error-msg" id="errorMsg"></div>
 
         <div class="toggle-mode" id="toggleText">
-            還沒有帳號嗎？<span id="toggleBtn">開啟註冊</span>
+            還沒有帳號嗎？<span id="toggleBtn">立即註冊</span>
         </div>
     </div>
 
-    <!-- Firebase 模組腳本 -->
+    <!-- Firebase 腳本 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
         import { 
             getAuth, 
             GoogleAuthProvider, 
@@ -224,30 +224,30 @@
             setDoc 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Firebase 配置資訊（請更換為你自己的 Firebase 金鑰）
+        // 帶入真實 Firebase 金鑰
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
+            authDomain: "cale-study-app-41b9b.firebaseapp.com",
+            projectId: "cale-study-app-41b9b",
+            storageBucket: "cale-study-app-41b9b.firebasestorage.app",
+            messagingSenderId: "819450732167",
+            appId: "1:819450732167:web:a727579df57eb9da33e222",
+            measurementId: "G-GP1XCE9W5E"
         };
 
-        // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         let isLoginMode = true;
 
-        // 監聽登入狀態：一旦使用者成功登入，確保雲端有其個人檔案後轉址
+        // 監聽登入狀態：一旦成功登入，確保雲端 Firestore 有該使用者的基本成就資料
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
 
-                // 如果是新註冊用戶，建立初始 Firebase 成就記錄
                 if (!userSnap.exists()) {
                     await setDoc(userRef, {
                         displayName: user.displayName || user.email.split('@')[0],
@@ -259,11 +259,12 @@
                         badges: []
                     });
                 }
+                // 成功登入後跳轉至主頁面
                 window.location.href = "dashboard.html";
             }
         });
 
-        // 處理 Google 彈窗登入
+        // Google 點擊登入
         document.getElementById("googleLoginBtn").addEventListener("click", async () => {
             const provider = new GoogleAuthProvider();
             try {
@@ -285,18 +286,16 @@
                 : '已有帳號？<span id="toggleBtn">返回登入</span>';
             document.getElementById("errorMsg").innerText = "";
 
-            // 重新綁定事件
             document.getElementById("toggleBtn").addEventListener("click", toggleMode);
         }
 
-        // 一般帳密登入 / 註冊 表單送出
+        // 一般帳密送出處理
         document.getElementById("authForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             const inputUser = document.getElementById("username").value.trim();
             const pass = document.getElementById("password").value.trim();
             const errorMsg = document.getElementById("errorMsg");
 
-            // 如果只輸入帳號名稱，自動補齊格式成為 Email
             const email = inputUser.includes("@") ? inputUser : `${inputUser}@caleapp.com`;
 
             errorMsg.innerText = "處理中...";
