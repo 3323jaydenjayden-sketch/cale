@@ -729,7 +729,7 @@
             }
         }
 
-        // 使用 Groq 官方模型 llama3-70b-8192
+        // 使用 Groq 目前運作中的模型 openai/gpt-oss-120b
         async function getAIAssist(event) {
             if (event) event.stopPropagation();
 
@@ -748,7 +748,7 @@
                         "Authorization": `Bearer ${GROQ_API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: "llama3-70b-8192", // 已修改為可正常存取的模型
+                        model: "openai/gpt-oss-120b", // 已更新為可用模型
                         messages: [
                             {
                                 role: "system",
