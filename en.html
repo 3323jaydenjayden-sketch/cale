@@ -547,13 +547,13 @@
         </div>
     </div>
 
-    <!-- 引入單字庫 -->
+       <!-- 引入單字庫 -->
     <script src="words/word-a.js"></script>
     <script src="words/word-b.js"></script>
 
     <script>
-        // 前端直接存取 Groq API Key
-        const GROQ_API_KEY = "Gsk_tIamylyZ0LfUOIuco184WGdyb3FY4ofKzi8bX8Mwph54qAcZpdX6"; // 請替換為您的 Groq API 金鑰
+        // 前端存取 Groq API Key
+        const GROQ_API_KEY = "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";
 
         let currentList = [];
         let currentIndex = 0;
@@ -585,6 +585,13 @@
             const currentXP = getUserXP();
             document.getElementById("xpCount").innerText = currentXP;
             localStorage.setItem(getXPKey(), currentXP);
+
+            let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
+            localStorage.setItem("todayProgressPercent", progressPercent);
+        }
+
+        // ... 其餘邏輯保持不變 ...
+
 
             let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
             localStorage.setItem("todayProgressPercent", progressPercent);
