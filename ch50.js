@@ -1,4 +1,5 @@
-const articles = [
+window.articles = [
+
     {
         id: "article_1",
         title: "世說新語 · 詠雪",
