@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         body {
-            background-color: #0b0f19; /* 深色背景 */
+            background-color: #0b0f19;
             color: #f1f5f9;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
@@ -21,7 +21,7 @@
             border-radius: 16px;
         }
 
-        /* 下拉選單自訂風格 (模仿圖1) */
+        /* 自訂下拉選單風格 (匹配 UI 圖案) */
         .custom-dropdown-btn {
             background-color: #1e293b;
             border: 1px solid #3b82f6;
@@ -34,6 +34,7 @@
             justify-content: space-between;
             align-items: center;
             font-weight: 500;
+            cursor: pointer;
         }
 
         .custom-dropdown-btn:focus {
@@ -45,11 +46,14 @@
             border: 1px solid #334155;
             border-radius: 14px;
             width: 100%;
-            max-height: 300px;
+            max-height: 320px;
             overflow-y: auto;
             margin-top: 8px;
             padding: 8px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: none; /* 預設隱藏 */
+            position: absolute;
+            z-index: 1000;
         }
 
         .custom-dropdown-item {
@@ -85,7 +89,7 @@
             color: #60a5fa;
         }
 
-        /* 隨堂測驗選項按鈕 */
+        /* 測驗選項 */
         .quiz-option {
             background-color: #1e293b;
             border: 1px solid #334155;
@@ -113,67 +117,90 @@
             <h4 class="mb-0 fw-bold">國文與文言文</h4>
         </div>
 
-        <!-- 1: 自訂下拉選單 (選文章) -->
-        <div class="dropdown mb-4">
-            <button class="custom-dropdown-btn dropdown-toggle" type="button" id="articleDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <!-- 自訂下拉選單區塊 -->
+        <div class="position-relative mb-4">
+            <button class="custom-dropdown-btn" type="button" id="articleDropdown" onclick="toggleDropdown()">
                 <span>📘 <span id="selected-title">載入中...</span></span>
+                <i class="bi bi-caret-down-fill text-secondary"></i>
             </button>
-            <ul class="dropdown-menu custom-dropdown-menu" id="dropdown-list" aria-labelledby="articleDropdown">
-                <!-- 由 JS 動態生成 50 篇選單 -->
-            </ul>
+            <div class="custom-dropdown-menu" id="dropdown-list">
+                <!-- 由 JS 動態生成 -->
+            </div>
         </div>
 
-        <!-- 文章展示卡片 -->
+        <!-- 文章內容展示區 -->
         <div id="article-display">
-            <!-- 由 JS 動態填入選中的文章 -->
+            <!-- 由 JS 動態填入 -->
         </div>
 
     </div>
 
-    <!-- 引入資料檔 cale/ch50.js -->
+    <!-- 引入資料檔 -->
     <script src="cale/ch50.js"></script>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
 
     <script>
+        let currentArticles = [];
+        let isDropdownOpen = false;
+
         document.addEventListener("DOMContentLoaded", () => {
-            if (typeof articles !== 'undefined' && articles.length > 0) {
-                initDropdown();
-                loadArticle(0); // 預設載入第一篇
-            }
+            initDataCheck();
         });
 
-        // 初始化下拉選單
-        function initDropdown() {
-            const listContainer = document.getElementById('dropdown-list');
-            listContainer.innerHTML = articles.map((art, index) => `
-                <li>
-                    <div class="custom-dropdown-item ${index === 0 ? 'active' : ''}" onclick="selectArticle(${index})">
-                        📘 ${art.title}
-                    </div>
-                </li>
-            `).join('');
+        // 輪詢檢查資料，確保讀取到 window.articles 或 articles
+        function initDataCheck() {
+            const data = (typeof window.articles !== 'undefined') ? window.articles : (typeof articles !== 'undefined' ? articles : null);
+
+            if (data && data.length > 0) {
+                currentArticles = data;
+                initDropdownMenu();
+                loadArticle(0); // 預設顯示第 1 篇
+            } else {
+                setTimeout(initDataCheck, 100);
+            }
         }
 
-        // 切換文章
+        // 初始化下拉清單
+        function initDropdownMenu() {
+            const listContainer = document.getElementById('dropdown-list');
+            if (!listContainer) return;
+
+            listContainer.innerHTML = currentArticles.map((art, index) => `
+                <div class="custom-dropdown-item ${index === 0 ? 'active' : ''}" onclick="selectArticle(${index})">
+                    📘 ${art.title}
+                </div>
+            `).join('');
+
+            document.getElementById('selected-title').innerText = currentArticles[0].title;
+        }
+
+        // 開啟/關閉下拉選單
+        function toggleDropdown() {
+            const dropdownMenu = document.getElementById('dropdown-list');
+            isDropdownOpen = !isDropdownOpen;
+            dropdownMenu.style.display = isDropdownOpen ? 'block' : 'none';
+        }
+
+        // 選擇特定文章
         function selectArticle(index) {
-            // 更新選單標題
-            document.getElementById('selected-title').innerText = articles[index].title;
+            const art = currentArticles[index];
             
-            // 更新選單 active 狀態
+            document.getElementById('selected-title').innerText = art.title;
+
             const items = document.querySelectorAll('.custom-dropdown-item');
             items.forEach((item, i) => {
                 if (i === index) item.classList.add('active');
                 else item.classList.remove('active');
             });
 
-            // 渲染內容
+            isDropdownOpen = false;
+            document.getElementById('dropdown-list').style.display = 'none';
+
             loadArticle(index);
         }
 
-        // 渲染單篇文章內容
+        // 渲染文章內容
         function loadArticle(index) {
-            const art = articles[index];
+            const art = currentArticles[index];
             const displayArea = document.getElementById('article-display');
 
             displayArea.innerHTML = `
@@ -199,7 +226,7 @@
                         </div>
                     </div>
 
-                    <!-- 註釋 -->
+                    <!-- 字詞釋義 -->
                     ${art.notes && art.notes.length > 0 ? `
                         <div class="mb-3">
                             <label class="text-secondary small fw-bold mb-2">【字詞釋義】</label>
@@ -233,7 +260,7 @@
             `;
         }
 
-        // 簡單的答題判斷
+        // 隨堂測驗判斷
         function checkAnswer(artIndex, qIndex, selectedIndex, correctIndex, btn) {
             const parent = btn.parentElement;
             const buttons = parent.querySelectorAll('button');
@@ -248,10 +275,19 @@
                 btn.style.borderColor = '#ef4444';
                 btn.innerText += '  ✗ 錯誤';
                 
-                // 標示正確答案
                 buttons[correctIndex].style.backgroundColor = '#15803d';
             }
         }
+
+        // 點擊選單外部時自動關閉下拉選單
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('dropdown-list');
+            const button = document.getElementById('articleDropdown');
+            if (dropdown && button && !button.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+                isDropdownOpen = false;
+            }
+        });
     </script>
 </body>
 </html>
