@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cale study app - 等級與成就</title>
+    
+    <!-- 網站 Favicon 圖示 -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png">
+    
+    <!-- 1. 強制登入防護 -->
+    <script>
+        if (localStorage.getItem("isLoggedIn") !== "true") {
+            window.location.replace("login.html");
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: none; /* 驗證通過前隱藏 */
+            background-color: #0b0f19;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem 1.2rem;
+            flex-direction: column;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+        }
+
+        /* 頂部導覽 */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #38bdf8;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+        }
+
+        .page-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* 等級總覽卡片 */
+        .profile-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 24px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem auto;
+        }
+
+        .user-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid #38bdf8;
+            object-fit: cover;
+        }
+
+        .level-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: #38bdf8;
+            color: #0b0f19;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        .username {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .user-title {
+            font-size: 0.95rem;
+            color: #38bdf8;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        /* XP 進度條 */
+        .xp-bar-container {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 10px;
+            height: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 0.8rem;
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            border-radius: 10px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .xp-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        /* 成就勳章區 */
+        .section-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 480px) {
+            .badges-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .badge-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .badge-card.unlocked {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .badge-card.locked {
+            opacity: 0.4;
+            filter: grayscale(100%);
+        }
+
+        .badge-icon {
+            font-size: 2.2rem;
+            background: rgba(15, 23, 42, 0.6);
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            flex-shrink: 0;
+        }
+
+        .badge-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .badge-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .badge-desc {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            line-height: 1.3;
+        }
+
+        .footer-brand {
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            color: #475569;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 頂部導覽 -->
+        <div class="top-nav">
+            <a href="dashboard.html" class="back-btn">➔ 返回控制台</a>
+            <div class="page-title">個人成就</div>
+            <div style="width: 80px;"></div> <!-- 排版平衡用 -->
+        </div>
+
+        <!-- 個人資訊與等級卡片 -->
+        <div class="profile-card">
+            <div class="avatar-container">
+                <img id="userAvatar" src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png" alt="Avatar" class="user-avatar">
+                <div class="level-badge" id="levelBadge">Lv.1</div>
+            </div>
+            <div class="username" id="username">學員</div>
+            <div class="user-title" id="userTitle">🌱 初學者</div>
+
+            <!-- XP 進度條 -->
+            <div class="xp-bar-container">
+                <div class="xp-bar-fill" id="xpBarFill"></div>
+            </div>
+            <div class="xp-stats">
+                <span id="xpCurrentText">0 / 100 XP</span>
+                <span id="xpTotalText">累積經驗：0 XP</span>
+            </div>
+        </div>
+
+        <!-- 成就勳章區 -->
+        <div class="section-header">
+            🏆 成就勳章
+        </div>
+        <div class="badges-grid" id="badgesContainer">
+            <!-- 勳章會透過 JS 自動渲染 -->
+        </div>
+
+        <div class="footer-brand">
+            cale study app
+        </div>
+    </div>
+
+    <script>
+        function loadXPPage() {
+            if (localStorage.getItem("isLoggedIn") !== "true") {
+                window.location.replace("login.html");
+                return;
+            }
+
+            document.body.style.display = "flex";
+
+            // 1. 載入使用者資料
+            const currentUser = localStorage.getItem("currentUser") || "學員";
+            const userPicture = localStorage.getItem("userPicture");
+            const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
+            
+            document.getElementById("username").innerText = currentUser;
+
+            if (userPicture) {
+                document.getElementById("userAvatar").src = userPicture;
+            }
+
+            // 2. 讀取 XP 資料 (預設為 0)
+            const xpKey = "xp_" + accountKey;
+            let totalXP = parseInt(localStorage.getItem(xpKey)) || 0;
+
+            const xpPerLevel = 100;
+            const level = Math.floor(totalXP / xpPerLevel) + 1;
+            const currentXP = totalXP % xpPerLevel;
+
+            // 稱號與等級設定
+            let title = "🌱 初學者";
+            if (level >= 5) title = "🌟 單字新星";
+            if (level >= 10) title = "⚡ 英語高手";
+            if (level >= 20) title = "👑 會考學霸";
+
+            document.getElementById("levelBadge").innerText = `Lv.${level}`;
+            document.getElementById("userTitle").innerText = title;
+            document.getElementById("xpCurrentText").innerText = `${currentXP} / ${xpPerLevel} XP`;
+            document.getElementById("xpTotalText").innerText = `累積經驗：${totalXP} XP`;
+
+            const percent = (currentXP / xpPerLevel) * 100;
+            document.getElementById("xpBarFill").style.width = `${percent}%`;
+
+            // 3. 勳章資料與觸發條件判定
+            const badges = [
+                {
+                    icon: "🚀",
+                    name: "起步走",
+                    desc: "獲得生涯第一個 10 XP",
+                    unlocked: totalXP >= 10
+                },
+                {
+                    icon: "🔥",
+                    name: "持之以恆",
+                    desc: "累積達到 100 XP (升至 Lv.2)",
+                    unlocked: totalXP >= 100
+                },
+                {
+                    icon: "📚",
+                    name: "單字達人",
+                    desc: "累積達到 500 XP (升至 Lv.6)",
+                    unlocked: totalXP >= 500
+                },
+                {
+                    icon: "👑",
+                    name: "會考學霸",
+                    desc: "累積達到 1000 XP (升至 Lv.11)",
+                    unlocked: totalXP >= 1000
+                }
+            ];
+
+            // 4. 渲染勳章 UI
+            const badgesContainer = document.getElementById("badgesContainer");
+            badgesContainer.innerHTML = "";
+
+            badges.forEach(b => {
+                const card = document.createElement("div");
+                card.className = `badge-card ${b.unlocked ? 'unlocked' : 'locked'}`;
+                card.innerHTML = `
+                    <div class="badge-icon">${b.icon}</div>
+                    <div class="badge-info">
+                        <div class="badge-name">${b.name}</div>
+                        <div class="badge-desc">${b.desc}</div>
+                    </div>
+                `;
+                badgesContainer.appendChild(card);
+            });
+        }
+
+        loadXPPage();
+    </script>
+</body>
+</html>
