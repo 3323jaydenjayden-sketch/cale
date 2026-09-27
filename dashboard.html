@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>cale study app</title>
-  
-  <!-- 網站 Favicon 圖示 -->
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cale study app - 控制台</title>
+    
+    <!-- 網站 Favicon 圖示 -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png">
     
     <!-- 1. 強制登入防護：若未登入立刻阻斷並重定向 -->
     <script>
@@ -44,7 +43,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         @media (min-width: 480px) {
@@ -58,6 +57,15 @@
         .user-greeting {
             display: flex;
             align-items: center;
+            gap: 0.8rem;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid #38bdf8;
+            object-fit: cover;
         }
 
         .app-title {
@@ -97,6 +105,68 @@
 
         .logout-btn:hover {
             background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* 經驗值 (XP) 概覽卡片 */
+        .xp-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .xp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .level-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+
+        .xp-detail-link {
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .xp-detail-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .progress-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 0.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .xp-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #94a3b8;
         }
 
         /* 科目卡片 */
@@ -182,6 +252,7 @@
         <!-- 頂部區塊 -->
         <div class="header">
             <div class="user-greeting">
+                <img id="userAvatar" src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png" alt="User Avatar" class="user-avatar" style="display: none;">
                 <h1 class="app-title" id="welcomeUser">你好 👋</h1>
             </div>
             <div class="user-panel">
@@ -189,6 +260,21 @@
                     🔥 今日進度 <span id="progressValue">0</span>%
                 </div>
                 <button class="logout-btn" onclick="logout()">登出</button>
+            </div>
+        </div>
+
+        <!-- 個人經驗值與等級卡片 -->
+        <div class="xp-card">
+            <div class="xp-header">
+                <span class="level-title" id="dashLevel">Lv. 1 初學者</span>
+                <a href="xp.html" class="xp-detail-link">詳細成就 ➔</a>
+            </div>
+            <div class="progress-bg">
+                <div class="progress-fill" id="dashProgress"></div>
+            </div>
+            <div class="xp-footer">
+                <span id="dashXPText">0 / 100 XP</span>
+                <span id="dashTotalXP">累積 XP: 0</span>
             </div>
         </div>
 
@@ -223,6 +309,20 @@
                 <div class="arrow-icon">➔</div>
             </a>
 
+            <!-- 經驗值與成就專區 -->
+            <a href="xp.html" class="subject-card">
+                <div class="subject-info">
+                    <div class="subject-title-group">
+                        <span class="subject-icon">🏆</span>
+                        <span class="subject-title">等級與成就勳章</span>
+                    </div>
+                    <div class="subject-desc">
+                        查看專屬等級、升級進度與獲得的學習稱號
+                    </div>
+                </div>
+                <div class="arrow-icon">➔</div>
+            </a>
+
         </div>
 
         <div class="footer-brand">
@@ -241,12 +341,44 @@
             // 驗證通過，顯示頁面
             document.body.style.display = "flex";
 
+            // 1. 使用者基本資訊載入
             const currentUser = localStorage.getItem("currentUser") || "學員";
+            const userPicture = localStorage.getItem("userPicture");
 
             document.getElementById("welcomeUser").innerText = `你好，${currentUser} 👋`;
 
+            if (userPicture) {
+                const avatarEl = document.getElementById("userAvatar");
+                avatarEl.src = userPicture;
+                avatarEl.style.display = "block";
+            }
+
+            // 今日進度載入
             const savedProgress = localStorage.getItem("todayProgressPercent") || "0";
             document.getElementById("progressValue").innerText = savedProgress;
+
+            // 2. 帳號專屬 XP 與等級計算
+            const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
+            const xpKey = "xp_" + accountKey;
+            let totalXP = parseInt(localStorage.getItem(xpKey)) || 0;
+
+            const xpPerLevel = 100; // 每 100 XP 一級
+            const currentLevel = Math.floor(totalXP / xpPerLevel) + 1;
+            const currentLevelXP = totalXP % xpPerLevel;
+
+            // 稱號判定
+            let title = "初學者";
+            if (currentLevel >= 5) title = "單字新星";
+            if (currentLevel >= 10) title = "英語高手";
+            if (currentLevel >= 20) title = "會考學霸";
+
+            // 更新控制台 XP 卡片 UI
+            document.getElementById("dashLevel").innerText = `Lv. ${currentLevel} ${title}`;
+            document.getElementById("dashXPText").innerText = `${currentLevelXP} / ${xpPerLevel} XP`;
+            document.getElementById("dashTotalXP").innerText = `累積 XP: ${totalXP}`;
+
+            const progressPercent = (currentLevelXP / xpPerLevel) * 100;
+            document.getElementById("dashProgress").style.width = `${progressPercent}%`;
         }
 
         function logout() {
@@ -254,6 +386,7 @@
             localStorage.removeItem("currentUser");
             localStorage.removeItem("userPicture");
             localStorage.removeItem("userEmail");
+            localStorage.removeItem("accountKey");
             window.location.replace("login.html");
         }
 
