@@ -11,6 +11,10 @@
     <!-- 引入彩帶紙花特效庫 canvas-confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+    <!-- 引入 Firebase SDK (Compat 版本) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <!-- 強制登入防護：未登入則重定向 -->
     <script>
         if (localStorage.getItem("isLoggedIn") !== "true") {
@@ -560,10 +564,24 @@
     <script src="words/word-b.js"></script>
 
     <script>
-        // Key 安全拼湊
+        // Groq API Key 安全拼湊
         const k1 = "gsk_tIamylyZ0LfUOIuco184";
         const k2 = "WGdyb3FY4ofKzi8bX8Mwph54qAcZpdX6";
         const GROQ_API_KEY = k1 + k2;
+
+        // 初始化 Firebase 設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
+            authDomain: "cale-study-app-41b9b.firebaseapp.com",
+            projectId: "cale-study-app-41b9b",
+            storageBucket: "cale-study-app-41b9b.firebasestorage.app",
+            messagingSenderId: "819450732167",
+            appId: "1:819450732167:web:a727579df57eb9da33e222",
+            measurementId: "G-GP1XCE9W5E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         let currentList = [];
         let currentIndex = 0;
@@ -576,16 +594,19 @@
         let comboCount = 0;
         let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
 
-        // 1. 取得與登入系統 (Google Login) 完全一致的帳號 Key
-        function getXPKey() {
-            const userKey = localStorage.getItem("accountKey") 
-                         || localStorage.getItem("userEmail") 
-                         || localStorage.getItem("currentUser") 
-                         || "default_user";
-            return "xp_" + userKey;
+        // 取得唯一的帳號 Email Key
+        function getUserEmailKey() {
+            return localStorage.getItem("accountKey") 
+                || localStorage.getItem("userEmail") 
+                || localStorage.getItem("currentUser") 
+                || "default_user";
         }
 
-        // 2. 讀取 XP（包含多重備援機制）
+        function getXPKey() {
+            return "xp_" + getUserEmailKey();
+        }
+
+        // 讀取本地 XP
         function getUserXP() {
             const key = getXPKey();
             const xpVal = localStorage.getItem(key) 
@@ -595,20 +616,55 @@
             return parseInt(xpVal, 10);
         }
 
-        // 3. 更新與同步寫入 XP，確保 dashboard.html 一定讀得到
+        // 跨手機同步：從 Firestore 雲端下載最新 XP
+        async function syncXPFromCloud() {
+            const userDocId = getUserEmailKey();
+            if (userDocId === "default_user") return;
+
+            try {
+                const docRef = db.collection("users").doc(userDocId);
+                const docSnap = await docRef.get();
+
+                if (docSnap.exists) {
+                    const cloudData = docSnap.data();
+                    if (cloudData.xp !== undefined) {
+                        const localXP = getUserXP();
+                        const newXP = Math.max(localXP, cloudData.xp);
+                        
+                        localStorage.setItem(getXPKey(), newXP);
+                        localStorage.setItem("userXP", newXP);
+                        localStorage.setItem("xp", newXP);
+                        
+                        document.getElementById("xpCount").innerText = newXP;
+                    }
+                }
+            } catch (err) {
+                console.error("雲端同步失敗：", err);
+            }
+        }
+
+        // 更新 XP 顯示，並上傳雲端 Firestore
         function updateXPDisplay() {
             const currentXP = getUserXP();
             
+            // 1. 本地更新
             document.getElementById("xpCount").innerText = currentXP;
-
-            // 多重連動寫入
             localStorage.setItem(getXPKey(), currentXP);
             localStorage.setItem("userXP", currentXP);
             localStorage.setItem("xp", currentXP);
 
-            // 同步每日進度
             let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
             localStorage.setItem("todayProgressPercent", progressPercent);
+
+            // 2. 雲端同步
+            const userDocId = getUserEmailKey();
+            if (userDocId !== "default_user") {
+                db.collection("users").doc(userDocId).set({
+                    xp: currentXP,
+                    email: userDocId,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(err => console.error("寫入雲端失敗：", err));
+            }
         }
 
         function toggleDropdown() {
@@ -740,7 +796,7 @@
             }
         }
 
-        // AI 助記：已更新為最新可用模型 openai/gpt-oss-120b
+        // AI 助記 (已加入禁止出現 * 符號的設定)
         async function getAIAssist(event) {
             if (event) event.stopPropagation();
 
@@ -763,7 +819,7 @@
                         messages: [
                             {
                                 role: "system",
-                                content: "你是一位親切的國中英文會考助教。請用繁體中文回答，簡短提供：1. 趣味諧音或拆解記憶法 2. 一句適合國中程度的生活例句與翻譯。"
+                                content: "你是一位親切的國中英文會考助教。請用繁體中文回答，簡短提供：1. 趣味諧音或拆解記憶法 2. 一句適合國中程度的生活例句與翻譯。注意事項：回答中絕對不能使用「*」米字號或粗體 Markdown 標記，請一律使用純文字、全形標點符號或數字列表呈現。"
                             },
                             {
                                 role: "user",
@@ -783,7 +839,9 @@
                 }
 
                 if (data.choices && data.choices[0]) {
-                    aiBox.innerText = data.choices[0].message.content;
+                    // 自動將可能遺漏的 * 符號濾除，確保畫面乾淨
+                    let cleanContent = data.choices[0].message.content.replace(/\*/g, '');
+                    aiBox.innerText = cleanContent;
                 } else {
                     aiBox.innerText = "❌ 未取得有效回應內容。";
                 }
@@ -936,7 +994,9 @@
         }
 
         // 啟動初始化
-        updateXPDisplay();
+        syncXPFromCloud().then(() => {
+            updateXPDisplay();
+        });
         changeTheme();
     </script>
 </body>
