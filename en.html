@@ -4,8 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cale study app - 英文單字庫與練習</title>
+    
+    <!-- 網站 Favicon 圖示 -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png">
+
     <!-- 引入彩帶紙花特效庫 canvas-confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- 強制登入防護：未登入則重定向 -->
+    <script>
+        if (localStorage.getItem("isLoggedIn") !== "true") {
+            window.location.replace("login.html");
+        }
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -523,14 +535,33 @@
         let correctQuizAnswer = '';
         let isAnswered = false;
 
-        // 讀取/初始化 積分與連勝紀錄
-        let userXP = parseInt(localStorage.getItem("userXP") || "0");
         let comboCount = 0;
         let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
 
+        // 1. 取得專屬帳號的 XP Key (解決 0 XP 與跨帳號不同步問題)
+        function getXPKey() {
+            const currentUser = localStorage.getItem("currentUser") || "學員";
+            const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
+            return "xp_" + accountKey;
+        }
+
+        // 2. 讀取與寫入帳號專屬的 XP
+        function getUserXP() {
+            const key = getXPKey();
+            // 相容舊的 Key 名稱
+            return parseInt(localStorage.getItem(key)) 
+                || parseInt(localStorage.getItem("userXP")) 
+                || parseInt(localStorage.getItem("user_xp")) 
+                || parseInt(localStorage.getItem("xp")) 
+                || 0;
+        }
+
         function updateXPDisplay() {
-            document.getElementById("xpCount").innerText = userXP;
-            localStorage.setItem("userXP", userXP);
+            const currentXP = getUserXP();
+            document.getElementById("xpCount").innerText = currentXP;
+            
+            // 寫回帳號專屬的 Key
+            localStorage.setItem(getXPKey(), currentXP);
 
             // 同步計算今日進度 % 並存入 localStorage，給 dashboard 使用
             let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
@@ -714,9 +745,15 @@
                 clickedBtn.classList.add("correct-anim");
                 comboCount++;
                 todayCorrectCount++;
+                localStorage.setItem("todayCorrectCount", todayCorrectCount);
                 
                 const gainXP = 10 + Math.min(comboCount * 2, 10);
-                userXP += gainXP;
+                
+                // 正確更新該帳號的 XP
+                let currentXP = getUserXP();
+                currentXP += gainXP;
+                localStorage.setItem(getXPKey(), currentXP);
+                
                 updateXPDisplay();
 
                 if (window.confetti) {
