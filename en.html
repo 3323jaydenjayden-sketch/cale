@@ -564,7 +564,7 @@
     <script src="words/word-b.js"></script>
 
     <script>
-        // Groq API Key 安全拼湊
+        // Groq API Key
         const k1 = "gsk_tIamylyZ0LfUOIuco184";
         const k2 = "WGdyb3FY4ofKzi8bX8Mwph54qAcZpdX6";
         const GROQ_API_KEY = k1 + k2;
@@ -594,22 +594,20 @@
         let comboCount = 0;
         let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
 
-        // 取得唯一的帳號 Email Key
+        // 全面捕捉所有可能的帳號名稱 Key
         function getUserEmailKey() {
             return localStorage.getItem("accountKey") 
                 || localStorage.getItem("userEmail") 
                 || localStorage.getItem("currentUser") 
+                || localStorage.getItem("username")
+                || localStorage.getItem("account")
                 || "default_user";
         }
 
-        function getXPKey() {
-            return "xp_" + getUserEmailKey();
-        }
-
-        // 讀取本地 XP
+        // 讀取當前 XP (相容所有可能被儲存過的位置)
         function getUserXP() {
-            const key = getXPKey();
-            const xpVal = localStorage.getItem(key) 
+            const emailKey = getUserEmailKey();
+            const xpVal = localStorage.getItem("xp_" + emailKey) 
                        || localStorage.getItem("userXP") 
                        || localStorage.getItem("xp") 
                        || "0";
@@ -619,7 +617,10 @@
         // 跨手機同步：從 Firestore 雲端下載最新 XP
         async function syncXPFromCloud() {
             const userDocId = getUserEmailKey();
-            if (userDocId === "default_user") return;
+            if (userDocId === "default_user") {
+                refreshXPBadge(getUserXP());
+                return;
+            }
 
             try {
                 const docRef = db.collection("users").doc(userDocId);
@@ -629,34 +630,51 @@
                     const cloudData = docSnap.data();
                     if (cloudData.xp !== undefined) {
                         const localXP = getUserXP();
-                        const newXP = Math.max(localXP, cloudData.xp);
-                        
-                        localStorage.setItem(getXPKey(), newXP);
-                        localStorage.setItem("userXP", newXP);
-                        localStorage.setItem("xp", newXP);
-                        
-                        document.getElementById("xpCount").innerText = newXP;
+                        const finalXP = Math.max(localXP, cloudData.xp);
+                        saveXPToAllStores(finalXP);
+                        refreshXPBadge(finalXP);
                     }
+                } else {
+                    refreshXPBadge(getUserXP());
                 }
             } catch (err) {
                 console.error("雲端同步失敗：", err);
+                refreshXPBadge(getUserXP());
             }
         }
 
-        // 更新 XP 顯示，並上傳雲端 Firestore
-        function updateXPDisplay() {
-            const currentXP = getUserXP();
-            
-            // 1. 本地更新
-            document.getElementById("xpCount").innerText = currentXP;
-            localStorage.setItem(getXPKey(), currentXP);
-            localStorage.setItem("userXP", currentXP);
-            localStorage.setItem("xp", currentXP);
+        // 統一將 XP 寫入所有相容的 LocalStorage Key
+        function saveXPToAllStores(newXP) {
+            const emailKey = getUserEmailKey();
+            localStorage.setItem("xp_" + emailKey, newXP);
+            localStorage.setItem("userXP", newXP);
+            localStorage.setItem("xp", newXP);
+        }
 
+        // 只更新畫面文字
+        function refreshXPBadge(xpValue) {
+            const badge = document.getElementById("xpCount");
+            if (badge) {
+                badge.innerText = xpValue;
+            }
+        }
+
+        // 當獲得新 XP 時呼叫：更新記憶體、寫入本地、推送到雲端並更新 DOM
+        function addAndSyncXP(addedXP) {
+            let currentXP = getUserXP();
+            currentXP += addedXP;
+
+            // 1. 寫入本地所有相容 Key
+            saveXPToAllStores(currentXP);
+
+            // 2. 立即更新 DOM 畫面
+            refreshXPBadge(currentXP);
+
+            // 3. 更新當天進度
             let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
             localStorage.setItem("todayProgressPercent", progressPercent);
 
-            // 2. 雲端同步
+            // 4. 同步至 Firebase 雲端
             const userDocId = getUserEmailKey();
             if (userDocId !== "default_user") {
                 db.collection("users").doc(userDocId).set({
@@ -796,7 +814,7 @@
             }
         }
 
-        // AI 助記 (已加入禁止出現 * 符號的設定)
+        // AI 助記
         async function getAIAssist(event) {
             if (event) event.stopPropagation();
 
@@ -839,7 +857,6 @@
                 }
 
                 if (data.choices && data.choices[0]) {
-                    // 自動將可能遺漏的 * 符號濾除，確保畫面乾淨
                     let cleanContent = data.choices[0].message.content.replace(/\*/g, '');
                     aiBox.innerText = cleanContent;
                 } else {
@@ -902,10 +919,8 @@
                 
                 const gainXP = 10 + Math.min(comboCount * 2, 10);
                 
-                let currentXP = getUserXP();
-                currentXP += gainXP;
-                
-                updateXPDisplay();
+                // 核心修復：直接呼叫專屬加分與即時同步 UI 函式
+                addAndSyncXP(gainXP);
 
                 if (window.confetti) {
                     confetti({
@@ -994,9 +1009,7 @@
         }
 
         // 啟動初始化
-        syncXPFromCloud().then(() => {
-            updateXPDisplay();
-        });
+        syncXPFromCloud();
         changeTheme();
     </script>
 </body>
