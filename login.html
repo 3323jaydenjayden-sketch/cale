@@ -4,14 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cale study app - 登入</title>
+    
+    <!-- 網站 Favicon 圖示 -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png">
+
     <!-- 引入 Google 官方 SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
         }
 
         body {
@@ -177,11 +182,11 @@
         <form id="authForm">
             <div class="form-group">
                 <label for="username">帳號</label>
-                <input type="text" id="username" class="form-control" placeholder="請輸入帳號">
+                <input type="text" id="username" class="form-control" placeholder="請輸入帳號" required>
             </div>
             <div class="form-group">
                 <label for="password">密碼</label>
-                <input type="password" id="password" class="form-control" placeholder="請輸入密碼">
+                <input type="password" id="password" class="form-control" placeholder="請輸入密碼" required>
             </div>
 
             <button type="submit" class="btn-primary" id="submitBtn">登入</button>
@@ -221,6 +226,9 @@
             localStorage.setItem("currentUser", responsePayload.name);
             localStorage.setItem("userPicture", responsePayload.picture);
             localStorage.setItem("userEmail", responsePayload.email);
+            
+            // 關鍵：將 Email 作為帳號唯一 Key 用於經驗值 (XP) 統計
+            localStorage.setItem("accountKey", responsePayload.email);
 
             window.location.href = "dashboard.html";
         }
@@ -230,7 +238,7 @@
             document.getElementById("pageSubTitle").innerText = isLoginMode ? "歡迎回來！請選擇登入方式" : "建立新帳號以開始學習";
             document.getElementById("submitBtn").innerText = isLoginMode ? "登入" : "註冊帳號";
             document.getElementById("toggleText").innerHTML = isLoginMode 
-                ? '還沒有帳號嗎？<span onclick="toggleMode()">釋放潛能 / 立即註冊</span>' 
+                ? '還沒有帳號嗎？<span onclick="toggleMode()">立即註冊</span>' 
                 : '已有帳號？<span onclick="toggleMode()">返回登入</span>';
             document.getElementById("errorMsg").innerText = "";
         }
@@ -253,7 +261,9 @@
                 if (users[user] && users[user] === pass) {
                     localStorage.setItem("isLoggedIn", "true");
                     localStorage.setItem("currentUser", user);
+                    localStorage.setItem("accountKey", user); // 將使用者帳號作為唯一 Key
                     localStorage.removeItem("userPicture");
+                    localStorage.removeItem("userEmail");
                     window.location.href = "dashboard.html";
                 } else {
                     errorMsg.innerText = "帳號或密碼錯誤！";
@@ -266,7 +276,9 @@
                     localStorage.setItem("cale_app_users", JSON.stringify(users));
                     localStorage.setItem("isLoggedIn", "true");
                     localStorage.setItem("currentUser", user);
+                    localStorage.setItem("accountKey", user); // 將使用者帳號作為唯一 Key
                     localStorage.removeItem("userPicture");
+                    localStorage.removeItem("userEmail");
                     alert("註冊成功！自動為您登入");
                     window.location.href = "dashboard.html";
                 }
