@@ -1,145 +1,152 @@
-baby, /ˈbeɪ.bi/, n. 嬰兒, The baby is sleeping quietly in the crib.
-back, /bæk/, n. 背部 / adv. 回原處, Please come back before dinner.
-background, /ˈbæk.ɡraʊnd/, n. 背景, She comes from a medical background.
-backpack, /ˈbæk.pæk/, n. 後背包, My backpack is full of heavy books.
-backward, /ˈbæk.wəd/, adv. 向後, He took a step backward in surprise.
-bad, /bæd/, adj. 壞的, Eating too much sugar is bad for your teeth.
-badminton, /ˈbæd.mɪn.tən/, n. 羽毛球, We often play badminton on weekends.
-bag, /bæɡ/, n. 袋子 / 包包, Put your books into the bag.
-bake, /beɪk/, v. 烘焙, My mother likes to bake cookies for us.
-bakery, /ˈbeɪ.kər.i/, n. 麵包店, The fresh bread from the bakery smells great.
-balcony, /ˈbæl.kə.ni/, n. 陽台, We sat on the balcony and watched the sunset.
-ball, /bɔːl/, n. 球, Throw the ball to me.
-balloon, /bəˈluːn/, n. 氣球, The kids were playing with colorful balloons.
-banana, /bəˈnɑː.nə/, n. 香蕉, Monkeys love to eat bananas.
-band, /bænd/, n. 樂團 / 橡皮圈, He plays the drums in a school band.
-bank, /bæŋk/, n. 銀行 / 岸, I need to go to the bank to save money.
-banker, /ˈbæŋ.kər/, n. 銀行家, Her father works as a banker.
-bar, /bɑːr/, n. 棒 / 酒吧, He bought a bar of chocolate.
-barbecue, /ˈbɑː.bɪ.kjuː/, n. 烤肉, We had a barbecue party in the backyard.
-bark, /bɑːk/, v. 吠叫, The dog barks whenever someone knocks.
-base, /beɪs/, n. 基地 / 基礎, The story is based on real events.
-baseball, /ˈbeɪs.bɔːl/, n. 棒球, Baseball is a popular sport in Taiwan.
-basement, /ˈbeɪs.mənt/, n. 地下室, They store old things in the basement.
-basic, /ˈbeɪ.sɪk/, adj. 基礎的, You need to learn basic English grammar.
-basket, /ˈbɑː.skɪt/, n. 籃子, She filled the basket with fresh apples.
-basketball, /ˈbɑː.skɪt.bɔːl/, n. 籃球, Let's go to the park and play basketball.
-bat, /bæt/, n. 球棒 / 蝙蝠, Bats usually fly out at night.
-bath, /bɑːθ/, n. 洗澡, I like taking a hot bath after work.
-bathe, /beɪð/, v. 洗澡, He bathed his dog in the yard.
-bathroom, /ˈbɑːθ.ruːm/, n. 浴室, Remember to wash your hands in the bathroom.
-battery, /ˈbæt.ər.i/, n. 電池, My phone battery is running low.
-be, /biː/, v. 是 / 在, Be careful when crossing the street.
-beach, /biːtʃ/, n. 海灘, Children enjoy playing on the sandy beach.
-bean, /biːn/, n. 豆類, Coffee beans smell wonderful.
-bear, /beər/, n. 熊 / v. 忍受, We saw a brown bear at the zoo.
-beard, /bɪəd/, n. 鬍鬚, Grandfather has a long white beard.
-beat, /biːt/, v. 擊打 / 打敗, Our team beat them in the match.
-beautiful, /ˈbjuː.tɪ.fəl/, adj. 美麗的, What a beautiful flower this is!
-beauty, /ˈbjuː.ti/, n. 美麗, Taiwan is famous for its natural beauty.
-because, /bɪˈkɒz/, conj. 因為, He stayed home because he was sick.
-become, /bɪˈkʌm/, v. 變成, She wants to become a doctor.
-bed, /bed/, n. 床, It's time to go to bed.
-bedroom, /ˈbed.ruːm/, n. 寢室, My bedroom is clean and tidy.
-bee, /biː/, n. 蜜蜂, A bee is collecting pollen from the flower.
-beef, /biːf/, n. 牛肉, We had beef noodles for lunch.
-beer, /bɪər/, n. 啤酒, My uncle drinks a beer after work.
-before, /bɪˈfɔːr/, prep. 在…之前, Finish your homework before dinner.
-begin, /bɪˈɡɪn/, v. 開始, The show will begin at seven o'clock.
-beginner, /bɪˈɡɪn.ər/, n. 初學者, This English course is for beginners.
-beginning, /bɪˈɡɪn.ɪŋ/, n. 開始 / 開端, Every story has a good beginning.
-behave, /bɪˈheɪv/, v. 行為舉止, Please behave yourself in public places.
-behind, /bɪˈhaɪnd/, prep. 在…後面, The cat is hiding behind the sofa.
-being, /ˈbiː.ɪŋ/, n. 生物 / 存在, Human beings should protect the Earth.
-belief, /bɪˈliːf/, n. 信仰 / 信念, Never lose your belief in yourself.
-believe, /bɪˈliːv/, v. 相信, I believe you can solve this problem.
-bell, /bel/, n. 鈴聲 / 鐘, The school bell rings at eight.
-belong, /bɪˈlɒŋ/, v. 屬於, This umbrella belongs to my sister.
-below, /bɪˈləʊ/, prep. 在…下方, The temperature drops below zero tonight.
-belt, /belt/, n. 皮帶, Fasten your seat belt before driving.
-bench, /bentʃ/, n. 長椅, They sat on a park bench to rest.
-beside, /bɪˈsaɪd/, prep. 在…旁邊, Sit beside me so we can talk.
-besides, /bɪˈsaɪdz/, adv. 此外 / prep. 除之外, Besides English, she speaks French.
-best, /best/, adj. 最好的, You are my best friend.
-bet, /bet/, v. 打賭 / 敢說, I bet he will arrive late again.
-better, /ˈbet.ər/, adj. 更好的, Your English is getting better every day.
-between, /bɪˈtwiːn/, prep. 在…之間, The bank is between the school and park.
-beyond, /bɪˈjɒnd/, prep. 超越 / 在…那邊, The castle stands beyond the mountain.
-bicycle, /ˈbaɪ.sɪ.kəl/, n. 腳踏車, Riding a bicycle is good exercise.
-big, /bɪɡ/, adj. 大的, Taipei is a big city.
-bike, /baɪk/, n. 單車, I ride my bike to school every day.
-bill, /bɪl/, n. 帳單 / 鈔票, Could we have the bill, please?
-billion, /ˈbɪl.jən/, n. 十億, Millions and billions of people use smartphones.
-biology, /baɪˈɒl.ə.dʒi/, n. 生物學, We learn about plants in biology class.
-bird, /bɜːd/, n. 鳥, A bird is singing in the tree.
-birthday, /ˈbɜːθ.deɪ/, n. 生日, Happy birthday to you!
-bite, /baɪt/, v. 咬, Be careful, that dog might bite.
-bitter, /ˈbɪt.ər/, adj. 苦的, This medicine tastes very bitter.
-black, /blæk/, adj. 黑色的, He is wearing a black jacket.
-blackboard, /ˈblæk.bɔːd/, n. 黑板, The teacher wrote the answer on the blackboard.
-blame, /bleɪm/, v. 責怪, Don't blame yourself for the mistake.
-blanket, /ˈblæŋ.kɪt/, n. 毛毯, It is cold, so put on a warm blanket.
-blind, /blaɪnd/, adj. 瞎的 / 盲目的, The dog helps the blind man cross the street.
-block, /blɒk/, n. 街區 / v. 阻擋, Walk two blocks and turn right.
-blood, /blʌd/, n. 血液, Blood was dripping from his finger.
-blouse, /blaʊz/, n. 女式襯衫, She wore a white blouse to the interview.
-blow, /bləʊ/, v. 吹, The cold wind blows hard in winter.
-blue, /bluː/, adj. 藍色的, The sky is blue and clear today.
-board, /bɔːd/, n. 木板 / 板子, Write down the words on the board.
-boat, /bəʊt/, n. 船, They took a small boat across the lake.
-body, /ˈbɒd.i/, n. 身體, Exercise is good for your body.
-boil, /bɔɪl/, v. 沸騰 / 煮沸, Boil the water before drinking it.
-bomb, /bɒm/, n. 炸彈, The soldiers found a hidden bomb.
-bone, /bəʊn/, n. 骨頭, The dog is chewing a big bone.
-book, /bʊk/, n. 書本 / v. 預訂, He is reading an English book.
-bookstore, /ˈbʊk.stɔːr/, n. 書店, Let's go to the bookstore to buy pens.
-bored, /bɔːd/, adj. 感到無聊的, I feel bored with this quiet game.
-boring, /ˈbɔː.rɪŋ/, adj. 令人無聊的, The movie was so boring that I fell asleep.
-born, /bɔːn/, adj. 出生的, She was born in a small village.
-borrow, /ˈbɒr.əʊ/, v. 借入, Can I borrow your pencil, please?
-boss, /bɒs/, n. 老闆, The boss is holding an important meeting.
-both, /bəʊθ/, det. 兩者都, Both of my brothers like sports.
-bother, /ˈbɒð.ər/, v. 打擾, Sorry to bother you, but I need help.
-bottle, /ˈbɒt.əl/, n. 瓶子, Bring a bottle of water with you.
-bottom, /ˈbɒt.əm/, n. 底部, Look at the notes at the bottom of the page.
-bow, /baʊ/, v. 鞠躬 / n. 弓, They bowed to the teacher nicely.
-bowl, /bəʊl/, n. 碗, Eat a bowl of soup to stay warm.
-bowling, /ˈbəʊ.lɪŋ/, n. 保齡球, Playing bowling is very exciting.
-box, /bɒks/, n. 盒子, Put all the toys in the box.
-boy, /bɔɪ/, n. 男孩, That boy is my younger brother.
-brain, /breɪn/, n. 大腦, Exercise improves memory and brain health.
-branch, /brɑːntʃ/, n. 樹枝 / 分行, Birds built a nest on the branch.
-brand, /brænd/, n. 品牌, They launched a new brand of shoes.
-brave, /breɪv/, adj. 勇敢的, The brave firefighter saved the cat.
-bread, /bred/, n. 麵包, I ate two slices of bread for breakfast.
-break, /breɪk/, v. 打破 / n. 休息, Be careful not to break the glass.
-breakfast, /ˈbrek.fəst/, n. 早餐, Eat a healthy breakfast every day.
-brick, /brɪk/, n. 磚塊, The wall is built with red bricks.
-bridge, /brɪdʒ/, n. 橋樑, We walked across the old stone bridge.
-brief, /briːf/, adj. 簡短的, The teacher gave a brief explanation.
-bright, /braɪt/, adj. 明亮的 / 聰明的, The sun is very bright today.
-brilliant, /ˈbrɪl.jənt/, adj. 傑出的 / 出色的, He came up with a brilliant idea.
-bring, /brɪŋ/, v. 帶來, Remember to bring your textbook tomorrow.
-broad, /brɔːd/, adj. 寬廣的, The river is very broad at this point.
-broadcast, /ˈbrɔːd.kɑːst/, v. 廣播, The news was broadcast live yesterday.
-brother, /ˈbrʌð.ər/, n. 兄弟, My older brother is in high school.
-brown, /braʊn/, adj. 棕色的, The dog has beautiful brown fur.
-brush, /brʌʃ/, v. 刷 / n. 刷子, Remember to brush your teeth twice a day.
-bucket, /ˈbʌk.ɪt/, n. 水桶, Fill the bucket with water.
-buffet, /ˈbʊf.eɪ/, n. 自助餐, We enjoyed a delicious seafood buffet.
-bug, /bʌɡ/, n. 昆蟲 / 小蟲, There is a bug crawling on the wall.
-build, /bɪld/, v. 建造, They plan to build a new library here.
-building, /ˈbɪl.dɪŋ/, n. 建築物, That tall building is a famous hotel.
-bun, /bʌn/, n. 小圓麵包 / 包子, I bought a steamed pork bun for lunch.
-burn, /bɜːn/, v. 燃燒 / 燒傷, Dry wood burns quickly.
-burst, /bɜːst/, v. 爆裂, The balloon burst with a loud noise.
-bus, /bʌs/, n. 公車, I take the bus to school every morning.
-business, /ˈbɪz.nɪs/, n. 生意 / 商業, His father is busy running a business.
-businessman, /ˈbɪz.nɪs.mæn/, n. 商人, The businessman travels a lot for work.
-busy, /ˈbɪz.i/, adj. 忙碌的, My mother is busy preparing dinner.
-but, /bʌt/, conj. 但是, He is young, but he is wise.
-butter, /ˈbʌt.ər/, n. 奶油, Spread some butter on the toast.
-butterfly, /ˈbʌt.ə.flaɪ/, n. 蝴蝶, Look at that beautiful butterfly.
-button, /ˈbʌt.ən/, n. 鈕扣 / 按鈕, Press the red button to start.
-buy, /baɪ/, v. 購買, I want to buy a birthday gift for my friend.
-by, /baɪ/, prep. 藉由 / 在…旁邊, We go to school by bicycle.
+// words/word-b.js
+if (!window.builtInThemes) {
+    window.builtInThemes = {};
+}
+
+window.builtInThemes.cap_b = [
+    { word: "baby", phonetic: "/ˈbeɪ.bi/", meaning: "n. 嬰兒", example: "The baby is sleeping quietly in the crib." },
+    { word: "back", phonetic: "/bæk/", meaning: "n. 背部 / adv. 回原處", example: "Please come back before dinner." },
+    { word: "background", phonetic: "/ˈbæk.ɡraʊnd/", meaning: "n. 背景", example: "She comes from a medical background." },
+    { word: "backpack", phonetic: "/ˈbæk.pæk/", meaning: "n. 後背包", example: "My backpack is full of heavy books." },
+    { word: "backward", phonetic: "/ˈbæk.wəd/", meaning: "adv. 向後", example: "He took a step backward in surprise." },
+    { word: "bad", phonetic: "/bæd/", meaning: "adj. 壞的", example: "Eating too much sugar is bad for your teeth." },
+    { word: "badminton", phonetic: "/ˈbæd.mɪn.tən/", meaning: "n. 羽毛球", example: "We often play badminton on weekends." },
+    { word: "bag", phonetic: "/bæɡ/", meaning: "n. 袋子 / 包包", example: "Put your books into the bag." },
+    { word: "bake", phonetic: "/beɪk/", meaning: "v. 烘焙", example: "My mother likes to bake cookies for us." },
+    { word: "bakery", phonetic: "/ˈbeɪ.kər.i/", meaning: "n. 麵包店", example: "The fresh bread from the bakery smells great." },
+    { word: "balcony", phonetic: "/ˈbæl.kə.ni/", meaning: "n. 陽台", example: "We sat on the balcony and watched the sunset." },
+    { word: "ball", phonetic: "/bɔːl/", meaning: "n. 球", example: "Throw the ball to me." },
+    { word: "balloon", phonetic: "/bəˈluːn/", meaning: "n. 氣球", example: "The kids were playing with colorful balloons." },
+    { word: "banana", phonetic: "/bəˈnɑː.nə/", meaning: "n. 香蕉", example: "Monkeys love to eat bananas." },
+    { word: "band", phonetic: "/bænd/", meaning: "n. 樂團 / 橡皮圈", example: "He plays the drums in a school band." },
+    { word: "bank", phonetic: "/bæŋk/", meaning: "n. 銀行 / 岸", example: "I need to go to the bank to save money." },
+    { word: "banker", phonetic: "/ˈbæŋ.kər/", meaning: "n. 銀行家", example: "Her father works as a banker." },
+    { word: "bar", phonetic: "/bɑːr/", meaning: "n. 棒 / 酒吧", example: "He bought a bar of chocolate." },
+    { word: "barbecue", phonetic: "/ˈbɑː.bɪ.kjuː/", meaning: "n. 烤肉", example: "We had a barbecue party in the backyard." },
+    { word: "bark", phonetic: "/bɑːk/", meaning: "v. 吠叫", example: "The dog barks whenever someone knocks." },
+    { word: "base", phonetic: "/beɪs/", meaning: "n. 基地 / 基礎", example: "The story is based on real events." },
+    { word: "baseball", phonetic: "/ˈbeɪs.bɔːl/", meaning: "n. 棒球", example: "Baseball is a popular sport in Taiwan." },
+    { word: "basement", phonetic: "/ˈbeɪs.mənt/", meaning: "n. 地下室", example: "They store old things in the basement." },
+    { word: "basic", phonetic: "/ˈbeɪ.sɪk/", meaning: "adj. 基礎的", example: "You need to learn basic English grammar." },
+    { word: "basket", phonetic: "/ˈbɑː.skɪt/", meaning: "n. 籃子", example: "She filled the basket with fresh apples." },
+    { word: "basketball", phonetic: "/ˈbɑː.skɪt.bɔːl/", meaning: "n. 籃球", example: "Let's go to the park and play basketball." },
+    { word: "bat", phonetic: "/bæt/", meaning: "n. 球棒 / 蝙蝠", example: "Bats usually fly out at night." },
+    { word: "bath", phonetic: "/bɑːθ/", meaning: "n. 洗澡", example: "I like taking a hot bath after work." },
+    { word: "bathe", phonetic: "/beɪð/", meaning: "v. 洗澡", example: "He bathed his dog in the yard." },
+    { word: "bathroom", phonetic: "/ˈbɑːθ.ruːm/", meaning: "n. 浴室", example: "Remember to wash your hands in the bathroom." },
+    { word: "battery", phonetic: "/ˈbæt.ər.i/", meaning: "n. 電池", example: "My phone battery is running low." },
+    { word: "be", phonetic: "/biː/", meaning: "v. 是 / 在", example: "Be careful when crossing the street." },
+    { word: "beach", phonetic: "/biːtʃ/", meaning: "n. 海灘", example: "Children enjoy playing on the sandy beach." },
+    { word: "bean", phonetic: "/biːn/", meaning: "n. 豆類", example: "Coffee beans smell wonderful." },
+    { word: "bear", phonetic: "/beər/", meaning: "n. 熊 / v. 忍受", example: "We saw a brown bear at the zoo." },
+    { word: "beard", phonetic: "/bɪəd/", meaning: "n. 鬍鬚", example: "Grandfather has a long white beard." },
+    { word: "beat", phonetic: "/biːt/", meaning: "v. 擊打 / 打敗", example: "Our team beat them in the match." },
+    { word: "beautiful", phonetic: "/ˈbjuː.tɪ.fəl/", meaning: "adj. 美麗的", example: "What a beautiful flower this is!" },
+    { word: "beauty", phonetic: "/ˈbjuː.ti/", meaning: "n. 美麗", example: "Taiwan is famous for its natural beauty." },
+    { word: "because", phonetic: "/bɪˈkɒz/", meaning: "conj. 因為", example: "He stayed home because he was sick." },
+    { word: "become", phonetic: "/bɪˈkʌm/", meaning: "v. 變成", example: "She wants to become a doctor." },
+    { word: "bed", phonetic: "/bed/", meaning: "n. 床", example: "It's time to go to bed." },
+    { word: "bedroom", phonetic: "/ˈbed.ruːm/", meaning: "n. 寢室", example: "My bedroom is clean and tidy." },
+    { word: "bee", phonetic: "/biː/", meaning: "n. 蜜蜂", example: "A bee is collecting pollen from the flower." },
+    { word: "beef", phonetic: "/biːf/", meaning: "n. 牛肉", example: "We had beef noodles for lunch." },
+    { word: "beer", phonetic: "/bɪər/", meaning: "n. 啤酒", example: "My uncle drinks a beer after work." },
+    { word: "before", phonetic: "/bɪˈfɔːr/", meaning: "prep. 在…之前", example: "Finish your homework before dinner." },
+    { word: "begin", phonetic: "/bɪˈɡɪn/", meaning: "v. 開始", example: "The show will begin at seven o'clock." },
+    { word: "beginner", phonetic: "/bɪˈɡɪn.ər/", meaning: "n. 初學者", example: "This English course is for beginners." },
+    { word: "beginning", phonetic: "/bɪˈɡɪn.ɪŋ/", meaning: "n. 開始 / 開端", example: "Every story has a good beginning." },
+    { word: "behave", phonetic: "/bɪˈheɪv/", meaning: "v. 行為舉止", example: "Please behave yourself in public places." },
+    { word: "behind", phonetic: "/bɪˈhaɪnd/", meaning: "prep. 在…後面", example: "The cat is hiding behind the sofa." },
+    { word: "being", phonetic: "/ˈbiː.ɪŋ/", meaning: "n. 生物 / 存在", example: "Human beings should protect the Earth." },
+    { word: "belief", phonetic: "/bɪˈliːf/", meaning: "n. 信仰 / 信念", example: "Never lose your belief in yourself." },
+    { word: "believe", phonetic: "/bɪˈliːv/", meaning: "v. 相信", example: "I believe you can solve this problem." },
+    { word: "bell", phonetic: "/bel/", meaning: "n. 鈴聲 / 鐘", example: "The school bell rings at eight." },
+    { word: "belong", phonetic: "/bɪˈlɒŋ/", meaning: "v. 屬於", example: "This umbrella belongs to my sister." },
+    { word: "below", phonetic: "/bɪˈləʊ/", meaning: "prep. 在…下方", example: "The temperature drops below zero tonight." },
+    { word: "belt", phonetic: "/belt/", meaning: "n. 皮帶", example: "Fasten your seat belt before driving." },
+    { word: "bench", phonetic: "/bentʃ/", meaning: "n. 長椅", example: "They sat on a park bench to rest." },
+    { word: "beside", phonetic: "/bɪˈsaɪd/", meaning: "prep. 在…旁邊", example: "Sit beside me so we can talk." },
+    { word: "besides", phonetic: "/bɪˈsaɪdz/", meaning: "adv. 此外 / prep. 除之外", example: "Besides English, she speaks French." },
+    { word: "best", phonetic: "/best/", meaning: "adj. 最好的", example: "You are my best friend." },
+    { word: "bet", phonetic: "/bet/", meaning: "v. 打賭 / 敢說", example: "I bet he will arrive late again." },
+    { word: "better", phonetic: "/ˈbet.ər/", meaning: "adj. 更好的", example: "Your English is getting better every day." },
+    { word: "between", phonetic: "/bɪˈtwiːn/", meaning: "prep. 在…之間", example: "The bank is between the school and park." },
+    { word: "beyond", phonetic: "/bɪˈjɒnd/", meaning: "prep. 超越 / 在…那邊", example: "The castle stands beyond the mountain." },
+    { word: "bicycle", phonetic: "/ˈbaɪ.sɪ.kəl/", meaning: "n. 腳踏車", example: "Riding a bicycle is good exercise." },
+    { word: "big", phonetic: "/bɪɡ/", meaning: "adj. 大的", example: "Taipei is a big city." },
+    { word: "bike", phonetic: "/baɪk/", meaning: "n. 單車", example: "I ride my bike to school every day." },
+    { word: "bill", phonetic: "/bɪl/", meaning: "n. 帳單 / 鈔票", example: "Could we have the bill, please?" },
+    { word: "billion", phonetic: "/ˈbɪl.jən/", meaning: "n. 十億", example: "Millions and billions of people use smartphones." },
+    { word: "biology", phonetic: "/baɪˈɒl.ə.dʒi/", meaning: "n. 生物學", example: "We learn about plants in biology class." },
+    { word: "bird", phonetic: "/bɜːd/", meaning: "n. 鳥", example: "A bird is singing in the tree." },
+    { word: "birthday", phonetic: "/ˈbɜːθ.deɪ/", meaning: "n. 生日", example: "Happy birthday to you!" },
+    { word: "bite", phonetic: "/baɪt/", meaning: "v. 咬", example: "Be careful, that dog might bite." },
+    { word: "bitter", phonetic: "/ˈbɪt.ər/", meaning: "adj. 苦的", example: "This medicine tastes very bitter." },
+    { word: "black", phonetic: "/blæk/", meaning: "adj. 黑色的", example: "He is wearing a black jacket." },
+    { word: "blackboard", phonetic: "/ˈblæk.bɔːd/", meaning: "n. 黑板", example: "The teacher wrote the answer on the blackboard." },
+    { word: "blame", phonetic: "/bleɪm/", meaning: "v. 責怪", example: "Don't blame yourself for the mistake." },
+    { word: "blanket", phonetic: "/ˈblæŋ.kɪt/", meaning: "n. 毛毯", example: "It is cold, so put on a warm blanket." },
+    { word: "blind", phonetic: "/blaɪnd/", meaning: "adj. 瞎的 / 盲目的", example: "The dog helps the blind man cross the street." },
+    { word: "block", phonetic: "/blɒk/", meaning: "n. 街區 / v. 阻擋", example: "Walk two blocks and turn right." },
+    { word: "blood", phonetic: "/blʌd/", meaning: "n. 血液", example: "Blood was dripping from his finger." },
+    { word: "blouse", phonetic: "/blaʊz/", meaning: "n. 女式襯衫", example: "She wore a white blouse to the interview." },
+    { word: "blow", phonetic: "/bləʊ/", meaning: "v. 吹", example: "The cold wind blows hard in winter." },
+    { word: "blue", phonetic: "/bluː/", meaning: "adj. 藍色的", example: "The sky is blue and clear today." },
+    { word: "board", phonetic: "/bɔːd/", meaning: "n. 木板 / 板子", example: "Write down the words on the board." },
+    { word: "boat", phonetic: "/bəʊt/", meaning: "n. 船", example: "They took a small boat across the lake." },
+    { word: "body", phonetic: "/ˈbɒd.i/", meaning: "n. 身體", example: "Exercise is good for your body." },
+    { word: "boil", phonetic: "/bɔɪl/", meaning: "v. 沸騰 / 煮沸", example: "Boil the water before drinking it." },
+    { word: "bomb", phonetic: "/bɒm/", meaning: "n. 炸彈", example: "The soldiers found a hidden bomb." },
+    { word: "bone", phonetic: "/bəʊn/", meaning: "n. 骨頭", example: "The dog is chewing a big bone." },
+    { word: "book", phonetic: "/bʊk/", meaning: "n. 書本 / v. 預訂", example: "He is reading an English book." },
+    { word: "bookstore", phonetic: "/ˈbʊk.stɔːr/", meaning: "n. 書店", example: "Let's go to the bookstore to buy pens." },
+    { word: "bored", phonetic: "/bɔːd/", meaning: "adj. 感到無聊的", example: "I feel bored with this quiet game." },
+    { word: "boring", phonetic: "/ˈbɔː.rɪŋ/", meaning: "adj. 令人無聊的", example: "The movie was so boring that I fell asleep." },
+    { word: "born", phonetic: "/bɔːn/", meaning: "adj. 出生的", example: "She was born in a small village." },
+    { word: "borrow", phonetic: "/ˈbɒr.əʊ/", meaning: "v. 借入", example: "Can I borrow your pencil, please?" },
+    { word: "boss", phonetic: "/bɒs/", meaning: "n. 老闆", example: "The boss is holding an important meeting." },
+    { word: "both", phonetic: "/bəʊθ/", meaning: "det. 兩者都", example: "Both of my brothers like sports." },
+    { word: "bother", phonetic: "/ˈbɒð.ər/", meaning: "v. 打擾", example: "Sorry to bother you, but I need help." },
+    { word: "bottle", phonetic: "/ˈbɒt.əl/", meaning: "n. 瓶子", example: "Bring a bottle of water with you." },
+    { word: "bottom", phonetic: "/ˈbɒt.əm/", meaning: "n. 底部", example: "Look at the notes at the bottom of the page." },
+    { word: "bow", phonetic: "/baʊ/", meaning: "v. 鞠躬 / n. 弓", example: "They bowed to the teacher nicely." },
+    { word: "bowl", phonetic: "/bəʊl/", meaning: "n. 碗", example: "Eat a bowl of soup to stay warm." },
+    { word: "bowling", phonetic: "/ˈbəʊ.lɪŋ/", meaning: "n. 保齡球", example: "Playing bowling is very exciting." },
+    { word: "box", phonetic: "/bɒks/", meaning: "n. 盒子", example: "Put all the toys in the box." },
+    { word: "boy", phonetic: "/bɔɪ/", meaning: "n. 男孩", example: "That boy is my younger brother." },
+    { word: "brain", phonetic: "/breɪn/", meaning: "n. 大腦", example: "Exercise improves memory and brain health." },
+    { word: "branch", phonetic: "/brɑːntʃ/", meaning: "n. 樹枝 / 分行", example: "Birds built a nest on the branch." },
+    { word: "brand", phonetic: "/brænd/", meaning: "n. 品牌", example: "They launched a new brand of shoes." },
+    { word: "brave", phonetic: "/breɪv/", meaning: "adj. 勇敢的", example: "The brave firefighter saved the cat." },
+    { word: "bread", phonetic: "/bred/", meaning: "n. 麵包", example: "I ate two slices of bread for breakfast." },
+    { word: "break", phonetic: "/breɪk/", meaning: "v. 打破 / n. 休息", example: "Be careful not to break the glass." },
+    { word: "breakfast", phonetic: "/ˈbrek.fəst/", meaning: "n. 早餐", example: "Eat a healthy breakfast every day." },
+    { word: "brick", phonetic: "/brɪk/", meaning: "n. 磚塊", example: "The wall is built with red bricks." },
+    { word: "bridge", phonetic: "/brɪdʒ/", meaning: "n. 橋樑", example: "We walked across the old stone bridge." },
+    { word: "brief", phonetic: "/briːf/", meaning: "adj. 簡短的", example: "The teacher gave a brief explanation." },
+    { word: "bright", phonetic: "/braɪt/", meaning: "adj. 明亮 / 聰明的", example: "The sun is very bright today." },
+    { word: "brilliant", phonetic: "/ˈbrɪl.jənt/", meaning: "adj. 傑出 / 出色的", example: "He came up with a brilliant idea." },
+    { word: "bring", phonetic: "/brɪŋ/", meaning: "v. 帶來", example: "Remember to bring your textbook tomorrow." },
+    { word: "broad", phonetic: "/brɔːd/", meaning: "adj. 寬廣的", example: "The river is very broad at this point." },
+    { word: "broadcast", phonetic: "/ˈbrɔːd.kɑːst/", meaning: "v. 廣播", example: "The news was broadcast live yesterday." },
+    { word: "brother", phonetic: "/ˈbrʌð.ər/", meaning: "n. 兄弟", example: "My older brother is in high school." },
+    { word: "brown", phonetic: "/braʊn/", meaning: "adj. 棕色的", example: "The dog has beautiful brown fur." },
+    { word: "brush", phonetic: "/brʌʃ/", meaning: "v. 刷 / n. 刷子", example: "Remember to brush your teeth twice a day." },
+    { word: "bucket", phonetic: "/ˈbʌk.ɪt/", meaning: "n. 水桶", example: "Fill the bucket with water." },
+    { word: "buffet", phonetic: "/ˈbʊf.eɪ/", meaning: "n. 自助餐", example: "We enjoyed a delicious seafood buffet." },
+    { word: "bug", phonetic: "/bʌɡ/", meaning: "n. 昆蟲 / 小蟲", example: "There is a bug crawling on the wall." },
+    { word: "build", phonetic: "/bɪld/", meaning: "v. 建造", example: "They plan to build a new library here." },
+    { word: "building", phonetic: "/ˈbɪl.dɪŋ/", meaning: "n. 建築物", example: "That tall building is a famous hotel." },
+    { word: "bun", phonetic: "/bʌn/", meaning: "n. 小圓麵包 / 包子", example: "I bought a steamed pork bun for lunch." },
+    { word: "burn", phonetic: "/bɜːn/", meaning: "v. 燃燒 / 燒傷", example: "Dry wood burns quickly." },
+    { word: "burst", phonetic: "/bɜːst/", meaning: "v. 爆裂", example: "The balloon burst with a loud noise." },
+    { word: "bus", phonetic: "/bʌs/", meaning: "n. 公車", example: "I take the bus to school every morning." },
+    { word: "business", phonetic: "/ˈbɪz.nɪs/", meaning: "n. 生意 / 商業", example: "His father is busy running a business." },
+    { word: "businessman", phonetic: "/ˈbɪz.nɪs.mæn/", meaning: "n. 商人", example: "The businessman travels a lot for work." },
+    { word: "busy", phonetic: "/ˈbɪz.i/", meaning: "adj. 忙碌的", example: "My mother is busy preparing dinner." },
+    { word: "but", phonetic: "/bʌt/", meaning: "conj. 但是", example: "He is young, but he is wise." },
+    { word: "butter", phonetic: "/ˈbʌt.ər/", meaning: "n. 奶油", example: "Spread some butter on the toast." },
+    { word: "butterfly", phonetic: "/ˈbʌt.ə.flaɪ/", meaning: "n. 蝴蝶", example: "Look at that beautiful butterfly." },
+    { word: "button", phonetic: "/ˈbʌt.ən/", meaning: "n. 鈕扣 / 按鈕", example: "Press the red button to start." },
+    { word: "buy", phonetic: "/baɪ/", meaning: "v. 購買", example: "I want to buy a birthday gift for my friend." },
+    { word: "by", phonetic: "/baɪ/", meaning: "prep. 藉由 / 在…旁邊", example: "We go to school by bicycle." }
+];
