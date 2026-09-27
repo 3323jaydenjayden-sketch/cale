@@ -729,7 +729,7 @@
             }
         }
 
-        // 手機端詳細除錯版 AI 函式
+        // 使用 Groq 官方模型 llama3-70b-8192
         async function getAIAssist(event) {
             if (event) event.stopPropagation();
 
@@ -748,7 +748,7 @@
                         "Authorization": `Bearer ${GROQ_API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
+                        model: "llama3-70b-8192", // 已修改為可正常存取的模型
                         messages: [
                             {
                                 role: "system",
@@ -765,7 +765,6 @@
 
                 const data = await response.json();
 
-                // 若回傳錯誤，直接將詳細 HTTP 碼與訊息印在手機畫面上
                 if (!response.ok) {
                     const errorMsg = data.error?.message || JSON.stringify(data);
                     aiBox.innerText = `❌ 錯誤 [HTTP ${response.status}]: ${errorMsg}`;
