@@ -8,6 +8,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Canvas Confetti 彩帶套件 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
         body {
             background-color: #0b0f19;
@@ -193,11 +196,13 @@
 
     </div>
 
-    <!-- 引入資料檔（修正為根目錄路徑，並加上版本號） -->
+    <!-- 引入資料檔 -->
     <script src="ch50.js?v=2"></script>
 
     <script>
         let currentArticles = [];
+        let currentArticleIndex = 0;
+        let currentQuestionIndex = 0;
         let isDropdownOpen = false;
         let userXP = parseInt(localStorage.getItem("user_xp") || "0");
 
@@ -210,6 +215,17 @@
         function updateXPDisplay() {
             document.getElementById("xp-display").innerText = userXP;
             localStorage.setItem("user_xp", userXP);
+        }
+
+        // 彩帶特效函數
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
         }
 
         // 讀取文章資料
@@ -246,6 +262,8 @@
         }
 
         function selectArticle(index) {
+            currentArticleIndex = index;
+            currentQuestionIndex = 0; // 重設題目序號
             document.getElementById('selected-title').innerText = currentArticles[index].title;
 
             const items = document.querySelectorAll('.custom-dropdown-item');
@@ -263,6 +281,8 @@
         function loadArticle(index) {
             const art = currentArticles[index];
             const displayArea = document.getElementById('article-display');
+            const totalQuestions = art.questions ? art.questions.length : 0;
+            const currentQ = (totalQuestions > 0 && art.questions[currentQuestionIndex]) ? art.questions[currentQuestionIndex] : null;
 
             displayArea.innerHTML = `
                 <div class="main-card p-4">
@@ -301,21 +321,22 @@
                         </div>
                     ` : ''}
 
-                    <!-- 隨堂測驗區塊 -->
-                    ${art.questions && art.questions.length > 0 ? `
-                        <div class="mt-4 pt-3 border-top border-secondary">
-                            <label class="text-warning small fw-bold mb-2"><i class="bi bi-pencil-square"></i> 隨堂測驗</label>
-                            ${art.questions.map((q, qIndex) => `
-                                <p class="fw-bold mb-3 text-white fs-5">${q.q}</p>
-                                <div class="d-grid gap-2" id="quiz-container-${qIndex}">
-                                    ${q.options.map((opt, optIndex) => `
-                                        <button class="quiz-option" onclick="checkAnswer(${index},${qIndex}, ${optIndex},${q.answer}, this)">
-                                            ${String.fromCharCode(65 + optIndex)}.${opt}
-                                        </button>
-                                    `).join('')}
-                                </div>
-                                <div id="feedback-${qIndex}"></div>
-                            `).join('')}
+                    <!-- 隨堂測驗區塊（一次顯示一題） -->
+                    ${currentQ ? `
+                        <div class="mt-4 pt-3 border-top border-secondary" id="quiz-section">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="text-warning small fw-bold mb-0"><i class="bi bi-pencil-square"></i> 隨堂測驗</label>
+                                <span class="badge bg-secondary">第 ${currentQuestionIndex + 1} /${totalQuestions} 題</span>
+                            </div>
+                            <p class="fw-bold mb-3 text-white fs-5">${currentQ.q}</p>
+                            <div class="d-grid gap-2" id="quiz-container">
+                                ${currentQ.options.map((opt, optIndex) => `
+                                    <button class="quiz-option" onclick="checkAnswer(${optIndex}, ${currentQ.answer}, this)">
+                                        ${String.fromCharCode(65 + optIndex)}.${opt}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <div id="feedback"></div>
                         </div>
                     ` : ''}
                 </div>
@@ -323,43 +344,64 @@
         }
 
         // 答題判斷 + 加 XP 功能
-        function checkAnswer(artIndex, qIndex, selectedIndex, correctIndex, btn) {
-            const container = document.getElementById(`quiz-container-${qIndex}`);
+        function checkAnswer(selectedIndex, correctIndex, btn) {
+            const container = document.getElementById('quiz-container');
             const buttons = container.querySelectorAll('button');
-            const feedbackDiv = document.getElementById(`feedback-${qIndex}`);
+            const feedbackDiv = document.getElementById('feedback');
+            const art = currentArticles[currentArticleIndex];
+            const isLastQuestion = currentQuestionIndex === art.questions.length - 1;
 
-            // 停用所有按鈕防止重複點擊
+            // 停用所有選項按鈕防止重複點擊
             buttons.forEach(b => b.disabled = true);
+
+            let feedbackHTML = '';
 
             if (selectedIndex === correctIndex) {
                 // 答對處理
                 btn.classList.add('correct');
-                
-                // 增加 XP (預設 +10)
                 const addedXP = 2;
                 userXP += addedXP;
                 updateXPDisplay();
-
-                // 顯示答對訊息與下一題按鈕
-                feedbackDiv.innerHTML = `
-                    <div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>
-                    <button class="btn-next" onclick="nextArticle(${artIndex})">下一題 ➔</button>
-                `;
+                feedbackHTML = `<div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>`;
             } else {
                 // 答錯處理
                 btn.classList.add('wrong');
                 buttons[correctIndex].classList.add('correct'); // 標示正確答案
-                
-                feedbackDiv.innerHTML = `
-                    <div class="feedback-msg text-danger">❌ 答錯了，再接再厲！</div>
-                    <button class="btn-next" onclick="nextArticle(${artIndex})">下一題 ➔</button>
+                feedbackHTML = `<div class="feedback-msg text-danger">❌ 答錯了，再接再勵！</div>`;
+            }
+
+            if (isLastQuestion) {
+                // 本篇全部題目完成，施放彩帶
+                triggerConfetti();
+                feedbackHTML += `
+                    <button class="btn-next" style="background-color: #22c55e; color: #fff;" onclick="nextArticle()">
+                        🎉 完成本篇，下一篇 ➔
+                    </button>
                 `;
+            } else {
+                feedbackHTML += `
+                    <button class="btn-next" onclick="nextQuestion()">下一題 ➔</button>
+                `;
+            }
+
+            feedbackDiv.innerHTML = feedbackHTML;
+        }
+
+        // 切換至本篇的下一題
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadArticle(currentArticleIndex);
+            
+            // 平滑滾動到測驗區域
+            const quizSection = document.getElementById('quiz-section');
+            if (quizSection) {
+                quizSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
-        // 切換至下一篇文章/題目
-        function nextArticle(currentIndex) {
-            const nextIndex = (currentIndex + 1) % currentArticles.length;
+        // 切換至下一篇文章
+        function nextArticle() {
+            const nextIndex = (currentArticleIndex + 1) % currentArticles.length;
             selectArticle(nextIndex);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
