@@ -11,6 +11,10 @@
     <!-- Canvas Confetti 彩帶套件 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+    <!-- 引入 Firebase SDK (Compat 版本) - 與 en.html 同步 -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         body {
             background-color: #0b0f19;
@@ -22,6 +26,7 @@
             background-color: #161e2e;
             border: 1px solid #273549;
             border-radius: 16px;
+            position: relative;
         }
 
         /* XP 標籤 */
@@ -161,6 +166,25 @@
             background-color: #7dd3fc;
         }
 
+        /* 浮動 XP 動畫 (與 en.html 一致) */
+        .floating-xp {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #fbbf24;
+            font-size: 1.4rem;
+            font-weight: 800;
+            pointer-events: none;
+            opacity: 0;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(10px); }
+            30% { opacity: 1; transform: translateY(-5px); }
+            100% { opacity: 0; transform: translateY(-30px); }
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
@@ -174,12 +198,11 @@
         <!-- 頂部導覽列 + XP 顯示 -->
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
-                <!-- 修改處：指向 dashboard.html -->
                 <a href="dashboard.html" class="text-secondary me-3 fs-4"><i class="bi bi-chevron-left"></i></a>
                 <h4 class="mb-0 fw-bold">國文與文言文</h4>
             </div>
             <div class="xp-badge">
-                ⚡ <span id="xp-display">0</span> XP
+                ⚡ <span id="xpCount">0</span> XP
             </div>
         </div>
 
@@ -201,32 +224,118 @@
     <script src="ch50.js?v=2"></script>
 
     <script>
+        // 初始化 Firebase 設定（與 en.html 一致）
+        const firebaseConfig = {
+            apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
+            authDomain: "cale-study-app-41b9b.firebaseapp.com",
+            projectId: "cale-study-app-41b9b",
+            storageBucket: "cale-study-app-41b9b.firebasestorage.app",
+            messagingSenderId: "819450732167",
+            appId: "1:819450732167:web:a727579df57eb9da33e222",
+            measurementId: "G-GP1XCE9W5E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let currentArticles = [];
         let currentArticleIndex = 0;
         let currentQuestionIndex = 0;
         let isDropdownOpen = false;
-        let userXP = parseInt(localStorage.getItem("user_xp") || "0");
+
+        let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
+
+        // 取得唯一的帳號 Key (與 en.html 完全相同)
+        function getUserEmailKey() {
+            return localStorage.getItem("accountKey") 
+                || localStorage.getItem("userEmail") 
+                || localStorage.getItem("currentUser") 
+                || localStorage.getItem("username")
+                || "default_user";
+        }
+
+        function getXPKey() {
+            return "xp_" + getUserEmailKey();
+        }
+
+        // 讀取本地 XP (捕捉全方位 Key)
+        function getUserXP() {
+            const key = getXPKey();
+            const xpVal = localStorage.getItem(key) 
+                       || localStorage.getItem("userXP") 
+                       || localStorage.getItem("xp")
+                       || localStorage.getItem("user_xp") 
+                       || "0";
+            return parseInt(xpVal, 10);
+        }
+
+        // 雲端同步下載 XP
+        async function syncXPFromCloud() {
+            const userDocId = getUserEmailKey();
+            if (userDocId === "default_user") return;
+
+            try {
+                const docRef = db.collection("users").doc(userDocId);
+                const docSnap = await docRef.get();
+
+                if (docSnap.exists) {
+                    const cloudData = docSnap.data();
+                    const cloudXP = cloudData.xp !== undefined ? cloudData.xp : (cloudData.userXP || 0);
+                    const localXP = getUserXP();
+                    const newXP = Math.max(localXP, cloudXP);
+                    
+                    saveXPToLocal(newXP);
+                    document.getElementById("xpCount").innerText = newXP;
+                }
+            } catch (err) {
+                console.error("雲端同步失敗：", err);
+            }
+        }
+
+        // 寫入本地所有相容 Key
+        function saveXPToLocal(val) {
+            localStorage.setItem(getXPKey(), val);
+            localStorage.setItem("userXP", val);
+            localStorage.setItem("xp", val);
+            localStorage.setItem("user_xp", val);
+        }
+
+        // 更新 XP 畫面與同步寫入 Firestore
+        function updateXPDisplay() {
+            const currentXP = getUserXP();
+            
+            document.getElementById("xpCount").innerText = currentXP;
+            saveXPToLocal(currentXP);
+
+            let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
+            localStorage.setItem("todayProgressPercent", progressPercent);
+
+            const userDocId = getUserEmailKey();
+            if (userDocId !== "default_user") {
+                db.collection("users").doc(userDocId).set({
+                    xp: currentXP,
+                    userXP: currentXP,
+                    email: userDocId,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(err => console.error("寫入雲端失敗：", err));
+            }
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
-            updateXPDisplay();
+            syncXPFromCloud().then(() => {
+                updateXPDisplay();
+            });
             initDataCheck();
         });
 
-        // 監聽其他頁面（如英文版）對 user_xp 的修改，實現跨頁面同步
+        // 跨頁面 Storage 監聽
         window.addEventListener('storage', (e) => {
-            if (e.key === 'user_xp') {
-                userXP = parseInt(e.newValue || "0");
-                document.getElementById("xp-display").innerText = userXP;
+            if (e.key === getXPKey() || e.key === 'userXP' || e.key === 'xp' || e.key === 'user_xp') {
+                const newXP = parseInt(e.newValue || "0", 10);
+                document.getElementById("xpCount").innerText = newXP;
             }
         });
 
-        // 更新 XP 畫面與儲存
-        function updateXPDisplay() {
-            document.getElementById("xp-display").innerText = userXP;
-            localStorage.setItem("user_xp", userXP.toString());
-        }
-
-        // 彩帶特效函數
         function triggerConfetti() {
             if (typeof confetti === 'function') {
                 confetti({
@@ -237,7 +346,19 @@
             }
         }
 
-        // 讀取文章資料
+        function showFloatingXP(text) {
+            const container = document.querySelector(".main-card");
+            if (!container) return;
+            const xpFloat = document.createElement("div");
+            xpFloat.className = "floating-xp";
+            xpFloat.innerText = text;
+            container.appendChild(xpFloat);
+
+            setTimeout(() => {
+                xpFloat.remove();
+            }, 800);
+        }
+
         function initDataCheck() {
             const data = (typeof window.articles !== 'undefined') ? window.articles : (typeof articles !== 'undefined' ? articles : null);
 
@@ -250,7 +371,6 @@
             }
         }
 
-        // 初始化下拉清單
         function initDropdownMenu() {
             const listContainer = document.getElementById('dropdown-list');
             if (!listContainer) return;
@@ -272,7 +392,7 @@
 
         function selectArticle(index) {
             currentArticleIndex = index;
-            currentQuestionIndex = 0; // 重設題目序號
+            currentQuestionIndex = 0;
             document.getElementById('selected-title').innerText = currentArticles[index].title;
 
             const items = document.querySelectorAll('.custom-dropdown-item');
@@ -286,7 +406,6 @@
             loadArticle(index);
         }
 
-        // 載入文章與測驗
         function loadArticle(index) {
             const art = currentArticles[index];
             const displayArea = document.getElementById('article-display');
@@ -300,7 +419,6 @@
                         <span class="badge bg-primary px-3 py-2 rounded-pill">${art.author}</span>
                     </div>
 
-                    <!-- 原文 -->
                     <div class="mb-3">
                         <label class="text-secondary small fw-bold mb-1">【原文】</label>
                         <div class="content-box fs-5 lh-lg text-white">
@@ -308,7 +426,6 @@
                         </div>
                     </div>
 
-                    <!-- 翻譯 -->
                     <div class="mb-3">
                         <label class="text-secondary small fw-bold mb-1">【白話文翻譯】</label>
                         <div class="content-box text-secondary fs-6 lh-base" style="background-color: #121926;">
@@ -316,7 +433,6 @@
                         </div>
                     </div>
 
-                    <!-- 字詞釋義 -->
                     ${art.notes && art.notes.length > 0 ? `
                         <div class="mb-3">
                             <label class="text-secondary small fw-bold mb-2">【字詞釋義】</label>
@@ -330,7 +446,6 @@
                         </div>
                     ` : ''}
 
-                    <!-- 隨堂測驗區塊（一次顯示一題） -->
                     ${currentQ ? `
                         <div class="mt-4 pt-3 border-top border-secondary" id="quiz-section">
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -352,7 +467,6 @@
             `;
         }
 
-        // 答題判斷 + 加 XP 功能
         function checkAnswer(selectedIndex, correctIndex, btn) {
             const container = document.getElementById('quiz-container');
             const buttons = container.querySelectorAll('button');
@@ -360,30 +474,30 @@
             const art = currentArticles[currentArticleIndex];
             const isLastQuestion = currentQuestionIndex === art.questions.length - 1;
 
-            // 停用所有選項按鈕防止重複點擊
             buttons.forEach(b => b.disabled = true);
 
             let feedbackHTML = '';
 
             if (selectedIndex === correctIndex) {
-                // 答對處理
                 btn.classList.add('correct');
-                const addedXP = 2;
+                const addedXP = 5; // 國文答對給予 5 XP
                 
-                // 重新讀取最新的 user_xp 避免累加覆蓋問題
-                userXP = parseInt(localStorage.getItem("user_xp") || "0") + addedXP;
+                todayCorrectCount++;
+                localStorage.setItem("todayCorrectCount", todayCorrectCount);
+
+                let currentXP = getUserXP() + addedXP;
+                saveXPToLocal(currentXP);
                 updateXPDisplay();
-                
+
+                showFloatingXP(`+${addedXP} XP`);
                 feedbackHTML = `<div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>`;
             } else {
-                // 答錯處理
                 btn.classList.add('wrong');
-                buttons[correctIndex].classList.add('correct'); // 標示正確答案
+                buttons[correctIndex].classList.add('correct');
                 feedbackHTML = `<div class="feedback-msg text-danger">❌ 答錯了，再接再勵！</div>`;
             }
 
             if (isLastQuestion) {
-                // 本篇全部題目完成，施放彩帶
                 triggerConfetti();
                 feedbackHTML += `
                     <button class="btn-next" style="background-color: #22c55e; color: #fff;" onclick="nextArticle()">
@@ -399,26 +513,22 @@
             feedbackDiv.innerHTML = feedbackHTML;
         }
 
-        // 切換至本篇的下一題
         function nextQuestion() {
             currentQuestionIndex++;
             loadArticle(currentArticleIndex);
             
-            // 平滑滾動到測驗區域
             const quizSection = document.getElementById('quiz-section');
             if (quizSection) {
                 quizSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
-        // 切換至下一篇文章
         function nextArticle() {
             const nextIndex = (currentArticleIndex + 1) % currentArticles.length;
             selectArticle(nextIndex);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 點擊外面時收合選單
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('dropdown-list');
             const button = document.getElementById('articleDropdown');
