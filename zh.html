@@ -479,23 +479,28 @@
             let feedbackHTML = '';
 
             if (selectedIndex === correctIndex) {
-                btn.classList.add('correct');
-                const addedXP = 5; // 國文答對給予 5 XP
-                
-                todayCorrectCount++;
-                localStorage.setItem("todayCorrectCount", todayCorrectCount);
+    btn.classList.add('correct');
+    const addedXP = 5; // 國文答對給予 5 XP
+    
+    todayCorrectCount++;
+    localStorage.setItem("todayCorrectCount", todayCorrectCount);
 
-                let currentXP = getUserXP() + addedXP;
-                saveXPToLocal(currentXP);
-                updateXPDisplay();
+    // 1. 累加國文專屬 XP (xp_zh)
+    let currentZhXP = parseInt(localStorage.getItem("xp_zh") || "0", 10) + addedXP;
+    localStorage.setItem("xp_zh", currentZhXP);
 
-                showFloatingXP(`+${addedXP} XP`);
-                feedbackHTML = `<div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>`;
-            } else {
-                btn.classList.add('wrong');
-                buttons[correctIndex].classList.add('correct');
-                feedbackHTML = `<div class="feedback-msg text-danger">❌ 答錯了，再接再勵！</div>`;
-            }
+    // 2. 算總 XP 並儲存/更新畫面 (保持頁面即時顯示)
+    let currentXP = getUserXP() + addedXP;
+    saveXPToLocal(currentXP);
+    updateXPDisplay();
+
+    showFloatingXP(`+${addedXP} XP`);
+    feedbackHTML = `<div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>`;
+} else {
+    btn.classList.add('wrong');
+    buttons[correctIndex].classList.add('correct');
+    feedbackHTML = `<div class="feedback-msg text-danger">❌ 答錯了，再接再勵！</div>`;
+}
 
             if (isLastQuestion) {
                 triggerConfetti();
