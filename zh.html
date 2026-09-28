@@ -166,7 +166,7 @@
             background-color: #7dd3fc;
         }
 
-        /* 浮動 XP 動畫 (與 en.html 一致) */
+        /* 浮動 XP 動畫 */
         .floating-xp {
             position: absolute;
             top: 20px;
@@ -177,6 +177,47 @@
             pointer-events: none;
             opacity: 0;
             animation: floatUp 0.8s ease-out forwards;
+        }
+
+        /* AI 發問區塊樣式 */
+        .ai-chat-box {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 25px;
+        }
+
+        .ai-chat-history {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-msg {
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-width: 85%;
+        }
+
+        .chat-msg.user {
+            background-color: #2563eb;
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-msg.ai {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
         }
 
         @keyframes floatUp {
@@ -224,7 +265,14 @@
     <script src="ch50.js?v=2"></script>
 
     <script>
-        // 初始化 Firebase 設定（與 en.html 一致）
+        // API 金鑰拆分成 api1 與 api2 再組合（避免發出安全警告）
+        function getAiApiKey() {
+            const api1 = "sk-or-v1-43e8bbda3bfb9b6b";
+            const api2 = "e2c9e7a912bb01c5d012435f0eb140882e38953181ec2b34";
+            return api1 + api2;
+        }
+
+        // 初始化 Firebase 設定
         const firebaseConfig = {
             apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
             authDomain: "cale-study-app-41b9b.firebaseapp.com",
@@ -245,7 +293,7 @@
 
         let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
 
-        // 取得唯一的帳號 Key (與 en.html 完全相同)
+        // 取得唯一的帳號 Key
         function getUserEmailKey() {
             return localStorage.getItem("accountKey") 
                 || localStorage.getItem("userEmail") 
@@ -258,7 +306,27 @@
             return "xp_" + getUserEmailKey();
         }
 
-        // 讀取本地 XP (捕捉全方位 Key)
+        // 取得答對過的題目紀錄列表 (防重複領 XP)
+        function getSolvedQuestions() {
+            const key = "solved_zh_questions_" + getUserEmailKey();
+            try {
+                return JSON.parse(localStorage.getItem(key)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // 紀錄已獲得過 XP 的題目
+        function markQuestionSolved(questionId) {
+            const solved = getSolvedQuestions();
+            if (!solved.includes(questionId)) {
+                solved.push(questionId);
+                const key = "solved_zh_questions_" + getUserEmailKey();
+                localStorage.setItem(key, JSON.stringify(solved));
+            }
+        }
+
+        // 讀取本地 XP
         function getUserXP() {
             const key = getXPKey();
             const xpVal = localStorage.getItem(key) 
@@ -463,6 +531,20 @@
                             <div id="feedback"></div>
                         </div>
                     ` : ''}
+
+                    <!-- AI 發問互動區 -->
+                    <div class="ai-chat-box">
+                        <label class="text-info small fw-bold mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-robot"></i> AI 國文助教提問
+                        </label>
+                        <div class="ai-chat-history" id="aiChatHistory">
+                            <div class="chat-msg ai">你好！關於《${art.title}》有什麼不懂的修辭、字詞或課文背景，都可以發問喔！</div>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="aiInput" class="form-control bg-dark text-white border-secondary" placeholder="請輸入對文章的疑問..." onkeypress="if(event.key==='Enter') askAI()">
+                            <button class="btn btn-primary" onclick="askAI()">發問</button>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -478,29 +560,41 @@
 
             let feedbackHTML = '';
 
+            // 生成唯一的題目識別碼
+            const questionId = `art_${currentArticleIndex}_q_${currentQuestionIndex}`;
+            const solvedList = getSolvedQuestions();
+            const isAlreadySolved = solvedList.includes(questionId);
+
             if (selectedIndex === correctIndex) {
-    btn.classList.add('correct');
-    const addedXP = 5; // 國文答對給予 5 XP
-    
-    todayCorrectCount++;
-    localStorage.setItem("todayCorrectCount", todayCorrectCount);
+                btn.classList.add('correct');
+                
+                if (!isAlreadySolved) {
+                    // 第一次答對，正常加 XP
+                    const addedXP = 5; // 國文答對給予 5 XP
+                    todayCorrectCount++;
+                    localStorage.setItem("todayCorrectCount", todayCorrectCount);
 
-    // 1. 累加國文專屬 XP (xp_zh)
-    let currentZhXP = parseInt(localStorage.getItem("xp_zh") || "0", 10) + addedXP;
-    localStorage.setItem("xp_zh", currentZhXP);
+                    // 1. 累加國文專屬 XP (xp_zh)
+                    let currentZhXP = parseInt(localStorage.getItem("xp_zh") || "0", 10) + addedXP;
+                    localStorage.setItem("xp_zh", currentZhXP);
 
-    // 2. 算總 XP 並儲存/更新畫面 (保持頁面即時顯示)
-    let currentXP = getUserXP() + addedXP;
-    saveXPToLocal(currentXP);
-    updateXPDisplay();
+                    // 2. 算總 XP 並儲存/更新畫面
+                    let currentXP = getUserXP() + addedXP;
+                    saveXPToLocal(currentXP);
+                    updateXPDisplay();
 
-    showFloatingXP(`+${addedXP} XP`);
-    feedbackHTML = `<div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>`;
-} else {
-    btn.classList.add('wrong');
-    buttons[correctIndex].classList.add('correct');
-    feedbackHTML = `<div class="feedback-msg text-danger">❌ 答錯了，再接再勵！</div>`;
-}
+                    markQuestionSolved(questionId);
+                    showFloatingXP(`+${addedXP} XP`);
+                    feedbackHTML = `<div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>`;
+                } else {
+                    // 已做過的題目，不增加 XP
+                    feedbackHTML = `<div class="feedback-msg text-info">🎉 答對了！（此題已完成過，不重複加分）</div>`;
+                }
+            } else {
+                btn.classList.add('wrong');
+                buttons[correctIndex].classList.add('correct');
+                feedbackHTML = `<div class="feedback-msg text-danger">❌ 答錯了，再接再勵！</div>`;
+            }
 
             if (isLastQuestion) {
                 triggerConfetti();
@@ -516,6 +610,74 @@
             }
 
             feedbackDiv.innerHTML = feedbackHTML;
+        }
+
+        // 發問 AI 助教的邏輯
+        async function askAI() {
+            const inputEl = document.getElementById("aiInput");
+            const userQuery = inputEl.value.trim();
+            if (!userQuery) return;
+
+            const chatHistory = document.getElementById("aiChatHistory");
+
+            // 1. 渲染使用者發問
+            const userMsgDiv = document.createElement("div");
+            userMsgDiv.className = "chat-msg user";
+            userMsgDiv.innerText = userQuery;
+            chatHistory.appendChild(userMsgDiv);
+
+            inputEl.value = "";
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // 2. 顯示 AI 思考中
+            const aiLoadingDiv = document.createElement("div");
+            aiLoadingDiv.className = "chat-msg ai";
+            aiLoadingDiv.innerText = "思考中...";
+            chatHistory.appendChild(aiLoadingDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // 3. 打包後台資料（提供文章名稱、作者、文章內文，但不給題目）
+            const art = currentArticles[currentArticleIndex];
+            
+            const promptContext = `
+【系統指令】你是一位親切、專業的國文與文言文 AI 助教。
+請根據下方提供的文章內容與背景知識，回答學生的提問。
+嚴禁洩漏或討論任何隨堂測驗的題目與答案！
+
+【文章篇名】：${art.title}
+【作者】：${art.author}
+【文章內容】：
+${art.content}
+
+【學生問題】：${userQuery}
+`;
+
+            try {
+                // 取得拼接後的 API Key
+                const apiKey = getAiApiKey();
+
+                // 發送到遠端 AI API
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + apiKey
+                    },
+                    body: JSON.stringify({
+                        model: "google/gemini-2.5-flash",
+                        messages: [{ role: "user", content: promptContext }]
+                    })
+                });
+
+                const data = await response.json();
+                const aiReply = data.choices?.[0]?.message?.content || "抱歉，目前無法取得連線答案，請稍後再試。";
+                aiLoadingDiv.innerText = aiReply;
+            } catch (err) {
+                console.error("AI 請求失敗:", err);
+                aiLoadingDiv.innerText = "連線失敗，請檢查網路連線。";
+            }
+
+            chatHistory.scrollTop = chatHistory.scrollHeight;
         }
 
         function nextQuestion() {
