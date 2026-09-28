@@ -897,21 +897,25 @@
             allBtns.forEach(btn => btn.disabled = true);
 
             if (selectedWord === correctQuizAnswer) {
-                clickedBtn.classList.add("correct-anim");
-                comboCount++;
-                todayCorrectCount++;
-                localStorage.setItem("todayCorrectCount", todayCorrectCount);
-                
-                const gainXP = 10 + Math.min(comboCount * 2, 10);
-                
-                let currentXP = getUserXP();
-                currentXP += gainXP;
-                
-                // 強制將加總後的 XP 寫回所有本地儲存空間
-                localStorage.setItem(getXPKey(), currentXP);
-                localStorage.setItem("userXP", currentXP);
-                localStorage.setItem("xp", currentXP);
+    clickedBtn.classList.add("correct-anim");
+    comboCount++;
+    todayCorrectCount++;
+    localStorage.setItem("todayCorrectCount", todayCorrectCount);
+    
+    const gainXP = 10 + Math.min(comboCount * 2, 10);
+    
+    // 1. 累加英文專屬 XP (xp_en)
+    let currentEnXP = parseInt(localStorage.getItem("xp_en") || "0", 10) + gainXP;
+    localStorage.setItem("xp_en", currentEnXP);
 
+    // 2. 更新總 XP 並寫回本地空間
+    let currentXP = getUserXP();
+    currentXP += gainXP;
+    
+    // 強制將加總後的 XP 寫回所有本地儲存空間
+    localStorage.setItem(getXPKey(), currentXP);
+    localStorage.setItem("userXP", currentXP);
+    localStorage.setItem("xp", currentXP);
                 updateXPDisplay();
 
                 if (window.confetti) {
