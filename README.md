@@ -1,1 +1,1 @@
-# <beta>cale
+# /beta/cale
