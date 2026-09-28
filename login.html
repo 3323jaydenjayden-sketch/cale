@@ -199,9 +199,10 @@
         </div>
     </div>
 
-    <!-- 載入 Firebase 模組並同步雲端資料庫 -->
+    <!-- 載入 Firebase 模組 (App, Analytics, Firestore) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -214,27 +215,14 @@
             measurementId: "G-GP1XCE9W5E"
         };
 
+        // 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
-        // 初始化/同步使用者雲端資料庫
-        async function syncUserToFirebase(accountKey, displayName) {
-            // 清理 accountKey 中的特殊字元以作為 Firestore Document ID
-            const safeDocId = accountKey.replace(/[^a-zA-Z0-9_-]/g, "_");
-            const userRef = doc(db, "users", safeDocId);
-            const userSnap = await getDoc(userRef);
-
-            if (!userSnap.exists()) {
-                // 新用戶：建立初始成就紀錄
-                await setDoc(userRef, {
-                    displayName: displayName || accountKey,
-                    accountKey: accountKey,
-                    level: 1,
-                    xp: 0,
-                    totalXp: 0,
-                    badges: []
-                });
-            }
+        // 將文件識別碼清理成安全的格式
+        function getSafeDocId(key) {
+            return key.replace(/[^a-zA-Z0-9_-]/g, "_");
         }
 
         window.isLoginMode = true;
@@ -257,15 +245,29 @@
         // Google 登入成功後的回調函數
         window.handleCredentialResponse = async function(response) {
             const responsePayload = parseJwt(response.credential);
+            const userEmail = responsePayload.email;
 
             localStorage.setItem("isLoggedIn", "true");
             localStorage.setItem("currentUser", responsePayload.name);
             localStorage.setItem("userPicture", responsePayload.picture);
-            localStorage.setItem("userEmail", responsePayload.email);
-            localStorage.setItem("accountKey", responsePayload.email);
+            localStorage.setItem("userEmail", userEmail);
+            localStorage.setItem("accountKey", userEmail);
 
-            // 存入 Firebase 雲端
-            await syncUserToFirebase(responsePayload.email, responsePayload.name);
+            // 雲端記錄 Google 登入資訊
+            const safeDocId = getSafeDocId(userEmail);
+            const userRef = doc(db, "users", safeDocId);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    displayName: responsePayload.name,
+                    accountKey: userEmail,
+                    level: 1,
+                    xp: 0,
+                    totalXp: 0,
+                    badges: []
+                });
+            }
 
             window.location.href = "dashboard.html";
         };
@@ -285,46 +287,84 @@
             const user = document.getElementById("username").value.trim();
             const pass = document.getElementById("password").value.trim();
             const errorMsg = document.getElementById("errorMsg");
+            const submitBtn = document.getElementById("submitBtn");
 
             if (!user || !pass) {
                 errorMsg.innerText = "請填寫所有欄位！";
                 return;
             }
 
-            let users = JSON.parse(localStorage.getItem("cale_app_users") || "{}");
-            if (!users["cale"]) users["cale"] = "123456";
+            const safeDocId = getSafeDocId(user);
+            const userRef = doc(db, "users", safeDocId);
 
-            if (window.isLoginMode) {
-                if (users[user] && users[user] === pass) {
-                    localStorage.setItem("isLoggedIn", "true");
-                    localStorage.setItem("currentUser", user);
-                    localStorage.setItem("accountKey", user);
-                    localStorage.removeItem("userPicture");
-                    localStorage.removeItem("userEmail");
+            submitBtn.disabled = true;
+            submitBtn.innerText = "連線驗證中...";
 
-                    await syncUserToFirebase(user, user);
+            try {
+                const userSnap = await getDoc(userRef);
 
-                    window.location.href = "dashboard.html";
+                if (window.isLoginMode) {
+                    // === 雲端登入驗證 ===
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        
+                        // 比對 Firebase 雲端上的密碼
+                        if (userData.password === pass) {
+                            localStorage.setItem("isLoggedIn", "true");
+                            localStorage.setItem("currentUser", user);
+                            localStorage.setItem("accountKey", user);
+                            localStorage.setItem("xp_" + user, userData.xp || 0);
+                            localStorage.removeItem("userPicture");
+                            localStorage.removeItem("userEmail");
+
+                            window.location.href = "dashboard.html";
+                        } else {
+                            errorMsg.innerText = "密碼錯誤！";
+                        }
+                    } else {
+                        // 相容預設測試帳號 cale
+                        if (user === "cale" && pass === "123456") {
+                            localStorage.setItem("isLoggedIn", "true");
+                            localStorage.setItem("currentUser", user);
+                            localStorage.setItem("accountKey", user);
+                            window.location.href = "dashboard.html";
+                        } else {
+                            errorMsg.innerText = "帳號不存在！請點選下方註冊。";
+                        }
+                    }
                 } else {
-                    errorMsg.innerText = "帳號或密碼錯誤！";
-                }
-            } else {
-                if (users[user]) {
-                    errorMsg.innerText = "該帳號已被註冊！";
-                } else {
-                    users[user] = pass;
-                    localStorage.setItem("cale_app_users", JSON.stringify(users));
-                    localStorage.setItem("isLoggedIn", "true");
-                    localStorage.setItem("currentUser", user);
-                    localStorage.setItem("accountKey", user);
-                    localStorage.removeItem("userPicture");
-                    localStorage.removeItem("userEmail");
+                    // === 雲端註冊 ===
+                    if (userSnap.exists()) {
+                        errorMsg.innerText = "該帳號已被註冊！";
+                    } else {
+                        // 正式將新帳號與密碼寫入 Firebase Firestore
+                        await setDoc(userRef, {
+                            displayName: user,
+                            accountKey: user,
+                            password: pass, // 儲存至雲端，達成跨裝置同步登入
+                            level: 1,
+                            xp: 0,
+                            totalXp: 0,
+                            badges: [],
+                            createdAt: new Date().toISOString()
+                        });
 
-                    await syncUserToFirebase(user, user);
+                        localStorage.setItem("isLoggedIn", "true");
+                        localStorage.setItem("currentUser", user);
+                        localStorage.setItem("accountKey", user);
+                        localStorage.removeItem("userPicture");
+                        localStorage.removeItem("userEmail");
 
-                    alert("註冊成功！自動為您登入");
-                    window.location.href = "dashboard.html";
+                        alert("註冊成功！已同步至雲端並自動登入");
+                        window.location.href = "dashboard.html";
+                    }
                 }
+            } catch (err) {
+                console.error("驗證失敗：", err);
+                errorMsg.innerText = "連線失敗，請檢查網路連線。";
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = window.isLoginMode ? "登入" : "註冊帳號";
             }
         });
     </script>
