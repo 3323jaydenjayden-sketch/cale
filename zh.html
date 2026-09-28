@@ -650,7 +650,7 @@ ${art.content}
                         "Authorization": "Bearer " + apiKey
                     },
                     body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile", // 使用 Groq 強大的 Llama 3.3 70B 模型
+                        model: "openai/gpt-oss-120b", // 使用 Groq 強大的 Llama 3.3 70B 模型
                         messages: [{ role: "user", content: promptContext }]
                     })
                 });
