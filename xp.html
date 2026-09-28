@@ -335,7 +335,7 @@
                 <div>
                     <div class="subject-header">
                         <span class="subject-title">🔤 英文單字</span>
-                        <span class="xp_en" id="enXpDisplay">0 XP</span>
+                        <span class="subject-xp" id="enXpDisplay">0 XP</span>
                     </div>
                     <div class="subject-desc" id="enDetailDisplay" style="margin-top: 0.4rem;">
                         今日答對：0 題
@@ -349,10 +349,10 @@
                 <div>
                     <div class="subject-header">
                         <span class="subject-title">📖 國文文言文</span>
-                        <span class="xp_zh" id="zhXpDisplay">0 XP</span>
+                        <span class="subject-xp" id="zhXpDisplay">0 XP</span>
                     </div>
                     <div class="subject-desc" id="zhDetailDisplay" style="margin-top: 0.4rem;">
-                        今日挑戰：已啟用
+                        狀態：已啟用
                     </div>
                 </div>
                 <a href="zh.html" class="subject-link">前往練習 ➔</a>
@@ -390,24 +390,18 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 全域相容讀取 LocalStorage 中的 XP[cite: 9]
-    function getLocalXP(accountKey) {
-        const specificKey = "xp_" + accountKey;
-        const valSpecific = parseInt(localStorage.getItem(specificKey) || "0", 10);
-        const valUserXP = parseInt(localStorage.getItem("userXP") || "0", 10);
-        const valXP = parseInt(localStorage.getItem("xp") || "0", 10);
-        const valZhXP = parseInt(localStorage.getItem("user_xp") || "0", 10);
+    // 讀取本地各科分數與舊資料相容機制
+    function getLocalSubjectsXP() {
+        let enXP = parseInt(localStorage.getItem("xp_en") || "0", 10);
+        let zhXP = parseInt(localStorage.getItem("xp_zh") || "0", 10);
 
-        return Math.max(valSpecific, valUserXP, valXP, valZhXP);
-    }
+        // 如果還沒有分科資料，讀取舊版累積分數並預設歸入英文
+        const oldXP = parseInt(localStorage.getItem("userXP") || localStorage.getItem("xp") || "0", 10);
+        if (enXP === 0 && zhXP === 0 && oldXP > 0) {
+            enXP = oldXP;
+        }
 
-    // 同步將最新 XP 寫回所有本地 Key[cite: 9]
-    function setLocalXP(accountKey, xp) {
-        const specificKey = "xp_" + accountKey;
-        localStorage.setItem(specificKey, xp);
-        localStorage.setItem("userXP", xp);
-        localStorage.setItem("xp", xp);
-        localStorage.setItem("user_xp", xp);
+        return { enXP, zhXP };
     }
 
     async function loadXPPage() {
@@ -418,7 +412,7 @@
 
         document.body.style.display = "flex";
 
-        // 1. 載入使用者的基本個人資訊[cite: 9]
+        // 1. 載入個人資訊
         const currentUser = localStorage.getItem("currentUser") || "學員";
         const userPicture = localStorage.getItem("userPicture");
         const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
@@ -429,17 +423,15 @@
             document.getElementById("userAvatar").src = userPicture;
         }
 
-        // 2. 優先讀取本地 LocalStorage 的 XP 並顯示[cite: 9]
-        let localXP = getLocalXP(accountKey);
-        renderXPData(localXP);
+        // 2. 本地讀取各科分數
+        let { enXP, zhXP } = getLocalSubjectsXP();
 
-        // 3. 從 Firebase 抓取最新雲端 XP 數據[cite: 9]
+        // 3. 從 Firebase 抓取最新雲端各科 XP 數據
         try {
             const rawDocRef = doc(db, "users", accountKey);
             let userSnap = await getDoc(rawDocRef);
             let targetRef = rawDocRef;
 
-            // 如果用原始 Key 沒抓到，嘗試 safeDocId 格式[cite: 9]
             if (!userSnap.exists()) {
                 const safeDocId = accountKey.replace(/[^a-zA-Z0-9_-]/g, "_");
                 const safeDocRef = doc(db, "users", safeDocId);
@@ -449,34 +441,41 @@
                 }
             }
 
-            let cloudXP = 0;
             if (userSnap.exists()) {
                 const data = userSnap.data();
-                if (data.xp !== undefined) cloudXP = data.xp;
-                else if (data.totalXp !== undefined) cloudXP = data.totalXp;
-                else if (data.userXP !== undefined) cloudXP = data.userXP;
+                if (data.xp_en !== undefined) enXP = Math.max(enXP, data.xp_en);
+                if (data.xp_zh !== undefined) zhXP = Math.max(zhXP, data.xp_zh);
             }
 
-            // 核心重點：取本地與雲端的最大值[cite: 9]
-            const finalXP = Math.max(localXP, cloudXP);
+            // 計算加總分數
+            const totalXP = enXP + zhXP;
 
-            // 如果本地 XP 比較大，順便自動回寫到 Firebase 雲端進行同步[cite: 9]
-            if (localXP > cloudXP) {
-                await setDoc(targetRef, { xp: finalXP, totalXp: finalXP }, { merge: true });
-            }
+            // 回寫同步到雲端與本地
+            await setDoc(targetRef, { 
+                xp_en: enXP, 
+                xp_zh: zhXP, 
+                xp: totalXP,
+                totalXp: totalXP 
+            }, { merge: true });
 
-            // 更新本地儲存與畫面[cite: 9]
-            setLocalXP(accountKey, finalXP);
-            renderXPData(finalXP);
+            localStorage.setItem("xp_en", enXP);
+            localStorage.setItem("xp_zh", zhXP);
+            localStorage.setItem("userXP", totalXP);
+            localStorage.setItem("xp", totalXP);
+
+            renderXPData(enXP, zhXP);
 
         } catch (error) {
             console.error("從 Firebase 獲取 XP 失敗，維持本機紀錄:", error);
-            renderXPData(localXP);
+            renderXPData(enXP, zhXP);
         }
     }
 
     // 渲染 XP UI 畫面的函式
-    function renderXPData(totalXP) {
+    function renderXPData(enXP, zhXP) {
+        // 自動加總各科分數
+        const totalXP = enXP + zhXP;
+
         const xpPerLevel = 100;
         const level = Math.floor(totalXP / xpPerLevel) + 1;
         const currentXP = totalXP % xpPerLevel;
@@ -489,55 +488,55 @@
         document.getElementById("levelBadge").innerText = `Lv.${level}`;
         document.getElementById("userTitle").innerText = title;
         document.getElementById("xpCurrentText").innerText = `${currentXP} / ${xpPerLevel} XP`;
-        document.getElementById("xpTotalText").innerText = `累積總經驗：${totalXP} XP`;
+        document.getElementById("xpTotalText").innerText = `累積總成績：${totalXP} XP`;
 
         const percent = (currentXP / xpPerLevel) * 100;
         document.getElementById("xpBarFill").style.width = `${percent}%`;
 
-        // 渲染各科詳細數據
+        // 渲染各科詳細分數
         const todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0", 10);
-        document.getElementById("enXpDisplay").innerText = `${totalXP} XP`;
-        document.getElementById("enDetailDisplay").innerText = `今日答對數：${todayCorrectCount} 題`;
+        document.getElementById("enXpDisplay").innerText = `${enXP} XP`;
+        document.getElementById("enDetailDisplay").innerText = `今日答對：${todayCorrectCount} 題`;
 
-        document.getElementById("zhXpDisplay").innerText = `${totalXP} XP`;
+        document.getElementById("zhXpDisplay").innerText = `${zhXP} XP`;
         document.getElementById("zhDetailDisplay").innerText = `狀態：已與雲端同步`;
 
-        // 渲染勳章 (整合總 XP 與科目專屬勳章)[cite: 9]
+        // 渲染成就勳章
         const badges = [
             {
                 icon: "🚀",
                 name: "起步走",
-                desc: "獲得生涯第一個 10 XP",
+                desc: "總成績達到第一個 10 XP",
                 unlocked: totalXP >= 10
             },
             {
                 icon: "🔤",
-                name: "英文單字新手",
-                desc: "在英文模式中獲得經驗值",
-                unlocked: totalXP >= 10
+                name: "英文單字達人",
+                desc: "英文科獲得 50 XP 以上",
+                unlocked: enXP >= 50
             },
             {
                 icon: "📖",
-                name: "文言文初探",
-                desc: "完成國文文章測驗並賺取 XP",
-                unlocked: totalXP >= 15
+                name: "國文文言文大師",
+                desc: "國文科獲得 50 XP 以上",
+                unlocked: zhXP >= 50
             },
             {
                 icon: "🔥",
                 name: "持之以恆",
-                desc: "累積達到 100 XP (升至 Lv.2)",
+                desc: "總成績達到 100 XP (升至 Lv.2)",
                 unlocked: totalXP >= 100
             },
             {
                 icon: "📚",
-                name: "知識達人",
-                desc: "累積達到 500 XP (升至 Lv.6)",
-                unlocked: totalXP >= 500
+                name: "雙科全能",
+                desc: "英、國兩科皆獲得 100 XP 以上",
+                unlocked: enXP >= 100 && zhXP >= 100
             },
             {
                 icon: "👑",
                 name: "會考學霸",
-                desc: "累積達到 1000 XP (升至 Lv.11)",
+                desc: "總成績達到 1000 XP (升至 Lv.11)",
                 unlocked: totalXP >= 1000
             }
         ];
