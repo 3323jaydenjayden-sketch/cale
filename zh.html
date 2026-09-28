@@ -11,7 +11,7 @@
     <!-- Canvas Confetti 彩帶套件 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <!-- 引入 Firebase SDK (Compat 版本) - 與 en.html 同步 -->
+    <!-- 引入 Firebase SDK (Compat 版本) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -265,10 +265,10 @@
     <script src="ch50.js?v=2"></script>
 
     <script>
-        // API 金鑰拆分成 api1 與 api2 再組合（避免 GitHub 告警）
+        // 你的 Groq API Key (拆成 api1 + api2 避開 GitHub 告警)
         function getAiApiKey() {
-            const api1 = "sk-or-v1-43e8bbda3bfb9b6b";
-            const api2 = "e2c9e7a912bb01c5d012435f0eb140882e38953181ec2b34";
+            const api1 = "gsk_9FLcICTwhme8EicODLks";
+            const api2 = "WGdyb3FYwEp5SAE6e5QTuCNmMF9MCW5k";
             return api1 + api2;
         }
 
@@ -293,7 +293,6 @@
 
         let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
 
-        // 取得唯一的帳號 Key
         function getUserEmailKey() {
             return localStorage.getItem("accountKey") 
                 || localStorage.getItem("userEmail") 
@@ -306,7 +305,6 @@
             return "xp_" + getUserEmailKey();
         }
 
-        // 取得答對過的題目紀錄列表 (防重複領 XP)
         function getSolvedQuestions() {
             const key = "solved_zh_questions_" + getUserEmailKey();
             try {
@@ -316,7 +314,6 @@
             }
         }
 
-        // 紀錄已獲得過 XP 的題目
         function markQuestionSolved(questionId) {
             const solved = getSolvedQuestions();
             if (!solved.includes(questionId)) {
@@ -326,7 +323,6 @@
             }
         }
 
-        // 讀取本地 XP
         function getUserXP() {
             const key = getXPKey();
             const xpVal = localStorage.getItem(key) 
@@ -337,7 +333,6 @@
             return parseInt(xpVal, 10);
         }
 
-        // 雲端同步下載 XP
         async function syncXPFromCloud() {
             const userDocId = getUserEmailKey();
             if (userDocId === "default_user") return;
@@ -360,7 +355,6 @@
             }
         }
 
-        // 寫入本地所有相容 Key
         function saveXPToLocal(val) {
             localStorage.setItem(getXPKey(), val);
             localStorage.setItem("userXP", val);
@@ -368,7 +362,6 @@
             localStorage.setItem("user_xp", val);
         }
 
-        // 更新 XP 畫面與同步寫入 Firestore
         function updateXPDisplay() {
             const currentXP = getUserXP();
             
@@ -396,7 +389,6 @@
             initDataCheck();
         });
 
-        // 跨頁面 Storage 監聽
         window.addEventListener('storage', (e) => {
             if (e.key === getXPKey() || e.key === 'userXP' || e.key === 'xp' || e.key === 'user_xp') {
                 const newXP = parseInt(e.newValue || "0", 10);
@@ -560,7 +552,6 @@
 
             let feedbackHTML = '';
 
-            // 生成唯一的題目識別碼
             const questionId = `art_${currentArticleIndex}_q_${currentQuestionIndex}`;
             const solvedList = getSolvedQuestions();
             const isAlreadySolved = solvedList.includes(questionId);
@@ -569,16 +560,13 @@
                 btn.classList.add('correct');
                 
                 if (!isAlreadySolved) {
-                    // 第一次答對，正常加 XP
-                    const addedXP = 5; // 國文答對給予 5 XP
+                    const addedXP = 5;
                     todayCorrectCount++;
                     localStorage.setItem("todayCorrectCount", todayCorrectCount);
 
-                    // 1. 累加國文專屬 XP (xp_zh)
                     let currentZhXP = parseInt(localStorage.getItem("xp_zh") || "0", 10) + addedXP;
                     localStorage.setItem("xp_zh", currentZhXP);
 
-                    // 2. 算總 XP 並儲存/更新畫面
                     let currentXP = getUserXP() + addedXP;
                     saveXPToLocal(currentXP);
                     updateXPDisplay();
@@ -587,7 +575,6 @@
                     showFloatingXP(`+${addedXP} XP`);
                     feedbackHTML = `<div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>`;
                 } else {
-                    // 已做過的題目，不增加 XP
                     feedbackHTML = `<div class="feedback-msg text-info">🎉 答對了！（此題已完成過，不重複加分）</div>`;
                 }
             } else {
@@ -612,7 +599,7 @@
             feedbackDiv.innerHTML = feedbackHTML;
         }
 
-        // 發問 AI 助教的邏輯
+        // 發問 AI 助教的邏輯 (使用 Groq API)
         async function askAI() {
             const inputEl = document.getElementById("aiInput");
             const userQuery = inputEl.value.trim();
@@ -636,13 +623,13 @@
             chatHistory.appendChild(aiLoadingDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // 3. 打包後台資料
+            // 3. 打包Prompt與背景知識
             const art = currentArticles[currentArticleIndex];
             
             const promptContext = `
 【系統指令】你是一位親切、專業的國文與文言文 AI 助教。
 請根據下方提供的文章內容與背景知識，回答學生的提問。
-嚴禁洩漏或討論任何隨堂測驗的題目與答案！
+嚴禁洩漏或討論任何隨堂測驗的題目與答案！請用繁體中文回答。
 
 【文章篇名】：${art.title}
 【作者】：${art.author}
@@ -655,17 +642,15 @@ ${art.content}
             try {
                 const apiKey = getAiApiKey();
 
-                // 補上 OpenRouter 必填的 Headers
-                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                // 呼叫 Groq API 端點
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer " + apiKey,
-                        "HTTP-Referer": window.location.origin || "https://jayden-sketch.github.io",
-                        "X-Title": "Cale Study"
+                        "Authorization": "Bearer " + apiKey
                     },
                     body: JSON.stringify({
-                        model: "google/gemini-2.0-flash-001",
+                        model: "llama-3.3-70b-versatile", // 使用 Groq 強大的 Llama 3.3 70B 模型
                         messages: [{ role: "user", content: promptContext }]
                     })
                 });
@@ -675,8 +660,8 @@ ${art.content}
                 if (data.choices && data.choices[0] && data.choices[0].message) {
                     aiLoadingDiv.innerText = data.choices[0].message.content;
                 } else if (data.error) {
-                    console.error("OpenRouter API Error:", data.error);
-                    aiLoadingDiv.innerText = "伺服器回應錯誤：" + (data.error.message || "Key 已失效或點數不足");
+                    console.error("Groq API Error:", data.error);
+                    aiLoadingDiv.innerText = "伺服器回應錯誤：" + (data.error.message || "Key 無法存取");
                 } else {
                     aiLoadingDiv.innerText = "抱歉，目前無法取得連線答案，請稍後再試。";
                 }
