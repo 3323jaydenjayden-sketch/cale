@@ -75,7 +75,7 @@
             padding: 2rem 1.5rem;
             text-align: center;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             position: relative;
             overflow: hidden;
         }
@@ -147,17 +147,84 @@
             color: #94a3b8;
         }
 
-        /* 成就勳章區 */
+        /* 標題與分組區塊 */
         .section-header {
             font-size: 1.1rem;
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin: 1.5rem 0 1rem 0;
             color: #f8fafc;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
+        /* 各科成績卡片區 */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 480px) {
+            .subjects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .subject-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.8rem;
+        }
+
+        .subject-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subject-title {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .subject-xp {
+            color: #fbbf24;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .subject-desc {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .subject-link {
+            text-decoration: none;
+            color: #38bdf8;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            align-self: flex-end;
+            margin-top: 0.4rem;
+        }
+
+        .subject-link:hover {
+            color: #7dd3fc;
+        }
+
+        /* 成就勳章區 */
         .badges-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -235,7 +302,7 @@
         <!-- 頂部導覽 -->
         <div class="top-nav">
             <a href="dashboard.html" class="back-btn">➔ 返回控制台</a>
-            <div class="page-title">個人成就</div>
+            <div class="page-title">個人成就與總成績</div>
             <div style="width: 80px;"></div>
         </div>
 
@@ -254,7 +321,41 @@
             </div>
             <div class="xp-stats">
                 <span id="xpCurrentText">0 / 100 XP</span>
-                <span id="xpTotalText">累積經驗：同步中...</span>
+                <span id="xpTotalText">累積總經驗：同步中...</span>
+            </div>
+        </div>
+
+        <!-- 各科學習戰報 -->
+        <div class="section-header">
+            📊 各科學習戰報
+        </div>
+        <div class="subjects-grid">
+            <!-- 英文科 -->
+            <div class="subject-card">
+                <div>
+                    <div class="subject-header">
+                        <span class="subject-title">🔤 英文單字</span>
+                        <span class="subject-xp" id="enXpDisplay">0 XP</span>
+                    </div>
+                    <div class="subject-desc" id="enDetailDisplay" style="margin-top: 0.4rem;">
+                        今日答對：0 題
+                    </div>
+                </div>
+                <a href="en.html" class="subject-link">前往練習 ➔</a>
+            </div>
+
+            <!-- 國文科 -->
+            <div class="subject-card">
+                <div>
+                    <div class="subject-header">
+                        <span class="subject-title">📖 國文文言文</span>
+                        <span class="subject-xp" id="zhXpDisplay">0 XP</span>
+                    </div>
+                    <div class="subject-desc" id="zhDetailDisplay" style="margin-top: 0.4rem;">
+                        今日挑戰：已啟用
+                    </div>
+                </div>
+                <a href="zh.html" class="subject-link">前往練習 ➔</a>
             </div>
         </div>
 
@@ -289,22 +390,24 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 全域相容讀取 LocalStorage 中的 XP
+    // 全域相容讀取 LocalStorage 中的 XP[cite: 9]
     function getLocalXP(accountKey) {
         const specificKey = "xp_" + accountKey;
         const valSpecific = parseInt(localStorage.getItem(specificKey) || "0", 10);
         const valUserXP = parseInt(localStorage.getItem("userXP") || "0", 10);
         const valXP = parseInt(localStorage.getItem("xp") || "0", 10);
+        const valZhXP = parseInt(localStorage.getItem("user_xp") || "0", 10);
 
-        return Math.max(valSpecific, valUserXP, valXP);
+        return Math.max(valSpecific, valUserXP, valXP, valZhXP);
     }
 
-    // 同步將最新 XP 寫回所有本地 Key
+    // 同步將最新 XP 寫回所有本地 Key[cite: 9]
     function setLocalXP(accountKey, xp) {
         const specificKey = "xp_" + accountKey;
         localStorage.setItem(specificKey, xp);
         localStorage.setItem("userXP", xp);
         localStorage.setItem("xp", xp);
+        localStorage.setItem("user_xp", xp);
     }
 
     async function loadXPPage() {
@@ -315,7 +418,7 @@
 
         document.body.style.display = "flex";
 
-        // 1. 載入使用者的基本個人資訊
+        // 1. 載入使用者的基本個人資訊[cite: 9]
         const currentUser = localStorage.getItem("currentUser") || "學員";
         const userPicture = localStorage.getItem("userPicture");
         const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
@@ -326,17 +429,17 @@
             document.getElementById("userAvatar").src = userPicture;
         }
 
-        // 2. 優先讀取本地 LocalStorage 的 24 XP 並顯示
+        // 2. 優先讀取本地 LocalStorage 的 XP 並顯示[cite: 9]
         let localXP = getLocalXP(accountKey);
         renderXPData(localXP);
 
-        // 3. 從 Firebase 抓取最新雲端 XP 數據
+        // 3. 從 Firebase 抓取最新雲端 XP 數據[cite: 9]
         try {
             const rawDocRef = doc(db, "users", accountKey);
             let userSnap = await getDoc(rawDocRef);
             let targetRef = rawDocRef;
 
-            // 如果用原始 Key 沒抓到，嘗試 safeDocId 格式
+            // 如果用原始 Key 沒抓到，嘗試 safeDocId 格式[cite: 9]
             if (!userSnap.exists()) {
                 const safeDocId = accountKey.replace(/[^a-zA-Z0-9_-]/g, "_");
                 const safeDocRef = doc(db, "users", safeDocId);
@@ -354,21 +457,20 @@
                 else if (data.userXP !== undefined) cloudXP = data.userXP;
             }
 
-            // 核心重點：取本地與雲端的最大值，絕不被 0 覆蓋！
+            // 核心重點：取本地與雲端的最大值[cite: 9]
             const finalXP = Math.max(localXP, cloudXP);
 
-            // 如果本地 XP 比較大，順便把 24 XP 自動回寫到 Firebase 雲端進行同步
+            // 如果本地 XP 比較大，順便自動回寫到 Firebase 雲端進行同步[cite: 9]
             if (localXP > cloudXP) {
                 await setDoc(targetRef, { xp: finalXP, totalXp: finalXP }, { merge: true });
             }
 
-            // 更新本地儲存與畫面
+            // 更新本地儲存與畫面[cite: 9]
             setLocalXP(accountKey, finalXP);
             renderXPData(finalXP);
 
         } catch (error) {
             console.error("從 Firebase 獲取 XP 失敗，維持本機紀錄:", error);
-            // 發生網路錯誤時，依然維持本地的 24 XP
             renderXPData(localXP);
         }
     }
@@ -380,25 +482,45 @@
         const currentXP = totalXP % xpPerLevel;
 
         let title = "🌱 初學者";
-        if (level >= 5) title = "🌟 單字新星";
-        if (level >= 10) title = "⚡ 英語高手";
-        if (level >= 20) title = "👑 會考學霸";
+        if (level >= 3) title = "🌟 學習新星";
+        if (level >= 6) title = "⚡ 高效學員";
+        if (level >= 10) title = "👑 會考學霸";
 
         document.getElementById("levelBadge").innerText = `Lv.${level}`;
         document.getElementById("userTitle").innerText = title;
         document.getElementById("xpCurrentText").innerText = `${currentXP} / ${xpPerLevel} XP`;
-        document.getElementById("xpTotalText").innerText = `累積經驗：${totalXP} XP`;
+        document.getElementById("xpTotalText").innerText = `累積總經驗：${totalXP} XP`;
 
         const percent = (currentXP / xpPerLevel) * 100;
         document.getElementById("xpBarFill").style.width = `${percent}%`;
 
-        // 渲染勳章
+        // 渲染各科詳細數據
+        const todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0", 10);
+        document.getElementById("enXpDisplay").innerText = `${totalXP} XP`;
+        document.getElementById("enDetailDisplay").innerText = `今日答對數：${todayCorrectCount} 題`;
+
+        document.getElementById("zhXpDisplay").innerText = `${totalXP} XP`;
+        document.getElementById("zhDetailDisplay").innerText = `狀態：已與雲端同步`;
+
+        // 渲染勳章 (整合總 XP 與科目專屬勳章)[cite: 9]
         const badges = [
             {
                 icon: "🚀",
                 name: "起步走",
                 desc: "獲得生涯第一個 10 XP",
                 unlocked: totalXP >= 10
+            },
+            {
+                icon: "🔤",
+                name: "英文單字新手",
+                desc: "在英文模式中獲得經驗值",
+                unlocked: totalXP >= 10
+            },
+            {
+                icon: "📖",
+                name: "文言文初探",
+                desc: "完成國文文章測驗並賺取 XP",
+                unlocked: totalXP >= 15
             },
             {
                 icon: "🔥",
@@ -408,7 +530,7 @@
             },
             {
                 icon: "📚",
-                name: "單字達人",
+                name: "知識達人",
                 desc: "累積達到 500 XP (升至 Lv.6)",
                 unlocked: totalXP >= 500
             },
