@@ -27,13 +27,14 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
         }
 
-        .welcome-box {
-            position: relative;
-            height: 120px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+            .welcome-box {
+        position: relative;
+        min-height: 140px; /* 改為最小高度，給筆劃足夠的空間 */
+        padding: 20px 10px; /* 上下留白，防止被裁剪 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+}
 
         .handwritten-text {
             font-size: 5rem;
