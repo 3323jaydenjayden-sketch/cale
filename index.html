@@ -29,29 +29,29 @@
 
         .welcome-box {
             position: relative;
-            min-height: 160px;
+            min-height: 200px; /* 給予足夠高度，防止上下被切 */
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .handwritten-text {
             font-size: 5rem;
-            color: transparent;
-            background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6));
+            color: #38bdf8; /* 明亮的霓虹藍色 */
+            /* 使用多層文字陰影營造高質感發光效果，且完全不會裁切字母尾巴 */
+            text-shadow: 
+                0 0 10px rgba(56, 189, 248, 0.8),
+                0 0 25px rgba(56, 189, 248, 0.5),
+                0 0 50px rgba(56, 189, 248, 0.3);
+            
+            line-height: 1.6; /* 大幅拉高行高，完整保留 y, p 的下垂筆劃 */
+            padding: 0 20px;   /* 左右留白，防止字母筆劃超出 */
+            display: inline-block;
             white-space: nowrap;
             opacity: 0;
             transform: scale(0.95);
             transition: opacity 0.8s ease, transform 0.8s ease;
-
-            /* 解決 -webkit-background-clip 切到字體尾巴的問題 */
-            padding-bottom: 0.25em;
-            padding-right: 0.1em;
-            line-height: 1.4;
-            display: inline-block;
         }
 
         .handwritten-text.show {
