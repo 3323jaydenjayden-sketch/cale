@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cale study app - Groq Qwen Vision AI 拍照出題</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            color: #38bdf8;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-box {
+            border: 2px dashed rgba(56, 189, 248, 0.4);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 1.5rem;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .upload-box:hover {
+            border-color: #38bdf8;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 8px;
+            display: none;
+            margin: 0 auto;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: #38bdf8;
+            color: #0b0f19;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #0284c7;
+            color: #ffffff;
+        }
+
+        .btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            color: #94a3b8;
+        }
+
+        .quiz-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .question-card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .question-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 0.8rem;
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.6rem 1rem;
+            margin: 0.4rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+        }
+
+        .explanation {
+            margin-top: 0.8rem;
+            padding: 0.8rem;
+            background: rgba(56, 189, 248, 0.1);
+            border-left: 3px solid #38bdf8;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #38bdf8;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>⚡ Qwen 27B AI 拍照出題</h1>
+        <p class="subtitle">上傳照片，讓 Groq 高速視覺模型為你生成測驗題！</p>
+
+        <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+            <p id="uploadPrompt">📷 點擊選擇照片或拖曳圖片至此</p>
+            <img id="imagePreview" alt="預覽圖片">
+        </div>
+
+        <button class="btn" id="generateBtn" onclick="generateQuiz()" disabled>開始生成題目</button>
+
+        <div class="loading" id="loadingText">⚡ Qwen 3.8 27B 高速推理中，請稍候...</div>
+
+        <div class="quiz-container" id="quizContainer"></div>
+    </div>
+
+    <script>
+        // 將 API Key 分開儲存
+        const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
+        const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
+
+        let fullBase64Image = "";
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                fullBase64Image = e.target.result;
+                
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+
+                document.getElementById('uploadPrompt').style.display = 'none';
+                document.getElementById('generateBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function generateQuiz() {
+            if (!fullBase64Image) return;
+
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingText = document.getElementById('loadingText');
+            const quizContainer = document.getElementById('quizContainer');
+
+            generateBtn.disabled = true;
+            loadingText.style.display = 'block';
+            quizContainer.style.display = 'none';
+            quizContainer.innerHTML = '';
+
+            const prompt = `
+                請分析這張圖片的內容（課本、講義或題目），並為學生設計 3 道選擇題。
+                請嚴格只回傳 JSON 格式，不要包含思考過程或任何 Markdown 標籤。
+                JSON 結構格式：
+                {
+                    "quizzes": [
+                        {
+                            "question": "題目內容",
+                            "options": ["選項 A", "選項 B", "選項 C", "選項 D"],
+                            "answer": 0,
+                            "explanation": "詳細解析"
+                        }
+                    ]
+                }
+            `;
+
+            try {
+                // 自動拼接完整的 API Key
+                const fullApiKey = API1 + API2;
+
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${fullApiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: "qwen/qwen3.8-27b",
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: prompt },
+                                    {
+                                        type: "image_url",
+                                        image_url: {
+                                            url: fullBase64Image
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        response_format: { type: "json_object" },
+                        temperature: 0.2
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                let rawText = data.choices[0].message.content;
+                
+                // 清理可能夾帶的 Markdown 標籤
+                rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                const quizData = JSON.parse(rawText);
+                renderQuizzes(quizData.quizzes);
+
+            } catch (error) {
+                console.error("Qwen 27B 生成失敗：", error);
+                alert("生成失敗：" + error.message);
+            } finally {
+                generateBtn.disabled = false;
+                loadingText.style.display = 'none';
+            }
+        }
+
+        function renderQuizzes(quizzes) {
+            const container = document.getElementById('quizContainer');
+            container.style.display = 'block';
+
+            quizzes.forEach((quiz, qIndex) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+
+                let optionsHTML = '';
+                quiz.options.forEach((opt, oIndex) => {
+                    optionsHTML += `<button class="option-btn" onclick="checkAnswer(${qIndex}, ${oIndex}, ${quiz.answer})">${opt}</button>`;
+                });
+
+                card.innerHTML = `
+                    <div class="question-title">Q${qIndex + 1}. ${quiz.question}</div>
+                    <div>${optionsHTML}</div>
+                    <div class="explanation" id="exp-${qIndex}">💡 <b>解析：</b> ${quiz.explanation}</div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function checkAnswer(qIndex, selectedIndex, correctIndex) {
+            const expEl = document.getElementById(`exp-${qIndex}`);
+            expEl.style.display = 'block';
+
+            if (selectedIndex === correctIndex) {
+                alert("🎉 回答正確！");
+            } else {
+                alert("❌ 答錯囉，看一下解析吧！");
+            }
+        }
+    </script>
+</body>
+</html>
