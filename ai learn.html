@@ -223,7 +223,7 @@
             cursor: not-allowed;
         }
 
-        /* 管理員彈窗 (Admin Modal) */
+        /* 通用彈窗樣式 */
         .admin-modal {
             display: none;
             position: fixed;
@@ -252,6 +252,16 @@
             color: var(--accent-color);
         }
 
+        .admin-content input {
+            width: 100%;
+            padding: 8px;
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            outline: none;
+        }
+
         .admin-content button {
             padding: 8px;
             background: var(--user-msg);
@@ -277,7 +287,7 @@
         <div class="header-controls">
             <!-- 模型選擇 -->
             <select class="model-select" id="modelSelect">
-                <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (預設視覺與推理)</option>
+                <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (視覺與推理)</option>
                 <option value="openai/gpt-oss-120b">GPT OSS 120B (核心大腦)</option>
                 <option value="openai/gpt-oss-20b">GPT OSS 20B (輕量先鋒)</option>
                 <option value="whisper-large-v3">Whisper Large v3 (語音辨識)</option>
@@ -307,7 +317,7 @@
                 <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
 
                 <!-- 文字輸入框 -->
-                <textarea id="userInput" placeholder="輸入訊息或輸入 admin1 開啟管理員選單..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
+                <textarea id="userInput" placeholder="輸入訊息或輸入 admin1 登入管理員..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
 
                 <!-- 發送按鈕 -->
                 <button class="send-btn" id="sendBtn" onclick="sendMessage()">發送</button>
@@ -315,13 +325,24 @@
         </div>
     </div>
 
-    <!-- Admin 管理員彈窗 -->
-    <div class="admin-modal" id="adminModal">
+    <!-- Admin 登入驗證彈窗 -->
+    <div class="admin-modal" id="adminLoginModal">
+        <div class="admin-content">
+            <h3>🔐 管理員登入 (admin1)</h3>
+            <p style="font-size: 0.85rem; color: #8b949e;">請輸入管理員密碼以控制用量：</p>
+            <input type="password" id="adminPasswordInput" placeholder="請輸入管理員密碼" onkeydown="handleAdminLoginKey(event)">
+            <button onclick="verifyAdminLogin()">登入後台</button>
+            <button class="close-btn" onclick="closeAdminLoginModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- Admin 控制面板彈窗 -->
+    <div class="admin-modal" id="adminPanelModal">
         <div class="admin-content">
             <h3>⚙️ admin1 管理員後台</h3>
             <p>使用者目前已使用次數：<b id="adminUsageCount">0</b> / 50 次</p>
             <button onclick="resetUsage()">🔄 重置使用次數 (歸零)</button>
-            <button class="close-btn" onclick="closeAdminModal()">關閉面板</button>
+            <button class="close-btn" onclick="closeAdminPanelModal()">關閉面板</button>
         </div>
     </div>
 
@@ -329,6 +350,9 @@
         // API Key 拆分儲存
         const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
+
+        // 管理員密碼設定（可在此自行修改）
+        const ADMIN_PASSWORD = "admin123";
 
         // 用量限制設定
         const MAX_LIMIT = 50;
@@ -370,9 +394,9 @@
 
             if (!text && !currentBase64Image) return;
 
-            // 檢查是否輸入管理員指令
+            // 檢查是否輸入 admin1 指令
             if (text === 'admin1') {
-                openAdminModal();
+                openAdminLoginModal();
                 inputEl.value = '';
                 return;
             }
@@ -389,26 +413,28 @@
             // 渲染使用者訊息
             appendMessage('user', text, currentBase64Image);
 
-            // 清空輸入
+            // 清空輸入與暫存圖片
             inputEl.value = '';
             const tempImage = currentBase64Image;
             removeImage();
 
-            // 構建傳送給 AI 的 Message 結構
-            let userContent = [];
-            if (text) {
-                userContent.push({ type: "text", text: text });
-            }
+            // 根據是否有圖片動態組裝 content 格式
+            let userContent;
             if (tempImage) {
+                userContent = [];
+                if (text) userContent.push({ type: "text", text: text });
                 userContent.push({
                     type: "image_url",
                     image_url: { url: tempImage }
                 });
+            } else {
+                userContent = text;
             }
 
+            // 記錄歷史訊息
             conversationHistory.push({
                 role: "user",
-                content: userContent.length === 1 && userContent[0].type === "text" ? text : userContent
+                content: userContent
             });
 
             // 增加次數並存入 localStorage
@@ -451,56 +477,4 @@
                 appendMessage('assistant', aiReply);
 
             } catch (error) {
-                console.error("請求失敗：", error);
-                appendMessage('assistant', '❌ 發生錯誤：' + error.message);
-            } finally {
-                sendBtn.disabled = false;
-            }
-        }
-
-        function appendMessage(role, text, imgSrc = null) {
-            const chatContainer = document.getElementById('chatContainer');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${role}`;
-
-            let innerHTML = '';
-            if (imgSrc) {
-                innerHTML += `<img src="${imgSrc}" class="msg-image">`;
-            }
-            if (text) {
-                innerHTML += `<div class="msg-bubble">${escapeHtml(text)}</div>`;
-            }
-
-            msgDiv.innerHTML = innerHTML;
-            chatContainer.appendChild(msgDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        /* 管理員功能 */
-        function openAdminModal() {
-            document.getElementById('adminUsageCount').innerText = currentUsage;
-            document.getElementById('adminModal').style.display = 'flex';
-        }
-
-        function closeAdminModal() {
-            document.getElementById('adminModal').style.display = 'none';
-        }
-
-        function resetUsage() {
-            currentUsage = 0;
-            localStorage.setItem('user_chat_usage', '0');
-            document.getElementById('adminUsageCount').innerText = '0';
-            alert('已成功重置使用者次數為 0 次！');
-        }
-    </script>
-</body>
-</html>
+                console.error("請求
