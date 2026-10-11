@@ -285,7 +285,7 @@
             <h1>cale study app</h1>
         </div>
         <div class="header-controls">
-            <!-- 模型選擇 (已更新支援 Llama 4 與 Qwen 視覺模型) -->
+            <!-- 模型選擇 -->
             <select class="model-select" id="modelSelect">
                 <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (精細 OCR / 視覺推理)</option>
                 <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout (綜合圖文對話)</option>
@@ -456,7 +456,8 @@
                     body: JSON.stringify({
                         model: selectedModel,
                         messages: conversationHistory,
-                        temperature: 0.7
+                        temperature: 0.7,
+                        max_tokens: 800 // 限制最大輸出 token 數量，避免觸發 Groq TPM 限制
                     })
                 });
 
