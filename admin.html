@@ -126,20 +126,21 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // TODO: 填入與 index.html 相同的 Firebase 專案設定
+        // 套用你的 Firebase 專案設定
         const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
+            apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
+            authDomain: "cale-study-app-41b9b.firebaseapp.com",
+            projectId: "cale-study-app-41b9b",
+            storageBucket: "cale-study-app-41b9b.firebasestorage.app",
+            messagingSenderId: "819450732167",
+            appId: "1:819450732167:web:a727579df57eb9da33e222",
+            measurementId: "G-GP1XCE9W5E"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const ADMIN_PASSWORD = "admin123"; // 可自行修改後台密碼
+        const ADMIN_PASSWORD = "admin123"; // 可自行更改後台密碼
 
         window.verifyAdmin = function() {
             const pwd = document.getElementById('adminPwd').value;
@@ -153,18 +154,23 @@
 
         async function loadUsers() {
             const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">載入中...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">正在向資料庫查詢使用者...</td></tr>';
 
             try {
                 const querySnapshot = await getDocs(collection(db, "users"));
                 tbody.innerHTML = '';
                 
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#8b949e;">目前尚無任何使用者記錄（請先讓學生在 index.html 傳送訊息）</td></tr>';
+                    return;
+                }
+
                 querySnapshot.forEach((document) => {
                     const data = document.data();
                     const tr = document.createElement('tr');
                     
                     tr.innerHTML = `
-                        <td><code>${data.uid}</code></td>
+                        <td><code>${data.uid || document.id}</code></td>
                         <td><b>${data.usage || 0}</b> / 50</td>
                         <td>${data.lastMessage || '無紀錄'}</td>
                         <td><button class="btn-reset" onclick="resetUser('${document.id}')">重置次數</button></td>
@@ -173,7 +179,7 @@
                 });
             } catch (e) {
                 console.error("載入失敗:", e);
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">載入資料失敗，請檢查 Firebase 權限</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">載入失敗: ${e.message}</td></tr>`;
             }
         }
 
@@ -196,7 +202,7 @@
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h3>🔐 管理員後台登入</h3>
-            <input type="password" id="adminPwd" placeholder="請輸入管理員密碼">
+            <input type="password" id="adminPwd" placeholder="請輸入管理員密碼" onkeydown="if(event.key==='Enter')verifyAdmin()">
             <button onclick="verifyAdmin()">登入</button>
         </div>
     </div>
