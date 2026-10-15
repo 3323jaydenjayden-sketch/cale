@@ -1,1 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cale study app - 管理員後台</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --text-color: #c9d1d9;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --danger-color: #ff7b72;
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        th {
+            color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .btn-reset {
+            background-color: var(--danger-color);
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .btn-reset:hover {
+            opacity: 0.8;
+        }
+
+        /* 登入遮罩 */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .login-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .login-box input {
+            padding: 8px;
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .login-box button {
+            padding: 8px;
+            background: var(--accent-color);
+            color: #0d1117;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+
+    <!-- Firebase SDK 引入 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // TODO: 填入與 index.html 相同的 Firebase 專案設定
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const ADMIN_PASSWORD = "admin123"; // 可自行修改後台密碼
+
+        window.verifyAdmin = function() {
+            const pwd = document.getElementById('adminPwd').value;
+            if (pwd === ADMIN_PASSWORD) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                loadUsers();
+            } else {
+                alert('❌ 密碼錯誤！');
+            }
+        };
+
+        async function loadUsers() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">載入中...</td></tr>';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                tbody.innerHTML = '';
+                
+                querySnapshot.forEach((document) => {
+                    const data = document.data();
+                    const tr = document.createElement('tr');
+                    
+                    tr.innerHTML = `
+                        <td><code>${data.uid}</code></td>
+                        <td><b>${data.usage || 0}</b> / 50</td>
+                        <td>${data.lastMessage || '無紀錄'}</td>
+                        <td><button class="btn-reset" onclick="resetUser('${document.id}')">重置次數</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error("載入失敗:", e);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">載入資料失敗，請檢查 Firebase 權限</td></tr>';
+            }
+        }
+
+        window.resetUser = async function(docId) {
+            if (!confirm("確定要將此使用者的次數歸零嗎？")) return;
+            try {
+                const userRef = doc(db, "users", docId);
+                await updateDoc(userRef, { usage: 0 });
+                alert("✅ 已成功重置！");
+                loadUsers();
+            } catch (e) {
+                alert("❌ 重置失敗: " + e.message);
+            }
+        };
+    </script>
+</head>
+<body>
+
+    <!-- 管理員登入遮罩 -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h3>🔐 管理員後台登入</h3>
+            <input type="password" id="adminPwd" placeholder="請輸入管理員密碼">
+            <button onclick="verifyAdmin()">登入</button>
+        </div>
+    </div>
+
+    <!-- 後台主畫面 -->
+    <div class="container">
+        <h1>⚙️ Cale Study App — 所有使用者管理面板</h1>
+        <p style="font-size: 0.9rem; color: #8b949e;">在此可即時檢視所有連線學生的使用次數與狀態並進行管理。</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>使用者 UID</th>
+                    <th>目前使用次數</th>
+                    <th>最後對話內容</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <!-- 動態載入 -->
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
