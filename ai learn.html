@@ -318,12 +318,11 @@
         }
     </style>
 
-    <!-- 使用你提供的標準 Firebase SDK 模組與初始化格式 -->
+    <!-- 穩定運作的 Firebase 模組 (移除容易報錯的 Analytics) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
@@ -335,22 +334,25 @@
             measurementId: "G-GP1XCE9W5E"
         };
 
-        // Initialize Firebase & Analytics
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
 
-        let currentUser = null;
+        // 產生或取得本地裝置預設 ID (避免匿名登入被阻擋時寫不進資料庫)
+        let localDeviceId = localStorage.getItem('cale_device_id');
+        if (!localDeviceId) {
+            localDeviceId = 'user_' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('cale_device_id', localDeviceId);
+        }
+
+        let userDocId = localDeviceId; // 預設使用裝置 ID
         let userUsage = 0;
         let userMaxLimit = 50;
         let currentBase64Image = "";
 
-        // 設定 System Prompt 告知 AI 身分與職責
         const systemPrompt = {
             role: "system",
             content: "你是 Cale Study App 的 AI 對話學習助手，專為學生提供親切、清晰且有條理的學習解答與解題輔導。請優先使用繁體中文回答。"
@@ -358,43 +360,45 @@
 
         let conversationHistory = [systemPrompt];
 
-        // 匿名登入
-        signInAnonymously(auth).catch((error) => {
-            console.error("Firebase 登入失敗:", error);
-            document.getElementById('userStatus').innerText = "連線異常";
-        });
+        // 嘗試匿名登入，成功則切換為 Firebase UID，失敗則降級使用 localDeviceId
+        signInAnonymously(auth)
+            .then((res) => {
+                userDocId = res.user.uid;
+                initUserData();
+            })
+            .catch((error) => {
+                console.warn("匿名登入失敗，採用本機識別碼模式:", error);
+                initUserData();
+            });
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                const userDocRef = doc(db, "users", user.uid);
-                try {
-                    const docSnap = await getDoc(userDocRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        userUsage = data.usage || 0;
-                        userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
-                    } else {
-                        userUsage = 0;
-                        userMaxLimit = 50;
-                        await setDoc(userDocRef, {
-                            uid: user.uid,
-                            usage: 0,
-                            maxLimit: 50,
-                            lastActive: new Date()
-                        }, { merge: true });
-                    }
-                    updateStatusDisplay();
-                } catch (e) {
-                    console.error("讀取失敗:", e);
+        async function initUserData() {
+            const userDocRef = doc(db, "users", userDocId);
+            try {
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    userUsage = data.usage || 0;
+                    userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
+                } else {
+                    userUsage = 0;
+                    userMaxLimit = 50;
+                    await setDoc(userDocRef, {
+                        uid: userDocId,
+                        usage: 0,
+                        maxLimit: 50,
+                        lastActive: new Date(),
+                        lastMessage: "初始化連線"
+                    }, { merge: true });
                 }
+                updateStatusDisplay();
+            } catch (e) {
+                console.error("Firestore 初始化讀取失敗:", e);
+                updateStatusDisplay();
             }
-        });
+        }
 
         function updateStatusDisplay() {
-            if (currentUser) {
-                document.getElementById('userStatus').innerText = `已連線 | 額度: ${userUsage}/${userMaxLimit}`;
-            }
+            document.getElementById('userStatus').innerText = `連線成功 (${userDocId.substring(0, 6)}...) | 額度: ${userUsage}/${userMaxLimit}`;
         }
 
         window.handleFileSelect = function(event) {
@@ -427,15 +431,16 @@
             const text = inputEl.value.trim();
             if (!text && !currentBase64Image) return;
 
-            if (currentUser) {
-                const userDocRef = doc(db, "users", currentUser.uid);
+            // 發送前同步資料庫最新的額度限制
+            try {
+                const userDocRef = doc(db, "users", userDocId);
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     userUsage = data.usage || 0;
                     userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
                 }
-            }
+            } catch(e) {}
 
             if (userUsage >= userMaxLimit) {
                 appendMessage('assistant', `⚠️ 您的對話次數已達上限 (${userUsage}/${userMaxLimit})，請聯繫管理員。`);
@@ -450,24 +455,25 @@
             const tempImage = currentBase64Image;
             removeImage();
 
+            // 1. 強制寫入/新增檔案至 Firestore
             userUsage++;
             updateStatusDisplay();
 
-            if (currentUser) {
-                try {
-                    const userDocRef = doc(db, "users", currentUser.uid);
-                    await setDoc(userDocRef, {
-                        uid: currentUser.uid,
-                        usage: increment(1),
-                        maxLimit: userMaxLimit,
-                        lastActive: new Date(),
-                        lastMessage: text || "[圖片訊息]"
-                    }, { merge: true });
-                } catch (err) {
-                    console.error("Firestore 寫入失敗:", err);
-                }
+            try {
+                const userDocRef = doc(db, "users", userDocId);
+                await setDoc(userDocRef, {
+                    uid: userDocId,
+                    usage: increment(1),
+                    maxLimit: userMaxLimit,
+                    lastActive: new Date(),
+                    lastMessage: text || "[圖片訊息]"
+                }, { merge: true });
+                console.log("已成功寫入/更新 Firestore！ ID:", userDocId);
+            } catch (err) {
+                console.error("Firestore 寫入失敗:", err);
             }
 
+            // 2. 發送給 Groq AI API
             let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
             conversationHistory.push({ role: "user", content: userContent });
 
@@ -543,7 +549,7 @@
             <div class="history-item">🔬 理化實驗原理解析</div>
         </div>
         <div class="sidebar-footer">
-            <span id="userStatus">連線中...</span>
+            <span id="userStatus">初始化連線中...</span>
             <span>系統狀態：正常運行</span>
         </div>
     </sidebar>
