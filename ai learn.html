@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cale Study App - AI 智能學習助手</title>
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
+    
     <!-- 引入 Markdown 解析器 (marked) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -12,6 +13,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -233,7 +235,7 @@
         .message {
             display: flex;
             flex-direction: column;
-            max-width: 80%;
+            max-width: 85%;
             line-height: 1.6;
             font-size: 0.95rem;
             animation: fadeIn 0.3s ease;
@@ -251,7 +253,29 @@
             padding: 1rem 1.2rem;
             border-radius: 12px;
             word-wrap: break-word;
-            white-space: pre-wrap;
+        }
+
+        /* 美化 Markdown 排版 */
+        .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+            margin-top: 0.6rem;
+            margin-bottom: 0.4rem;
+            color: var(--accent-color);
+        }
+
+        .msg-bubble ul, .msg-bubble ol {
+            padding-left: 1.4rem;
+            margin: 0.4rem 0;
+        }
+
+        .msg-bubble p {
+            margin-bottom: 0.5rem;
+        }
+
+        .msg-bubble code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
         }
 
         .user .msg-bubble {
@@ -503,7 +527,6 @@
             }
         }
 
-        // 編輯給 AI 的專屬指令 (個人化服務)
         window.editCustomPrompt = async function() {
             const input = prompt("【個人化服務】請輸入你想給 AI 的特別指令/設定（例如：我是國中生、請用親切大哥哥口吻解答、數學請多舉例）：", customPromptText);
             if (input === null) return;
@@ -518,7 +541,6 @@
             }
         };
 
-        // 載入多個聊天室 (最多10個)
         async function loadRooms(username) {
             try {
                 const roomsRef = collection(db, "ai learn", username, "rooms");
@@ -615,7 +637,6 @@
                 const chatContainer = document.getElementById('chatContainer');
                 chatContainer.innerHTML = ''; 
 
-                // 初始化 System Prompt（融合預設 + 個人化自訂）
                 let combinedSystemPrompt = defaultSystemPrompt;
                 if (customPromptText) {
                     combinedSystemPrompt += `\n【使用者個人化特色與要求】：${customPromptText}`;
@@ -704,7 +725,6 @@
             userUsage++;
             updateStatusDisplay();
 
-            // 寫入當前聊天室的 messages 集合
             try {
                 const msgRef = collection(db, "ai learn", currentUsername, "rooms", activeRoomId, "messages");
                 await addDoc(msgRef, {
@@ -751,7 +771,6 @@
                 conversationHistory.push({ role: "assistant", content: aiReply });
                 appendMessageUI('assistant', aiReply);
 
-                // 寫入 AI 回覆
                 const msgRef = collection(db, "ai learn", currentUsername, "rooms", activeRoomId, "messages");
                 await addDoc(msgRef, {
                     role: 'assistant',
@@ -767,15 +786,37 @@
             }
         };
 
+        // 升級：自動解析 Markdown 與 LaTeX 數學公式
         function appendMessageUI(role, text, imgSrc = null) {
             const chatContainer = document.getElementById('chatContainer');
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${role}`;
+            
             let innerHTML = '';
             if (imgSrc) innerHTML += `<img src="${imgSrc}" class="msg-image">`;
-            if (text) innerHTML += `<div class="msg-bubble">${escapeHtml(text)}</div>`;
+            
+            if (text) {
+                // 如果是 AI 回覆，使用 marked 解析 Markdown 語法
+                let formattedText = (role === 'assistant' && window.marked) ? window.marked.parse(text) : escapeHtml(text);
+                innerHTML += `<div class="msg-bubble">${formattedText}</div>`;
+            }
+
             msgDiv.innerHTML = innerHTML;
             chatContainer.appendChild(msgDiv);
+
+            // 如果引入了 KaTeX，自動渲染裡面的 LaTeX 數學公式
+            if (window.renderMathInElement && role === 'assistant') {
+                renderMathInElement(msgDiv, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '[', right: ']', display: true}
+                    ],
+                    throwOnError : false
+                });
+            }
+
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
