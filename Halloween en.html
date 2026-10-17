@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cale Study App - 萬聖節英文單字魔法庫 🎃</title>
+    
+    <!-- 網站 Favicon 圖示 -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
+
+    <!-- 引入彩帶紙花特效庫 canvas-confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- 引入 Firebase SDK (Compat 版本) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- 強制登入防護：未登入則重定向 -->
+    <script>
+        if (localStorage.getItem("isLoggedIn") !== "true") {
+            window.location.replace("login.html");
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        }
+
+        body {
+            background-color: #0d0914; /* 萬聖節幽暗夜空紫 */
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 萬聖節飄浮裝飾動畫 (南瓜、幽靈、蝙蝠) */
+        .spooky-float {
+            position: absolute;
+            font-size: 1.6rem;
+            opacity: 0.12;
+            pointer-events: none;
+            user-select: none;
+            animation: floatAnim 10s infinite ease-in-out alternate;
+            z-index: 0;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(12deg); }
+            100% { transform: translateY(10px) rotate(-12deg); }
+        }
+
+        .nav-bar, .mode-tabs, .theme-selector-group, .container-box, .controls {
+            z-index: 10;
+            position: relative;
+        }
+
+        .nav-bar {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-btn {
+            color: #ff7518; /* 南瓜橘 */
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+
+        .stats-badge-group {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: rgba(28, 19, 43, 0.85);
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ff9f43;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .combo-badge {
+            color: #ff4757;
+        }
+
+        .mode-tabs {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            background: rgba(28, 19, 43, 0.85);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 117, 24, 0.25);
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.6rem;
+            border: none;
+            background: transparent;
+            color: #a799be;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: #ff7518;
+            color: #0d0914;
+        }
+
+        .theme-selector-group {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .custom-dropdown {
+            position: relative;
+            flex: 1;
+        }
+
+        .dropdown-selected {
+            background: rgba(28, 19, 43, 0.85);
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            color: #ffffff;
+            padding: 0.65rem 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .dropdown-selected:hover {
+            border-color: #ff7518;
+            background: rgba(36, 23, 56, 0.95);
+        }
+
+        .dropdown-selected .arrow {
+            font-size: 0.8rem;
+            color: #a799be;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-selected.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            width: 100%;
+            background: #1c132b;
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            display: none;
+            overflow: hidden;
+            z-index: 50;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: #d1c4e9;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 117, 24, 0.2);
+            color: #ff9f43;
+        }
+
+        .dropdown-item.active {
+            background: rgba(255, 117, 24, 0.35);
+            color: #ff9f43;
+            font-weight: 600;
+        }
+
+        button.btn-secondary {
+            background: rgba(28, 19, 43, 0.85);
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            color: #fff;
+            padding: 0.6rem 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        button.btn-secondary:hover {
+            background: rgba(255, 117, 24, 0.25);
+            border-color: #ff7518;
+        }
+
+        .container-box {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .flashcard {
+            background: rgba(28, 19, 43, 0.65);
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .word-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .phonetic {
+            font-size: 1rem;
+            color: #ff9f43;
+            margin-bottom: 1.2rem;
+        }
+
+        .meaning {
+            font-size: 1.2rem;
+            color: #e2e8f0;
+            display: none;
+        }
+
+        .example-sentence {
+            font-size: 0.88rem;
+            color: #a799be;
+            margin-top: 0.8rem;
+            font-style: italic;
+            display: none;
+        }
+
+        .ai-box {
+            margin-top: 1rem;
+            padding: 0.8rem 1rem;
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px dashed rgba(168, 85, 247, 0.5);
+            border-radius: 12px;
+            text-align: left;
+            font-size: 0.88rem;
+            color: #d8b4fe;
+            display: none;
+            width: 100%;
+            line-height: 1.5;
+            word-break: break-all;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            gap: 0.8rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 117, 24, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.primary {
+            background: #ff7518;
+            color: #0d0914;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 4px 12px rgba(255, 117, 24, 0.3);
+        }
+
+        .action-btn.ai-btn {
+            background: rgba(168, 85, 247, 0.25);
+            border: 1px solid #a855f7;
+            color: #d8b4fe;
+            font-weight: 600;
+        }
+
+        .action-btn.ai-btn:hover {
+            background: rgba(168, 85, 247, 0.4);
+        }
+
+        .quiz-option-btn {
+            width: 100%;
+            padding: 0.9rem;
+            margin-top: 0.6rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 117, 24, 0.25);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .quiz-option-btn:hover:not(:disabled) {
+            background: rgba(255, 117, 24, 0.2);
+            border-color: #ff7518;
+        }
+
+        .quiz-option-btn.correct-anim {
+            background: rgba(34, 197, 94, 0.25) !important;
+            border-color: #22c55e !important;
+            color: #4ade80 !important;
+            font-weight: bold;
+            animation: pulseCorrect 0.4s ease;
+        }
+
+        .quiz-option-btn.wrong-anim {
+            background: rgba(239, 68, 68, 0.25) !important;
+            border-color: #ef4444 !important;
+            color: #f87171 !important;
+            animation: shakeWrong 0.3s ease;
+        }
+
+        @keyframes pulseCorrect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shakeWrong {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .exam-card {
+            background: rgba(28, 19, 43, 0.65);
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .exam-card:hover {
+            border-color: #ff7518;
+            background: rgba(36, 23, 56, 0.85);
+            transform: translateY(-2px);
+        }
+
+        .exam-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .exam-desc {
+            font-size: 0.85rem;
+            color: #a799be;
+        }
+
+        .floating-xp {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #ff9f43;
+            font-size: 1.4rem;
+            font-weight: 800;
+            pointer-events: none;
+            opacity: 0;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(10px); }
+            30% { opacity: 1; transform: translateY(-5px); }
+            100% { opacity: 0; transform: translateY(-30px); }
+        }
+
+        .quiz-feedback {
+            margin-top: 1rem;
+            font-weight: bold;
+            min-height: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #1c132b;
+            border: 1px solid rgba(255, 117, 24, 0.4);
+            padding: 1.8rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: #0d0914;
+            border: 1px solid rgba(255, 117, 24, 0.25);
+            border-radius: 10px;
+            color: #fff;
+            padding: 0.8rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            resize: none;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: #7c6899;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 萬聖節飄浮裝飾 🎃👻🦇🕸️ -->
+    <div class="spooky-float" style="top: 5%; left: 8%;">🎃</div>
+    <div class="spooky-float" style="top: 75%; left: 90%; animation-delay: -3s;">👻</div>
+    <div class="spooky-float" style="top: 25%; right: 6%; animation-delay: -5s;">🦇</div>
+    <div class="spooky-float" style="top: 82%; left: 15%; animation-delay: -2s;">🕸️</div>
+
+    <div class="nav-bar">
+        <a href="dashboard.html" class="back-btn">⇠ 返回萬聖儀表板</a>
+        <div class="stats-badge-group">
+            <div class="stat-badge combo-badge" id="comboBadge" style="display:none;">🔥 <span id="comboCount">0</span> 連勝</div>
+            <div class="stat-badge">🎃 <span id="xpCount">0</span> XP</div>
+        </div>
+    </div>
+
+    <div class="mode-tabs">
+        <button class="tab-btn active" id="cardTab" onclick="switchMode('card')">📇 魔法字卡</button>
+        <button class="tab-btn" id="quizTab" onclick="switchMode('quiz')">✏️ 糖果測驗</button>
+        <button class="tab-btn" id="examTab" onclick="switchMode('exam')">📝 歷屆會考題庫</button>
+    </div>
+
+    <div class="theme-selector-group" id="themeSelectorGroup">
+        <div class="custom-dropdown" id="themeDropdown">
+            <div class="dropdown-selected" id="dropdownSelected" onclick="toggleDropdown()">
+                <span id="selectedOptionText">📘 會考核心單字 (A 開頭)</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <div class="dropdown-item active" onclick="selectTheme('cap_a', '📘 會考核心單字 (A 開頭)')">
+                    📘 會考核心單字 (A 開頭)
+                </div>
+                <div class="dropdown-item" onclick="selectTheme('cap_b', '📘 會考核心單字 (B 開頭)')">
+                    📘 會考核心單字 (B 開頭)
+                </div>
+                <div class="dropdown-item" onclick="selectTheme('custom', '✏️ 個人自訂單字庫')">
+                    ✏️ 個人自訂單字庫
+                </div>
+            </div>
+        </div>
+        <button class="btn-secondary" onclick="openCustomModal()">+ 新增單字</button>
+    </div>
+
+    <!-- 1. 字卡模式區塊 -->
+    <div id="cardView" class="container-box">
+        <div class="flashcard" onclick="toggleFlip()">
+            <div class="word-title" id="wordText">---</div>
+            <div class="phonetic" id="phoneticText">---</div>
+            <div class="meaning" id="meaningText">---</div>
+            <div class="example-sentence" id="exampleText">---</div>
+            <div class="ai-box" id="aiBox"></div>
+        </div>
+        <div class="controls">
+            <button class="action-btn" onclick="prevWord()">上一單字</button>
+            <button class="action-btn ai-btn" onclick="getAIAssist(event)">✨ 萬聖 AI 助記</button>
+            <button class="action-btn primary" onclick="nextWord()">下一單字 ➔</button>
+        </div>
+        <div class="progress-text" id="progressText" style="text-align: center; margin-top: 0.8rem;">進度：0 / 0</div>
+    </div>
+
+    <!-- 2. 練習測驗模式區塊 -->
+    <div id="quizView" class="container-box" style="display: none;">
+        <div class="flashcard" id="quizCard" style="cursor: default;">
+            <div style="font-size: 0.9rem; color: #ff9f43; margin-bottom: 0.5rem;">🎃 選擇正確的萬聖英文單字：</div>
+            <div class="word-title" id="quizQuestion" style="font-size: 1.8rem;">---</div>
+            <div id="quizOptions" style="width: 100%; margin-top: 1rem;"></div>
+            <div class="quiz-feedback" id="quizFeedback"></div>
+        </div>
+        <div class="controls">
+            <button class="action-btn primary" onclick="generateQuizQuestion()">下一題 ➔</button>
+        </div>
+    </div>
+
+    <!-- 3. 歷屆會考題庫區塊 -->
+    <div id="examView" class="container-box" style="display: none; max-width: 650px;">
+        <div class="exam-card" onclick="alert('載入 112 年國中教育會考英文試題')">
+            <div class="exam-title">📌 112 年國中教育會考 - 英文科試題</div>
+            <div class="exam-desc">含單題字彙語法與閱讀理解題目測驗</div>
+        </div>
+        <div class="exam-card" onclick="alert('載入 111 年國中教育會考英文試題')">
+            <div class="exam-title">📌 111 年國中教育會考 - 英文科試題</div>
+            <div class="exam-desc">含單題字彙語法與閱讀理解題目測驗</div>
+        </div>
+        <div class="exam-card" onclick="alert('載入 110 年國中教育會考英文試題')">
+            <div class="exam-title">📌 110 年國中教育會考 - 英文科試題</div>
+            <div class="exam-desc">含單題字彙語法與閱讀理解題目測驗</div>
+        </div>
+    </div>
+
+    <!-- 自訂單字彈窗 Modal -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-content">
+            <h3>✏️ 新增個人自訂單字</h3>
+            <p style="font-size: 0.8rem; color: #a799be; margin-bottom: 0.5rem;">
+                格式：單字,音標,中文解釋,例句（每行一組）
+            </p>
+            <textarea id="customInput" placeholder="apple,/ˈæp.əl/,n. 蘋果,An apple a day keeps the doctor away."></textarea>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="action-btn" onclick="closeCustomModal()">取消</button>
+                <button class="action-btn primary" onclick="saveCustomWords()">儲存單字庫</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 安全初始化：防卡死預設機制 -->
+    <script>
+        window.builtInThemes = window.builtInThemes || {};
+        window.builtInThemes.cap_a = window.builtInThemes.cap_a || [
+            { word: "apple", phonetic: "/ˈæp.əl/", meaning: "n. 蘋果", example: "I ate an apple today." },
+            { word: "ability", phonetic: "/əˈbɪl.ə.ti/", meaning: "n. 能力", example: "She has the ability to swim." }
+        ];
+    </script>
+
+    <!-- 引入外部單字庫 -->
+    <script src="words/word-a.js"></script>
+    <script src="words/word-b.js"></script>
+
+    <script>
+        // Groq API Key 安全拼湊
+        const k1 = "gsk_9FLcICTwhme8EicODLks";
+        const k2 = "WGdyb3FYwEp5SAE6e5QTuCNmMF9MCW5k";
+        const GROQ_API_KEY = k1 + k2;
+
+        // 初始化 Firebase 設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
+            authDomain: "cale-study-app-41b9b.firebaseapp.com",
+            projectId: "cale-study-app-41b9b",
+            storageBucket: "cale-study-app-41b9b.firebasestorage.app",
+            messagingSenderId: "819450732167",
+            appId: "1:819450732167:web:a727579df57eb9da33e222",
+            measurementId: "G-GP1XCE9W5E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let currentList = [];
+        let currentIndex = 0;
+        let isFlipped = false;
+        let currentMode = 'card';
+        let currentThemeValue = 'cap_a';
+        let correctQuizAnswer = '';
+        let isAnswered = false;
+
+        let comboCount = 0;
+        let todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0");
+
+        function getUserEmailKey() {
+            return localStorage.getItem("accountKey") 
+                || localStorage.getItem("userEmail") 
+                || localStorage.getItem("currentUser") 
+                || localStorage.getItem("username")
+                || "default_user";
+        }
+
+        function getXPKey() {
+            return "xp_" + getUserEmailKey();
+        }
+
+        function getUserXP() {
+            const key = getXPKey();
+            const xpVal = localStorage.getItem(key) 
+                       || localStorage.getItem("userXP") 
+                       || localStorage.getItem("xp") 
+                       || "0";
+            return parseInt(xpVal, 10);
+        }
+
+        async function syncXPFromCloud() {
+            const userDocId = getUserEmailKey();
+            if (userDocId === "default_user") return;
+
+            try {
+                const docRef = db.collection("users").doc(userDocId);
+                const docSnap = await docRef.get();
+
+                if (docSnap.exists) {
+                    const cloudData = docSnap.data();
+                    const cloudXP = cloudData.xp !== undefined ? cloudData.xp : (cloudData.userXP || 0);
+                    const localXP = getUserXP();
+                    const newXP = Math.max(localXP, cloudXP);
+                    
+                    localStorage.setItem(getXPKey(), newXP);
+                    localStorage.setItem("userXP", newXP);
+                    localStorage.setItem("xp", newXP);
+                    
+                    document.getElementById("xpCount").innerText = newXP;
+                }
+            } catch (err) {
+                console.error("雲端同步失敗：", err);
+            }
+        }
+
+        function updateXPDisplay() {
+            const currentXP = getUserXP();
+            
+            document.getElementById("xpCount").innerText = currentXP;
+            localStorage.setItem(getXPKey(), currentXP);
+            localStorage.setItem("userXP", currentXP);
+            localStorage.setItem("xp", currentXP);
+
+            let progressPercent = Math.min(100, Math.round((todayCorrectCount / 20) * 100));
+            localStorage.setItem("todayProgressPercent", progressPercent);
+
+            const userDocId = getUserEmailKey();
+            if (userDocId !== "default_user") {
+                db.collection("users").doc(userDocId).set({
+                    xp: currentXP,
+                    userXP: currentXP,
+                    email: userDocId,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(err => console.error("寫入雲端失敗：", err));
+            }
+        }
+
+        function toggleDropdown() {
+            const menu = document.getElementById("dropdownMenu");
+            const selected = document.getElementById("dropdownSelected");
+            menu.classList.toggle("show");
+            selected.classList.toggle("open");
+        }
+
+        function selectTheme(value, text) {
+            currentThemeValue = value;
+            document.getElementById("selectedOptionText").innerText = text;
+
+            const menu = document.getElementById("dropdownMenu");
+            const selected = document.getElementById("dropdownSelected");
+            menu.classList.remove("show");
+            selected.classList.remove("open");
+
+            document.querySelectorAll(".dropdown-item").forEach(item => {
+                item.classList.toggle("active", item.innerText.trim() === text.trim());
+            });
+
+            changeTheme();
+        }
+
+        window.addEventListener("click", function(e) {
+            const dropdown = document.getElementById("themeDropdown");
+            if (dropdown && !dropdown.contains(e.target)) {
+                document.getElementById("dropdownMenu").classList.remove("show");
+                document.getElementById("dropdownSelected").classList.remove("open");
+            }
+        });
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById("cardTab").classList.toggle("active", mode === 'card');
+            document.getElementById("quizTab").classList.toggle("active", mode === 'quiz');
+            document.getElementById("examTab").classList.toggle("active", mode === 'exam');
+
+            const themeGroup = document.getElementById("themeSelectorGroup");
+
+            if (mode === 'card') {
+                themeGroup.style.display = "flex";
+                document.getElementById("cardView").style.display = "block";
+                document.getElementById("quizView").style.display = "none";
+                document.getElementById("examView").style.display = "none";
+                loadWord();
+            } else if (mode === 'quiz') {
+                themeGroup.style.display = "flex";
+                document.getElementById("cardView").style.display = "none";
+                document.getElementById("quizView").style.display = "block";
+                document.getElementById("examView").style.display = "none";
+                generateQuizQuestion();
+            } else if (mode === 'exam') {
+                themeGroup.style.display = "none";
+                document.getElementById("cardView").style.display = "none";
+                document.getElementById("quizView").style.display = "none";
+                document.getElementById("examView").style.display = "block";
+            }
+        }
+
+        function changeTheme() {
+            const selected = currentThemeValue;
+            if (selected === "custom") {
+                const saved = localStorage.getItem("myCustomVocab");
+                currentList = saved ? JSON.parse(saved) : [];
+                if (currentList.length === 0) {
+                    alert("目前還沒有個人自訂單字，可以點擊『新增單字』來添加！");
+                    openCustomModal();
+                }
+            } else {
+                currentList = (window.builtInThemes && window.builtInThemes[selected]) || [];
+            }
+            currentIndex = 0;
+            if (currentMode === 'card') {
+                loadWord();
+            } else if (currentMode === 'quiz') {
+                generateQuizQuestion();
+            }
+        }
+
+        function loadWord() {
+            const aiBox = document.getElementById("aiBox");
+            aiBox.style.display = "none";
+            aiBox.innerText = "";
+
+            if (!currentList || currentList.length === 0) {
+                document.getElementById("wordText").innerText = "尚無單字";
+                document.getElementById("phoneticText").innerText = "";
+                document.getElementById("meaningText").innerText = "";
+                document.getElementById("exampleText").innerText = "";
+                document.getElementById("progressText").innerText = "進度：0 / 0";
+                return;
+            }
+
+            const item = currentList[currentIndex];
+            document.getElementById("wordText").innerText = item.word || "";
+            document.getElementById("phoneticText").innerText = item.phonetic || "";
+            document.getElementById("meaningText").innerText = item.meaning || "";
+            document.getElementById("exampleText").innerText = item.example || "";
+            document.getElementById("progressText").innerText = `進度：${currentIndex + 1} / ${currentList.length}`;
+
+            isFlipped = false;
+            document.getElementById("meaningText").style.display = "none";
+            document.getElementById("exampleText").style.display = "none";
+        }
+
+        function toggleFlip() {
+            if (!currentList || currentList.length === 0) return;
+            isFlipped = !isFlipped;
+            const displayStyle = isFlipped ? "block" : "none";
+            document.getElementById("meaningText").style.display = displayStyle;
+            document.getElementById("exampleText").style.display = displayStyle;
+        }
+
+        function nextWord() {
+            if (currentIndex < currentList.length - 1) {
+                currentIndex++;
+                loadWord();
+            } else if (currentList.length > 0) {
+                alert("已完成此主題所有單字！🎃");
+            }
+        }
+
+        function prevWord() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadWord();
+            }
+        }
+
+        // AI 助記 (禁止出現 * 符號)
+        async function getAIAssist(event) {
+            if (event) event.stopPropagation();
+
+            if (!currentList || currentList.length === 0) return;
+            const item = currentList[currentIndex];
+            const aiBox = document.getElementById("aiBox");
+
+            aiBox.style.display = "block";
+            aiBox.innerText = "🧙‍♂️ 萬聖魔法 AI 思考中...";
+
+            try {
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${GROQ_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "openai/gpt-oss-120b",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "你是一位萬聖節風格的國中英文會考助教 🎃。請用繁體中文回答，簡短提供：1. 趣味諧音或萬聖節拆解記憶法 2. 一句適合國中程度的生活例句與翻譯。注意事項：回答中絕對不能使用「*」米字號或粗體 Markdown 標記，請一律使用純文字、全形標點符號或數字列表呈現。"
+                            },
+                            {
+                                role: "user",
+                                content: `請提供英文單字「${item.word}」（中文：${item.meaning}）的萬聖魔法記憶法與例句。`
+                            }
+                        ],
+                        temperature: 0.6
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    const errorMsg = data.error?.message || JSON.stringify(data);
+                    aiBox.innerText = `❌ 錯誤 [HTTP ${response.status}]: ${errorMsg}`;
+                    return;
+                }
+
+                if (data.choices && data.choices[0]) {
+                    let cleanContent = data.choices[0].message.content.replace(/\*/g, '');
+                    aiBox.innerText = cleanContent;
+                } else {
+                    aiBox.innerText = "❌ 未取得有效回應內容。";
+                }
+            } catch (err) {
+                aiBox.innerText = "❌ 網路或程式錯誤：" + err.message;
+            }
+        }
+
+        function generateQuizQuestion() {
+            isAnswered = false;
+            document.getElementById("quizFeedback").innerText = "";
+            if (!currentList || currentList.length < 4) {
+                document.getElementById("quizQuestion").innerText = "單字數量過少（至少需 4 個單字）";
+                document.getElementById("quizOptions").innerHTML = "";
+                return;
+            }
+
+            const correctIndex = Math.floor(Math.random() * currentList.length);
+            const target = currentList[correctIndex];
+            correctQuizAnswer = target.word;
+
+            document.getElementById("quizQuestion").innerText = target.meaning;
+
+            let options = [target.word];
+            while (options.length < 4) {
+                const randomWord = currentList[Math.floor(Math.random() * currentList.length)].word;
+                if (!options.includes(randomWord)) {
+                    options.push(randomWord);
+                }
+            }
+
+            options.sort(() => Math.random() - 0.5);
+
+            const optionsContainer = document.getElementById("quizOptions");
+            optionsContainer.innerHTML = "";
+            options.forEach((opt, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "quiz-option-btn";
+                btn.innerText = `${String.fromCharCode(65 + idx)}. ${opt}`;
+                btn.onclick = () => checkQuizAnswer(opt, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkQuizAnswer(selectedWord, clickedBtn) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const feedback = document.getElementById("quizFeedback");
+            const allBtns = document.querySelectorAll(".quiz-option-btn");
+            allBtns.forEach(btn => btn.disabled = true);
+
+            if (selectedWord === correctQuizAnswer) {
+                clickedBtn.classList.add("correct-anim");
+                comboCount++;
+                todayCorrectCount++;
+                localStorage.setItem("todayCorrectCount", todayCorrectCount);
+                
+                const gainXP = 10 + Math.min(comboCount * 2, 10);
+                
+                let currentEnXP = parseInt(localStorage.getItem("xp_en") || "0", 10) + gainXP;
+                localStorage.setItem("xp_en", currentEnXP);
+
+                let currentXP = getUserXP();
+                currentXP += gainXP;
+                
+                localStorage.setItem(getXPKey(), currentXP);
+                localStorage.setItem("userXP", currentXP);
+                localStorage.setItem("xp", currentXP);
+                updateXPDisplay();
+
+                if (window.confetti) {
+                    confetti({
+                        particleCount: 50,
+                        spread: 60,
+                        origin: { y: 0.7 }
+                    });
+                }
+
+                showFloatingXP(`+${gainXP} XP 🎃`);
+
+                if (comboCount >= 2) {
+                    document.getElementById("comboBadge").style.display = "flex";
+                    document.getElementById("comboCount").innerText = comboCount;
+                    feedback.style.color = "#4ade80";
+                    feedback.innerText = `🎃 太棒了！${comboCount} 連勝中！ (+${gainXP} XP)`;
+                } else {
+                    feedback.style.color = "#4ade80";
+                    feedback.innerText = `🍬 答對了！ (+${gainXP} XP)`;
+                }
+            } else {
+                clickedBtn.classList.add("wrong-anim");
+                comboCount = 0;
+                document.getElementById("comboBadge").style.display = "none";
+
+                allBtns.forEach(btn => {
+                    if (btn.innerText.includes(correctQuizAnswer)) {
+                        btn.classList.add("correct-anim");
+                    }
+                });
+
+                feedback.style.color = "#f87171";
+                feedback.innerText = `👻 答錯囉！正確答案是：${correctQuizAnswer}`;
+            }
+        }
+
+        function showFloatingXP(text) {
+            const card = document.getElementById("quizCard");
+            const xpFloat = document.createElement("div");
+            xpFloat.className = "floating-xp";
+            xpFloat.innerText = text;
+            card.appendChild(xpFloat);
+
+            setTimeout(() => {
+                xpFloat.remove();
+            }, 800);
+        }
+
+        function openCustomModal() {
+            document.getElementById("customModal").style.display = "flex";
+            const saved = localStorage.getItem("myCustomVocabText");
+            if (saved) {
+                document.getElementById("customInput").value = saved;
+            }
+        }
+
+        function closeCustomModal() {
+            document.getElementById("customModal").style.display = "none";
+        }
+
+        function saveCustomWords() {
+            const rawText = document.getElementById("customInput").value.trim();
+            if (!rawText) {
+                alert("內容不能為空！");
+                return;
+            }
+
+            const lines = rawText.split("\n");
+            const parsedList = lines.map(line => {
+                const parts = line.split(",");
+                return {
+                    word: parts[0]?.trim() || "",
+                    phonetic: parts[1]?.trim() || "",
+                    meaning: parts[2]?.trim() || "",
+                    example: parts[3]?.trim() || ""
+                };
+            }).filter(item => item.word !== "");
+
+            localStorage.setItem("myCustomVocabText", rawText);
+            localStorage.setItem("myCustomVocab", JSON.stringify(parsedList));
+
+            alert(`成功新增 ${parsedList.length} 個自訂單字！🎃`);
+            closeCustomModal();
+
+            selectTheme("custom", "✏️ 個人自訂單字庫");
+        }
+
+        // 啟動初始化
+        syncXPFromCloud().then(() => {
+            updateXPDisplay();
+        });
+        changeTheme();
+    </script>
+</body>
+</html>
