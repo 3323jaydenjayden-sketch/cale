@@ -78,7 +78,6 @@
             opacity: 0.8;
         }
 
-        /* 登入遮罩 */
         .login-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -164,11 +163,12 @@
                     return;
                 }
 
-                querySnapshot.forEach((documentSnap) => {
-                    const data = documentSnap.data();
+                // 注意這裡改用 docSnap 避免與內建 document 衝突
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
                     const tr = document.createElement('tr');
                     
-                    const displayUid = data.uid || documentSnap.id;
+                    const displayUid = data.uid || docSnap.id;
                     const usageCount = data.usage !== undefined ? data.usage : 0;
                     const lastMsg = data.lastMessage || '無紀錄';
 
@@ -176,13 +176,13 @@
                         <td><code>${displayUid}</code></td>
                         <td><b>${usageCount}</b> / 50</td>
                         <td>${lastMsg}</td>
-                        <td><button class="btn-reset" onclick="resetUser('${documentSnap.id}')">重置次數</button></td>
+                        <td><button class="btn-reset" onclick="resetUser('${docSnap.id}')">重置次數</button></td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (e) {
                 console.error("載入失敗:", e);
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">❌ 載入失敗 (請檢查 Rules 權限)：${e.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">❌ 載入失敗: ${e.message}</td></tr>`;
             }
         }
 
