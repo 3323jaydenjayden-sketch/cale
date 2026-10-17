@@ -1,1 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cale Study App - 萬聖節魔法學習中心 🎃</title>
+    
+    <!-- 網站 Favicon 圖示 -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
+    
+    <!-- 1. 強制登入防護：若未登入立刻阻斷並重定向 -->
+    <script>
+        if (localStorage.getItem("isLoggedIn") !== "true") {
+            window.location.replace("login.html");
+        }
+    </script>
 
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: none; /* 驗證通過前隱藏內容，防止閃爍 */
+            background-color: #0d0914; /* 萬聖節幽暗夜空紫 */
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem 1.2rem;
+            flex-direction: column;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 萬聖節飄浮裝飾動畫 (南瓜、幽靈、蝙蝠) */
+        .spooky-float {
+            position: absolute;
+            font-size: 1.6rem;
+            opacity: 0.12;
+            pointer-events: none;
+            user-select: none;
+            animation: floatAnim 10s infinite ease-in-out alternate;
+            z-index: 0;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(12deg); }
+            100% { transform: translateY(10px) rotate(-12deg); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            z-index: 10;
+            position: relative;
+        }
+
+        /* 頂部區域排版 */
+        .header {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 480px) {
+            .header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .user-greeting {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid #ff7518; /* 經典南瓜橘邊框 */
+            object-fit: cover;
+            box-shadow: 0 0 10px rgba(255, 117, 24, 0.4);
+        }
+
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #ff7518;
+            text-shadow: 0 0 10px rgba(255, 117, 24, 0.3);
+        }
+
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .streak-badge {
+            background: rgba(28, 19, 43, 0.85);
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            padding: 0.45rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ff9f43;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .logout-btn {
+            background: rgba(255, 71, 87, 0.15);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+            color: #ff4757;
+            padding: 0.45rem 0.9rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 71, 87, 0.3);
+        }
+
+        /* 經驗值 (XP) 概覽卡片 */
+        .xp-card {
+            background: linear-gradient(135deg, rgba(27, 19, 43, 0.85), rgba(15, 10, 24, 0.9));
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .xp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .level-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ff9f43;
+        }
+
+        .xp-detail-link {
+            color: #ff7518;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .xp-detail-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .progress-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(15, 10, 24, 0.9);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 0.6rem;
+            border: 1px solid rgba(255, 117, 24, 0.15);
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff7518, #7b2cbf); /* 南瓜橘到魔法紫的漸層 */
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+            box-shadow: 0 0 10px rgba(255, 117, 24, 0.5);
+        }
+
+        .xp-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #a799be;
+        }
+
+        /* 科目卡片 */
+        .subject-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .subject-card {
+            background: rgba(28, 19, 43, 0.6);
+            border: 1px solid rgba(255, 117, 24, 0.2);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 1.5rem 1.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .subject-card:hover {
+            transform: translateY(-3px);
+            background: rgba(36, 23, 56, 0.85);
+            border-color: rgba(255, 117, 24, 0.5);
+            box-shadow: 0 15px 30px rgba(255, 117, 24, 0.15);
+        }
+
+        .subject-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .subject-title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .subject-icon {
+            font-size: 1.3rem;
+        }
+
+        .subject-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .subject-desc {
+            font-size: 0.88rem;
+            color: #a799be;
+            margin-left: 2rem;
+        }
+
+        .arrow-icon {
+            font-size: 1.2rem;
+            color: #7c6899;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .subject-card:hover .arrow-icon {
+            color: #ff7518;
+            transform: translateX(4px);
+        }
+
+        .footer-brand {
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            color: #614e7a;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 萬聖節飄浮裝飾 🎃👻🦇🕸️ -->
+    <div class="spooky-float" style="top: 8%; left: 10%;">🎃</div>
+    <div class="spooky-float" style="top: 65%; left: 88%; animation-delay: -3s;">👻</div>
+    <div class="spooky-float" style="top: 35%; right: 5%; animation-delay: -5s;">🦇</div>
+    <div class="spooky-float" style="top: 85%; left: 12%; animation-delay: -2s;">🕸️</div>
+
+    <div class="container">
+        <!-- 頂部區塊 -->
+        <div class="header">
+            <div class="user-greeting">
+                <img id="userAvatar" src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png" alt="User Avatar" class="user-avatar" style="display: none;">
+                <h1 class="app-title" id="welcomeUser">萬聖節快樂 🎃</h1>
+            </div>
+            <div class="user-panel">
+                <div class="streak-badge" id="streakBadge">
+                    🍬 魔法進度 <span id="progressValue">0</span>%
+                </div>
+                <button class="logout-btn" onclick="logout()">登出</button>
+            </div>
+        </div>
+
+        <!-- 個人經驗值與等級卡片 -->
+        <div class="xp-card">
+            <div class="xp-header">
+                <span class="level-title" id="dashLevel">🎃 Lv. 1 萬聖學徒</span>
+                <a href="xp.html" class="xp-detail-link">詳細成就 ➔</a>
+            </div>
+            <div class="progress-bg">
+                <div class="progress-fill" id="dashProgress"></div>
+            </div>
+            <div class="xp-footer">
+                <span id="dashXPText">0 / 100 XP</span>
+                <span id="dashTotalXP">累積 XP: 0</span>
+            </div>
+        </div>
+
+        <!-- 科目清單 -->
+        <div class="subject-list">
+            
+            <!-- 國中英文 -->
+            <a href="en.html" class="subject-card">
+                <div class="subject-info">
+                    <div class="subject-title-group">
+                        <span class="subject-icon">📘</span>
+                        <span class="subject-title">國中英文 (Super 2500)</span>
+                    </div>
+                    <div class="subject-desc">
+                        核心單字、主題分類卡與 Learn-then-Quiz 測驗
+                    </div>
+                </div>
+                <div class="arrow-icon">➔</div>
+            </a>
+
+            <!-- 國文與文言文 -->
+            <a href="zh.html" class="subject-card">
+                <div class="subject-info">
+                    <div class="subject-title-group">
+                        <span class="subject-icon">📕</span>
+                        <span class="subject-title">國文與文言文</span>
+                    </div>
+                    <div class="subject-desc">
+                        會考常考字詞、成語意涵與文章理解
+                    </div>
+                </div>
+                <div class="arrow-icon">➔</div>
+            </a>
+
+            <!-- AI智能出題 (對應萬聖節 AI 聊天室) -->
+            <a href="Halloween ai learn.html" class="subject-card">
+                <div class="subject-info">
+                    <div class="subject-title-group">
+                        <span class="subject-icon">🎃</span>
+                        <span class="subject-title">萬聖 AI 智能出題與解題</span>
+                    </div>
+                    <div class="subject-desc">
+                        萬聖節限定魔法 AI 出題與對話助手
+                    </div>
+                </div>
+                <div class="arrow-icon">➔</div>
+            </a>
+
+        </div>
+
+        <div class="footer-brand">
+           🎃 beta cale study app (Halloween Edition) ©
+        </div>
+    </div>
+
+    <script>
+        function loadDashboardStats() {
+            // 二次確認登入狀態，未登入則替換網址
+            if (localStorage.getItem("isLoggedIn") !== "true") {
+                window.location.replace("login.html");
+                return;
+            }
+
+            // 驗證通過，顯示頁面
+            document.body.style.display = "flex";
+
+            // 1. 使用者基本資訊載入
+            const currentUser = localStorage.getItem("currentUser") || "小幽靈";
+            const userPicture = localStorage.getItem("userPicture");
+
+            document.getElementById("welcomeUser").innerText = `你好，${currentUser} 🎃`;
+
+            if (userPicture) {
+                const avatarEl = document.getElementById("userAvatar");
+                avatarEl.src = userPicture;
+                avatarEl.style.display = "block";
+            }
+
+            // 今日進度載入
+            const savedProgress = localStorage.getItem("todayProgressPercent") || "0";
+            document.getElementById("progressValue").innerText = savedProgress;
+
+            // 2. 帳號專屬 XP 與等級計算
+            const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
+            const xpKey = "xp_" + accountKey;
+            let totalXP = parseInt(localStorage.getItem(xpKey)) || 0;
+
+            const xpPerLevel = 100; // 每 100 XP 一級
+            const currentLevel = Math.floor(totalXP / xpPerLevel) + 1;
+            const currentLevelXP = totalXP % xpPerLevel;
+
+            // 萬聖節限定稱號判定 👻
+            let title = "萬聖學徒";
+            if (currentLevel >= 5) title = "魔法單字使者";
+            if (currentLevel >= 10) title = "糖果收藏家";
+            if (currentLevel >= 20) title = "萬聖學霸大魔王";
+
+            // 更新控制台 XP 卡片 UI
+            document.getElementById("dashLevel").innerText = `🎃 Lv. ${currentLevel} ${title}`;
+            document.getElementById("dashXPText").innerText = `${currentLevelXP} / ${xpPerLevel} XP`;
+            document.getElementById("dashTotalXP").innerText = `累積 XP: ${totalXP}`;
+
+            const progressPercent = (currentLevelXP / xpPerLevel) * 100;
+            document.getElementById("dashProgress").style.width = `${progressPercent}%`;
+        }
+
+        function logout() {
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("userPicture");
+            localStorage.removeItem("userEmail");
+            localStorage.removeItem("accountKey");
+            window.location.replace("login.html");
+        }
+
+        // 執行初始化
+        loadDashboardStats();
+    </script>
+</body>
+</html>
