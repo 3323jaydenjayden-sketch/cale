@@ -65,6 +65,16 @@
             color: #ffffff;
         }
 
+        .user-welcome {
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            font-weight: 600;
+            background: rgba(96, 165, 250, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+
         .new-chat-btn {
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
@@ -318,11 +328,11 @@
         }
     </style>
 
-    <!-- 穩定運作的 Firebase 模組 (移除容易報錯的 Analytics) -->
+    <!-- Firebase SDK 模組引入 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs, query, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
@@ -341,14 +351,10 @@
         const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
 
-        // 產生或取得本地裝置預設 ID (避免匿名登入被阻擋時寫不進資料庫)
-        let localDeviceId = localStorage.getItem('cale_device_id');
-        if (!localDeviceId) {
-            localDeviceId = 'user_' + Math.random().toString(36).substring(2, 9);
-            localStorage.setItem('cale_device_id', localDeviceId);
-        }
+        // 目標帳號 ID
+        const TARGET_USER_DOC_ID = "3323jaydenjayden_gmail_com";
 
-        let userDocId = localDeviceId; // 預設使用裝置 ID
+        let userName = "Jayden Lin";
         let userUsage = 0;
         let userMaxLimit = 50;
         let currentBase64Image = "";
@@ -360,45 +366,77 @@
 
         let conversationHistory = [systemPrompt];
 
-        // 嘗試匿名登入，成功則切換為 Firebase UID，失敗則降級使用 localDeviceId
-        signInAnonymously(auth)
-            .then((res) => {
-                userDocId = res.user.uid;
-                initUserData();
-            })
-            .catch((error) => {
-                console.warn("匿名登入失敗，採用本機識別碼模式:", error);
-                initUserData();
-            });
-
-        async function initUserData() {
-            const userDocRef = doc(db, "users", userDocId);
+        async function initData() {
+            // 1. 從頂層 users 集合抓取使用者基本資料 (提取 displayName)
+            const userDocRef = doc(db, "users", TARGET_USER_DOC_ID);
             try {
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    userUsage = data.usage || 0;
-                    userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
-                } else {
-                    userUsage = 0;
-                    userMaxLimit = 50;
-                    await setDoc(userDocRef, {
-                        uid: userDocId,
-                        usage: 0,
-                        maxLimit: 50,
-                        lastActive: new Date(),
-                        lastMessage: "初始化連線"
-                    }, { merge: true });
+                    userName = data.displayName || (data.badges && data.badges.displayName) || "Jayden Lin";
+                    userUsage = data.usage !== undefined ? data.usage : (data.badges && data.badges.usage) || 0;
+                    userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : (data.badges && data.badges.maxLimit) || 50;
                 }
-                updateStatusDisplay();
             } catch (e) {
-                console.error("Firestore 初始化讀取失敗:", e);
-                updateStatusDisplay();
+                console.error("讀取 users 失敗:", e);
+            }
+
+            document.getElementById('userDisplayName').innerText = `👋 歡迎，${userName}`;
+            updateStatusDisplay();
+
+            // 2. 初始化頂層集合 `ai learn` 下對應使用者的文件資料與對話紀錄
+            await initTopLevelAiLearn();
+        }
+
+        // 管理頂層 `ai learn` 集合
+        async function initTopLevelAiLearn() {
+            // 指向頂層集合 `ai learn` 裡面的 `3323jaydenjayden_gmail_com` 文件
+            const aiLearnDocRef = doc(db, "ai learn", TARGET_USER_DOC_ID);
+
+            try {
+                // 確保頂層文件存在，同步寫入基本資訊
+                await setDoc(aiLearnDocRef, {
+                    accountKey: TARGET_USER_DOC_ID,
+                    displayName: userName,
+                    lastActive: new Date()
+                }, { merge: true });
+
+                // 載入該文件下的對話歷史子集合 `chats`
+                await loadChatHistory();
+
+            } catch (e) {
+                console.error("頂層 ai learn 初始化失敗:", e);
+            }
+        }
+
+        // 載入歷史紀錄：`ai learn/3323jaydenjayden_gmail_com/chats`
+        async function loadChatHistory() {
+            try {
+                const chatRef = collection(db, "ai learn", TARGET_USER_DOC_ID, "chats");
+                const q = query(chatRef, orderBy("timestamp", "asc"));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const chatContainer = document.getElementById('chatContainer');
+                    chatContainer.innerHTML = ''; // 清空預設訊息
+
+                    querySnapshot.forEach((docSnap) => {
+                        const chatData = docSnap.data();
+                        appendMessageUI(chatData.role, chatData.text, chatData.imgSrc);
+                        
+                        conversationHistory.push({
+                            role: chatData.role,
+                            content: chatData.text
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error("載入聊天歷史失敗:", err);
             }
         }
 
         function updateStatusDisplay() {
-            document.getElementById('userStatus').innerText = `連線成功 (${userDocId.substring(0, 6)}...) | 額度: ${userUsage}/${userMaxLimit}`;
+            document.getElementById('userStatus').innerText = `連線成功 (${userName}) | 額度: ${userUsage}/${userMaxLimit}`;
         }
 
         window.handleFileSelect = function(event) {
@@ -431,46 +469,43 @@
             const text = inputEl.value.trim();
             if (!text && !currentBase64Image) return;
 
-            // 發送前同步資料庫最新的額度限制
-            try {
-                const userDocRef = doc(db, "users", userDocId);
-                const docSnap = await getDoc(userDocRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    userUsage = data.usage || 0;
-                    userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
-                }
-            } catch(e) {}
-
             if (userUsage >= userMaxLimit) {
-                appendMessage('assistant', `⚠️ 您的對話次數已達上限 (${userUsage}/${userMaxLimit})，請聯繫管理員。`);
+                appendMessageUI('assistant', `⚠️ 您的對話次數已達上限 (${userUsage}/${userMaxLimit})，請聯繫管理員。`);
                 return;
             }
 
             const selectedModel = document.getElementById('modelSelect').value;
             const sendBtn = document.getElementById('sendBtn');
 
-            appendMessage('user', text, currentBase64Image);
+            // 渲染 UI
+            appendMessageUI('user', text, currentBase64Image);
             inputEl.value = '';
             const tempImage = currentBase64Image;
             removeImage();
 
-            // 1. 強制寫入/新增檔案至 Firestore
             userUsage++;
             updateStatusDisplay();
 
+            // 1. 寫入使用者發送的訊息到頂層 `ai learn/3323jaydenjayden_gmail_com/chats` 子集合
             try {
-                const userDocRef = doc(db, "users", userDocId);
+                const chatRef = collection(db, "ai learn", TARGET_USER_DOC_ID, "chats");
+                await addDoc(chatRef, {
+                    role: 'user',
+                    text: text || "[圖片訊息]",
+                    imgSrc: tempImage || null,
+                    timestamp: new Date()
+                });
+
+                // 同步更新 users 主文件的用量紀錄
+                const userDocRef = doc(db, "users", TARGET_USER_DOC_ID);
                 await setDoc(userDocRef, {
-                    uid: userDocId,
                     usage: increment(1),
-                    maxLimit: userMaxLimit,
                     lastActive: new Date(),
                     lastMessage: text || "[圖片訊息]"
                 }, { merge: true });
-                console.log("已成功寫入/更新 Firestore！ ID:", userDocId);
+
             } catch (err) {
-                console.error("Firestore 寫入失敗:", err);
+                console.error("儲存至 ai learn 失敗:", err);
             }
 
             // 2. 發送給 Groq AI API
@@ -499,16 +534,25 @@
 
                 const aiReply = data.choices[0].message.content;
                 conversationHistory.push({ role: "assistant", content: aiReply });
-                appendMessage('assistant', aiReply);
+                appendMessageUI('assistant', aiReply);
+
+                // 3. 寫入 AI 的回覆到頂層 `ai learn/3323jaydenjayden_gmail_com/chats` 子集合
+                const chatRef = collection(db, "ai learn", TARGET_USER_DOC_ID, "chats");
+                await addDoc(chatRef, {
+                    role: 'assistant',
+                    text: aiReply,
+                    imgSrc: null,
+                    timestamp: new Date()
+                });
 
             } catch (error) {
-                appendMessage('assistant', '❌ 發生錯誤：' + error.message);
+                appendMessageUI('assistant', '❌ 發生錯誤：' + error.message);
             } finally {
                 sendBtn.disabled = false;
             }
         };
 
-        function appendMessage(role, text, imgSrc = null) {
+        function appendMessageUI(role, text, imgSrc = null) {
             const chatContainer = document.getElementById('chatContainer');
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${role}`;
@@ -531,7 +575,10 @@
                     <div class="msg-bubble">你好！我是你的 Cale Study App AI 學習助手，已開啟新的對話，請問今天想解決什麼科目或題目呢？</div>
                 </div>
             `;
-        }
+        };
+
+        // 啟動資料載入
+        initData();
     </script>
 </head>
 <body>
@@ -542,6 +589,12 @@
             <img src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png" alt="Logo">
             <h2>Cale Study</h2>
         </div>
+        
+        <!-- 使用者名稱顯示區域 -->
+        <div class="user-welcome" id="userDisplayName">
+            👋 歡迎，讀取中...
+        </div>
+
         <button class="new-chat-btn" onclick="startNewChat()">＋ 新增學習對話</button>
         <div class="chat-history-list">
             <div class="history-item">📖 英文文法與單字複習</div>
