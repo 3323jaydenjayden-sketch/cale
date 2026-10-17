@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cale Study App - 萬聖節 AI 學習助手 🎃</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
+    
+    <!-- 引入 Markdown 解析器 (marked) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- 引入 LaTeX 數學公式解析器 (KaTeX) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0d0914; /* 萬聖節幽暗夜空紫 */
+            --sidebar-bg: #150e21;
+            --chat-bg: #0f0a18;
+            --panel-bg: #1c132b;
+            --user-msg: #7b2cbf; /* 魔法紫 */
+            --ai-msg: #241738;
+            --text-color: #f1f5f9;
+            --text-secondary: #a799be;
+            --border-color: #3c2a57;
+            --accent-color: #ff7518; /* 經典南瓜橘 */
+            --danger-color: #ff4757;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 萬聖節飄浮裝飾動畫 (蝙蝠與幽靈) */
+        .spooky-float {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0.15;
+            pointer-events: none;
+            user-select: none;
+            animation: floatAnim 10s infinite ease-in-out alternate;
+            z-index: 0;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(10deg); }
+            100% { transform: translateY(10px) rotate(-10deg); }
+        }
+
+        /* 側邊欄 */
+        sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 0.8rem;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 8px rgba(255, 117, 24, 0.4);
+        }
+
+        .user-welcome {
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            font-weight: 600;
+            background: rgba(255, 117, 24, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 117, 24, 0.25);
+            word-break: break-all;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-btn-sm {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
+
+        .new-chat-btn {
+            background: linear-gradient(135deg, #ff7518, #d94e00);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(255, 117, 24, 0.3);
+        }
+
+        .new-chat-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .chat-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .chat-history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .history-item {
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover, .history-item.active {
+            background: rgba(255, 117, 24, 0.12);
+            color: var(--text-color);
+            border-color: rgba(255, 117, 24, 0.3);
+        }
+
+        .history-item .title-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        .delete-room-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .delete-room-btn:hover {
+            color: var(--danger-color);
+            opacity: 1;
+        }
+
+        .sidebar-footer {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* 主聊天區 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--chat-bg);
+            height: 100vh;
+            z-index: 10;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: rgba(15, 10, 24, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .model-selector-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        select.model-select {
+            background-color: var(--panel-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user { align-self: flex-end; }
+        .message.assistant { align-self: flex-start; width: 100%; max-width: 100%; }
+
+        .msg-bubble {
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        /* 美化 Markdown 排版 */
+        .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+            margin-top: 0.6rem;
+            margin-bottom: 0.4rem;
+            color: var(--accent-color);
+        }
+
+        .msg-bubble ul, .msg-bubble ol {
+            padding-left: 1.4rem;
+            margin: 0.4rem 0;
+        }
+
+        .msg-bubble p {
+            margin-bottom: 0.5rem;
+        }
+
+        .msg-bubble code {
+            background: rgba(255, 117, 24, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #ff9f43;
+        }
+
+        .user .msg-bubble {
+            background-color: var(--user-msg);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px rgba(123, 44, 191, 0.25);
+        }
+
+        .assistant .msg-bubble {
+            background-color: var(--ai-msg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg-image {
+            max-width: 240px;
+            max-height: 240px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* 底部輸入列 */
+        .input-container {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(to top, var(--chat-bg) 80%, transparent);
+        }
+
+        .input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .image-preview-bar {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px 10px;
+            border-radius: 8px;
+            width: fit-content;
+            border: 1px solid var(--border-color);
+        }
+
+        .image-preview-bar img {
+            width: 44px;
+            height: 44px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .remove-img-btn {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            resize: none;
+            max-height: 140px;
+            outline: none;
+            padding: 6px;
+            line-height: 1.5;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+        }
+
+        .send-btn {
+            background-color: var(--accent-color);
+            color: #0b0f19;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .send-btn:hover { opacity: 0.9; }
+        .send-btn:disabled {
+            background-color: var(--border-color);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            sidebar { display: none; }
+        }
+    </style>
+
+    <!-- Firebase SDK 與聊天室模組 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc, collection, getDocs, query, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
+            authDomain: "cale-study-app-41b9b.firebaseapp.com",
+            projectId: "cale-study-app-41b9b",
+            storageBucket: "cale-study-app-41b9b.firebasestorage.app",
+            messagingSenderId: "819450732167",
+            appId: "1:819450732167:web:a727579df57eb9da33e222",
+            measurementId: "G-GP1XCE9W5E"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
+        const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
+
+        let currentUsername = localStorage.getItem('cale_custom_username') || "";
+        let customPromptText = "";
+        let userUsage = 0;
+        let userMaxLimit = 50;
+        let currentBase64Image = "";
+
+        let activeRoomId = null;
+        let roomList = [];
+
+        // 萬聖節特別 System Prompt 設定 🎃
+        const defaultSystemPrompt = "你是 Cale Study App 的萬聖節 AI 學習魔法師 🎃🧙‍♂️，專為學生提供親切、清晰且有趣的學習解答與解題輔導。適當時候可以帶點萬聖節應景元素（如魔法、南瓜、小驚喜）。請優先使用繁體中文回答。";
+        let conversationHistory = [];
+
+        signInAnonymously(auth).catch(err => console.error("匿名登入失敗:", err));
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!currentUsername) {
+                await promptForUsername();
+            } else {
+                await initUserSession(currentUsername);
+            }
+        });
+
+        window.promptForUsername = async function() {
+            while (true) {
+                let inputName = prompt("🎃 歡迎來到萬聖節 Cale Study！請輸入您的專屬名稱：", currentUsername || "");
+                if (!inputName) {
+                    inputName = "小幽靈_" + Math.random().toString(36).substring(2, 6);
+                }
+                inputName = inputName.trim();
+
+                const isTaken = await checkNameExistsInFirestore(inputName);
+                if (isTaken) {
+                    alert(`❌ 名稱「${inputName}」已經被其他人使用了，請換一個新名稱！`);
+                } else {
+                    currentUsername = inputName;
+                    localStorage.setItem('cale_custom_username', currentUsername);
+                    await initUserSession(currentUsername);
+                    break;
+                }
+            }
+        };
+
+        async function checkNameExistsInFirestore(name) {
+            try {
+                const userDocRef = doc(db, "users", name);
+                const docSnap = await getDoc(userDocRef);
+                return docSnap.exists();
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function initUserSession(username) {
+            document.getElementById('userDisplayName').innerHTML = `
+                <span>🎃 ${username}</span>
+                <div>
+                    <button class="action-btn-sm" onclick="promptForUsername()">改名</button>
+                    <button class="action-btn-sm" onclick="editCustomPrompt()" style="margin-left: 4px;">⚙️給AI的話</button>
+                </div>
+            `;
+            
+            const userDocRef = doc(db, "users", username);
+            const aiLearnDocRef = doc(db, "ai learn", username);
+
+            try {
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    userUsage = data.usage || 0;
+                    userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
+                    customPromptText = data.customPrompt || "";
+                } else {
+                    userUsage = 0;
+                    userMaxLimit = 50;
+                    customPromptText = "";
+                    await setDoc(userDocRef, {
+                        uid: username,
+                        displayName: username,
+                        usage: 0,
+                        maxLimit: 50,
+                        customPrompt: "",
+                        lastActive: new Date()
+                    }, { merge: true });
+                }
+
+                await setDoc(aiLearnDocRef, {
+                    accountKey: username,
+                    displayName: username,
+                    lastActive: new Date()
+                }, { merge: true });
+
+                updateStatusDisplay();
+                await loadRooms(username);
+
+            } catch (e) {
+                console.error("初始化失敗:", e);
+            }
+        }
+
+        window.editCustomPrompt = async function() {
+            const input = prompt("【個人化服務】請輸入你想給 AI 的特別指令/設定（例如：我是國中生、請用親切大哥哥口吻解答）：", customPromptText);
+            if (input === null) return;
+
+            customPromptText = input.trim();
+            try {
+                const userDocRef = doc(db, "users", currentUsername);
+                await setDoc(userDocRef, { customPrompt: customPromptText }, { merge: true });
+                alert("✅ 已成功儲存萬聖節魔法指令！");
+            } catch (e) {
+                alert("❌ 設定儲存失敗: " + e.message);
+            }
+        };
+
+        async function loadRooms(username) {
+            try {
+                const roomsRef = collection(db, "ai learn", username, "rooms");
+                const q = query(roomsRef, orderBy("createdAt", "asc"));
+                const querySnapshot = await getDocs(q);
+
+                roomList = [];
+                querySnapshot.forEach(docSnap => {
+                    roomList.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                if (roomList.length === 0) {
+                    await createNewRoom(false);
+                } else {
+                    activeRoomId = roomList[roomList.length - 1].id;
+                    renderRoomListUI();
+                    await loadRoomMessages(activeRoomId);
+                }
+            } catch (err) {
+                console.error("載入聊天室失敗:", err);
+            }
+        }
+
+        function renderRoomListUI() {
+            const historyListEl = document.getElementById('chatHistoryList');
+            document.getElementById('roomCountText').innerText = `${roomList.length}/10`;
+            historyListEl.innerHTML = '';
+
+            roomList.forEach((room, index) => {
+                const item = document.createElement('div');
+                item.className = `history-item ${room.id === activeRoomId ? 'active' : ''}`;
+                item.onclick = () => switchRoom(room.id);
+
+                item.innerHTML = `
+                    <span class="title-text">🎃 ${room.title || '萬聖對話 ' + (index + 1)}</span>
+                    <button class="delete-room-btn" onclick="deleteRoom(event, '${room.id}')" title="刪除聊天室">🗑️</button>
+                `;
+                historyListEl.appendChild(item);
+            });
+        }
+
+        window.createNewRoom = async function(showAlert = true) {
+            if (roomList.length >= 10) {
+                alert("⚠️ 您最多只能建立 10 個聊天室，請先刪除舊的聊天室！");
+                return;
+            }
+
+            const roomTitle = prompt("請輸入萬聖節主題：", `萬聖魔法房 ${roomList.length + 1}`) || `萬聖對話 ${roomList.length + 1}`;
+            
+            try {
+                const roomsRef = collection(db, "ai learn", currentUsername, "rooms");
+                const newDoc = await addDoc(roomsRef, {
+                    title: roomTitle,
+                    createdAt: new Date()
+                });
+
+                activeRoomId = newDoc.id;
+                await loadRooms(currentUsername);
+
+            } catch (e) {
+                console.error("建立新聊天室失敗:", e);
+            }
+        };
+
+        async function switchRoom(roomId) {
+            activeRoomId = roomId;
+            renderRoomListUI();
+            await loadRoomMessages(roomId);
+        }
+
+        window.deleteRoom = async function(event, roomId) {
+            event.stopPropagation();
+            if (roomList.length <= 1) {
+                alert("⚠️ 至少需要保留 1 個聊天室！");
+                return;
+            }
+            if (!confirm("確定要刪除這個聊天室嗎？")) return;
+
+            try {
+                const roomDocRef = doc(db, "ai learn", currentUsername, "rooms", roomId);
+                await deleteDoc(roomDocRef);
+                await loadRooms(currentUsername);
+            } catch (e) {
+                alert("❌ 刪除失敗: " + e.message);
+            }
+        };
+
+        async function loadRoomMessages(roomId) {
+            try {
+                const msgRef = collection(db, "ai learn", currentUsername, "rooms", roomId, "messages");
+                const q = query(msgRef, orderBy("timestamp", "asc"));
+                const querySnapshot = await getDocs(q);
+
+                const chatContainer = document.getElementById('chatContainer');
+                chatContainer.innerHTML = ''; 
+
+                let combinedSystemPrompt = defaultSystemPrompt;
+                if (customPromptText) {
+                    combinedSystemPrompt += `\n【使用者個人化特色與要求】：${customPromptText}`;
+                }
+
+                conversationHistory = [{ role: "system", content: combinedSystemPrompt }];
+
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach((docSnap) => {
+                        const chatData = docSnap.data();
+                        appendMessageUI(chatData.role, chatData.text, chatData.imgSrc);
+                        
+                        conversationHistory.push({
+                            role: chatData.role,
+                            content: chatData.text
+                        });
+                    });
+                } else {
+                    appendMessageUI('assistant', 'Trick or Treat! 🎃 我是你的萬聖節 AI 學習助手，不給題目就鬧事喔！請問今天想解決什麼學習難題呢？');
+                }
+            } catch (err) {
+                console.error("載入訊息失敗:", err);
+            }
+        }
+
+        function updateStatusDisplay() {
+            document.getElementById('userStatus').innerText = `萬聖連線: 正常 👻 | 魔法額度: ${userUsage}/${userMaxLimit}`;
+        }
+
+        window.handleFileSelect = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                currentBase64Image = e.target.result;
+                document.getElementById('imagePreview').src = currentBase64Image;
+                document.getElementById('imagePreviewBar').style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.removeImage = function() {
+            currentBase64Image = "";
+            document.getElementById('fileInput').value = "";
+            document.getElementById('imagePreviewBar').style.display = 'none';
+        };
+
+        window.handleKeyDown = function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+
+        window.sendMessage = async function() {
+            if (!currentUsername || !activeRoomId) {
+                alert("請先設定使用者名稱！");
+                return;
+            }
+
+            const inputEl = document.getElementById('userInput');
+            const text = inputEl.value.trim();
+            if (!text && !currentBase64Image) return;
+
+            const userDocRef = doc(db, "users", currentUsername);
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                userUsage = data.usage || 0;
+                userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
+            }
+
+            if (userUsage >= userMaxLimit) {
+                appendMessageUI('assistant', `⚠️ 您的魔法對話次數已用完 (${userUsage}/${userMaxLimit})，請聯繫管理員補給額度 🍬！`);
+                return;
+            }
+
+            const selectedModel = document.getElementById('modelSelect').value;
+            const sendBtn = document.getElementById('sendBtn');
+
+            appendMessageUI('user', text, currentBase64Image);
+            inputEl.value = '';
+            const tempImage = currentBase64Image;
+            removeImage();
+
+            userUsage++;
+            updateStatusDisplay();
+
+            try {
+                const msgRef = collection(db, "ai learn", currentUsername, "rooms", activeRoomId, "messages");
+                await addDoc(msgRef, {
+                    role: 'user',
+                    text: text || "[圖片訊息]",
+                    imgSrc: tempImage || null,
+                    timestamp: new Date()
+                });
+
+                await setDoc(userDocRef, {
+                    usage: increment(1),
+                    lastActive: new Date(),
+                    lastMessage: text || "[圖片訊息]"
+                }, { merge: true });
+
+            } catch (err) {
+                console.error("寫入訊息失敗:", err);
+            }
+
+            let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
+            conversationHistory.push({ role: "user", content: userContent });
+
+            sendBtn.disabled = true;
+
+            try {
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API1 + API2}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: selectedModel,
+                        messages: conversationHistory,
+                        temperature: 0.7,
+                        max_tokens: 800
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
+
+                const aiReply = data.choices[0].message.content;
+                conversationHistory.push({ role: "assistant", content: aiReply });
+                appendMessageUI('assistant', aiReply);
+
+                const msgRef = collection(db, "ai learn", currentUsername, "rooms", activeRoomId, "messages");
+                await addDoc(msgRef, {
+                    role: 'assistant',
+                    text: aiReply,
+                    imgSrc: null,
+                    timestamp: new Date()
+                });
+
+            } catch (error) {
+                appendMessageUI('assistant', '❌ 發生錯誤：' + error.message);
+            } finally {
+                sendBtn.disabled = false;
+            }
+        };
+
+        function appendMessageUI(role, text, imgSrc = null) {
+            const chatContainer = document.getElementById('chatContainer');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            
+            let innerHTML = '';
+            if (imgSrc) innerHTML += `<img src="${imgSrc}" class="msg-image">`;
+            
+            if (text) {
+                let formattedText = (role === 'assistant' && window.marked) ? window.marked.parse(text) : escapeHtml(text);
+                innerHTML += `<div class="msg-bubble">${formattedText}</div>`;
+            }
+
+            msgDiv.innerHTML = innerHTML;
+            chatContainer.appendChild(msgDiv);
+
+            if (window.renderMathInElement && role === 'assistant') {
+                renderMathInElement(msgDiv, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '[', right: ']', display: true}
+                    ],
+                    throwOnError : false
+                });
+            }
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</head>
+<body>
+
+    <!-- 萬聖節飄浮小元素 🎃👻🦇 -->
+    <div class="spooky-float" style="top: 12%; left: 22%;">🎃</div>
+    <div class="spooky-float" style="top: 70%; left: 15%; animation-delay: -3s;">👻</div>
+    <div class="spooky-float" style="top: 25%; right: 12%; animation-delay: -5s;">🦇</div>
+    <div class="spooky-float" style="top: 80%; right: 25%; animation-delay: -2s;">🕸️</div>
+
+    <sidebar>
+        <div class="sidebar-header">
+            <img src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png" alt="Logo">
+            <h2>Cale Study 🎃</h2>
+        </div>
+        
+        <div class="user-welcome" id="userDisplayName">
+            👋 設定中...
+        </div>
+
+        <button class="new-chat-btn" onclick="createNewRoom()">＋ 萬聖新對話 🍬</button>
+
+        <div class="chat-history-header">
+            <span>萬聖學習魔法房</span>
+            <span id="roomCountText">0/10</span>
+        </div>
+
+        <div class="chat-history-list" id="chatHistoryList">
+            <!-- 動態載入聊天室 -->
+        </div>
+
+        <div class="sidebar-footer">
+            <span id="userStatus">初始化連線中...</span>
+            <span>萬聖節特別版 👻 正常運行</span>
+        </div>
+    </sidebar>
+
+    <div class="main-content">
+        <header>
+            <div style="font-size: 1.05rem; font-weight: 600; color: #f8fafc;">萬聖 AI 學習對話室 🧙‍♂️</div>
+            <div class="model-selector-wrapper">
+                <span>魔法模型：</span>
+                <select class="model-select" id="modelSelect">
+                    <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (視覺與推理)</option>
+                    <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout (綜合對話)</option>
+                    <option value="openai/gpt-oss-120b">GPT OSS 120B (核心大腦)</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="chat-container" id="chatContainer">
+            <!-- 聊天內容動態載入 -->
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <div class="image-preview-bar" id="imagePreviewBar">
+                    <img id="imagePreview" src="" alt="預覽">
+                    <button class="remove-img-btn" onclick="removeImage()">✕ 移除圖片</button>
+                </div>
+                <div class="input-row">
+                    <button class="icon-btn" onclick="document.getElementById('fileInput').click()" title="上傳題目照片">📷</button>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                    <textarea id="userInput" placeholder="輸入你想解開的萬聖學習謎題..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">發送 🎃</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
