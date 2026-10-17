@@ -35,7 +35,7 @@
             overflow: hidden;
         }
 
-        /* 側邊欄 (Sidebar) */
+        /* 側邊欄 */
         sidebar {
             width: 260px;
             background-color: var(--sidebar-bg);
@@ -74,6 +74,18 @@
             border-radius: 6px;
             border: 1px solid rgba(96, 165, 250, 0.2);
             word-break: break-all;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .edit-name-btn {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: underline;
         }
 
         .new-chat-btn {
@@ -128,7 +140,7 @@
             gap: 4px;
         }
 
-        /* 主畫面聊天區 (Main Chat Area) */
+        /* 主聊天區 */
         .main-content {
             flex: 1;
             display: flex;
@@ -223,7 +235,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* 底部輸入列 (Input Area) */
+        /* 底部輸入列 */
         .input-container {
             padding: 1.5rem 2rem;
             background: linear-gradient(to top, var(--chat-bg) 80%, transparent);
@@ -329,10 +341,10 @@
         }
     </style>
 
-    <!-- Firebase SDK 模組引入 -->
+    <!-- Firebase SDK 與邏輯 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs, query, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -352,8 +364,7 @@
         const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
 
-        let activeUserId = null;
-        let userName = "訪客";
+        let currentUsername = localStorage.getItem('cale_custom_username') || "";
         let userUsage = 0;
         let userMaxLimit = 50;
         let currentBase64Image = "";
@@ -365,71 +376,97 @@
 
         let conversationHistory = [systemPrompt];
 
-        // 自動監聽任何登入進來的使用者身分
-        signInAnonymously(auth).catch((error) => {
-            console.error("匿名登入失敗:", error);
-        });
+        signInAnonymously(auth).catch(err => console.error("匿名登入失敗:", err));
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // 自動抓取當前連線使用者的真實 UID 或代號
-                activeUserId = user.uid;
-                userName = "使用者_" + activeUserId.substring(0, 5);
-
-                document.getElementById('userDisplayName').innerText = `👋 歡迎，${userName}`;
-                
-                // 同步初始化或讀取頂層 users 與 ai learn 集合
-                await initUserDataForAnyUser(activeUserId, userName);
+        // 頁面載入時檢查是否設定過名稱
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!currentUsername) {
+                await promptForUsername();
+            } else {
+                await initUserSession(currentUsername);
             }
         });
 
-        async function initUserDataForAnyUser(uid, defaultName) {
-            const userDocRef = doc(db, "users", uid);
-            const aiLearnDocRef = doc(db, "ai learn", uid);
+        // 讓使用者輸入名稱並檢查是否重複
+        window.promptForUsername = async function() {
+            while (true) {
+                let inputName = prompt("請輸入您的專屬使用者名稱（不能與其他人重複）：", currentUsername || "");
+                if (!inputName) {
+                    inputName = "訪客_" + Math.random().toString(36).substring(2, 6);
+                }
+                inputName = inputName.trim();
+
+                // 檢查是否已被其他人使用
+                const isTaken = await checkNameExistsInFirestore(inputName);
+                if (isTaken) {
+                    alert(`❌ 名稱「${inputName}」已經被其他人使用了，請換一個新名稱！`);
+                } else {
+                    currentUsername = inputName;
+                    localStorage.setItem('cale_custom_username', currentUsername);
+                    await initUserSession(currentUsername);
+                    break;
+                }
+            }
+        };
+
+        // 檢查名稱是否在 Firestore 中重複
+        async function checkNameExistsInFirestore(name) {
+            try {
+                const usersSnap = await getDocs(collection(db, "users"));
+                for (let docSnap of usersSnap.docs) {
+                    const data = docSnap.data();
+                    // 如果文件 ID 或者是 displayName 符合，且不是當前使用者自己
+                    if (docSnap.id === name || data.displayName === name) {
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.error("檢查名稱失敗:", e);
+            }
+            return false;
+        }
+
+        async function initUserSession(username) {
+            document.getElementById('userDisplayName').innerHTML = `👋 ${username} <button class="edit-name-btn" onclick="promptForUsername()">修改</button>`;
+            
+            const userDocRef = doc(db, "users", username);
+            const aiLearnDocRef = doc(db, "ai learn", username);
 
             try {
-                // 1. 檢查 users 集合中有沒有該使用者，沒有就建立預設值
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    userName = data.displayName || defaultName;
                     userUsage = data.usage || 0;
                     userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
                 } else {
-                    userName = defaultName;
                     userUsage = 0;
                     userMaxLimit = 50;
                     await setDoc(userDocRef, {
-                        uid: uid,
-                        displayName: userName,
+                        uid: username,
+                        displayName: username,
                         usage: 0,
                         maxLimit: 50,
                         lastActive: new Date()
                     }, { merge: true });
                 }
 
-                document.getElementById('userDisplayName').innerText = `👋 歡迎，${userName}`;
-
-                // 2. 在頂層 `ai learn` 建立對應使用者的獨立檔案
                 await setDoc(aiLearnDocRef, {
-                    accountKey: uid,
-                    displayName: userName,
+                    accountKey: username,
+                    displayName: username,
                     lastActive: new Date()
                 }, { merge: true });
 
                 updateStatusDisplay();
-
-                // 3. 載入該使用者的頂層 `ai learn/{uid}/chats` 歷史對話
-                await loadChatHistory(uid);
+                await loadChatHistory(username);
 
             } catch (e) {
-                console.error("初始化通用使用者資料失敗:", e);
+                console.error("初始化失敗:", e);
             }
         }
 
-        async function loadChatHistory(uid) {
+        async function loadChatHistory(username) {
             try {
-                const chatRef = collection(db, "ai learn", uid, "chats");
+                const chatRef = collection(db, "ai learn", username, "chats");
                 const q = query(chatRef, orderBy("timestamp", "asc"));
                 const querySnapshot = await getDocs(q);
 
@@ -448,7 +485,7 @@
                     });
                 }
             } catch (err) {
-                console.error("載入個人歷史對話失敗:", err);
+                console.error("載入對話歷史失敗:", err);
             }
         }
 
@@ -482,8 +519,8 @@
         };
 
         window.sendMessage = async function() {
-            if (!activeUserId) {
-                alert("正在連線中，請稍候再試...");
+            if (!currentUsername) {
+                alert("請先設定使用者名稱！");
                 return;
             }
 
@@ -491,8 +528,7 @@
             const text = inputEl.value.trim();
             if (!text && !currentBase64Image) return;
 
-            // 即時檢查最新額度
-            const userDocRef = doc(db, "users", activeUserId);
+            const userDocRef = doc(db, "users", currentUsername);
             const docSnap = await getDoc(userDocRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
@@ -516,9 +552,8 @@
             userUsage++;
             updateStatusDisplay();
 
-            // 1. 儲存至頂層 `ai learn/{activeUserId}/chats` 與 `users/{activeUserId}`
             try {
-                const chatRef = collection(db, "ai learn", activeUserId, "chats");
+                const chatRef = collection(db, "ai learn", currentUsername, "chats");
                 await addDoc(chatRef, {
                     role: 'user',
                     text: text || "[圖片訊息]",
@@ -533,10 +568,9 @@
                 }, { merge: true });
 
             } catch (err) {
-                console.error("儲存對話失敗:", err);
+                console.error("儲存失敗:", err);
             }
 
-            // 2. 發送給 Groq AI
             let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
             conversationHistory.push({ role: "user", content: userContent });
 
@@ -564,8 +598,7 @@
                 conversationHistory.push({ role: "assistant", content: aiReply });
                 appendMessageUI('assistant', aiReply);
 
-                // 3. 儲存 AI 回覆至該使用者的頂層 `ai learn` 紀錄
-                const chatRef = collection(db, "ai learn", activeUserId, "chats");
+                const chatRef = collection(db, "ai learn", currentUsername, "chats");
                 await addDoc(chatRef, {
                     role: 'assistant',
                     text: aiReply,
@@ -608,7 +641,6 @@
 </head>
 <body>
 
-    <!-- 左側導覽列 -->
     <sidebar>
         <div class="sidebar-header">
             <img src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png" alt="Logo">
@@ -616,7 +648,7 @@
         </div>
         
         <div class="user-welcome" id="userDisplayName">
-            👋 歡迎，連線中...
+            👋 設定中...
         </div>
 
         <button class="new-chat-btn" onclick="startNewChat()">＋ 新增學習對話</button>
@@ -631,7 +663,6 @@
         </div>
     </sidebar>
 
-    <!-- 右側主聊天介面 -->
     <div class="main-content">
         <header>
             <div style="font-size: 1.05rem; font-weight: 600; color: #f8fafc;">AI 智能學習對話室</div>
@@ -647,7 +678,7 @@
 
         <div class="chat-container" id="chatContainer">
             <div class="message assistant">
-                <div class="msg-bubble">你好！我是你的 Cale Study App AI 學習助手，請隨時跟我對話或上傳題目照片！</div>
+                <div class="msg_bubble">你好！我是你的 Cale Study App AI 學習助手，請隨時跟我對話或上傳題目照片！</div>
             </div>
         </div>
 
