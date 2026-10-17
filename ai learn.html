@@ -73,6 +73,7 @@
             padding: 8px 12px;
             border-radius: 6px;
             border: 1px solid rgba(96, 165, 250, 0.2);
+            word-break: break-all;
         }
 
         .new-chat-btn {
@@ -351,10 +352,8 @@
         const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
 
-        // 目標帳號 ID
-        const TARGET_USER_DOC_ID = "3323jaydenjayden_gmail_com";
-
-        let userName = "Jayden Lin";
+        let activeUserId = null;
+        let userName = "訪客";
         let userUsage = 0;
         let userMaxLimit = 50;
         let currentBase64Image = "";
@@ -366,59 +365,77 @@
 
         let conversationHistory = [systemPrompt];
 
-        async function initData() {
-            // 1. 從頂層 users 集合抓取使用者基本資料 (提取 displayName)
-            const userDocRef = doc(db, "users", TARGET_USER_DOC_ID);
+        // 自動監聽任何登入進來的使用者身分
+        signInAnonymously(auth).catch((error) => {
+            console.error("匿名登入失敗:", error);
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // 自動抓取當前連線使用者的真實 UID 或代號
+                activeUserId = user.uid;
+                userName = "使用者_" + activeUserId.substring(0, 5);
+
+                document.getElementById('userDisplayName').innerText = `👋 歡迎，${userName}`;
+                
+                // 同步初始化或讀取頂層 users 與 ai learn 集合
+                await initUserDataForAnyUser(activeUserId, userName);
+            }
+        });
+
+        async function initUserDataForAnyUser(uid, defaultName) {
+            const userDocRef = doc(db, "users", uid);
+            const aiLearnDocRef = doc(db, "ai learn", uid);
+
             try {
+                // 1. 檢查 users 集合中有沒有該使用者，沒有就建立預設值
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    userName = data.displayName || (data.badges && data.badges.displayName) || "Jayden Lin";
-                    userUsage = data.usage !== undefined ? data.usage : (data.badges && data.badges.usage) || 0;
-                    userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : (data.badges && data.badges.maxLimit) || 50;
+                    userName = data.displayName || defaultName;
+                    userUsage = data.usage || 0;
+                    userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
+                } else {
+                    userName = defaultName;
+                    userUsage = 0;
+                    userMaxLimit = 50;
+                    await setDoc(userDocRef, {
+                        uid: uid,
+                        displayName: userName,
+                        usage: 0,
+                        maxLimit: 50,
+                        lastActive: new Date()
+                    }, { merge: true });
                 }
-            } catch (e) {
-                console.error("讀取 users 失敗:", e);
-            }
 
-            document.getElementById('userDisplayName').innerText = `👋 歡迎，${userName}`;
-            updateStatusDisplay();
+                document.getElementById('userDisplayName').innerText = `👋 歡迎，${userName}`;
 
-            // 2. 初始化頂層集合 `ai learn` 下對應使用者的文件資料與對話紀錄
-            await initTopLevelAiLearn();
-        }
-
-        // 管理頂層 `ai learn` 集合
-        async function initTopLevelAiLearn() {
-            // 指向頂層集合 `ai learn` 裡面的 `3323jaydenjayden_gmail_com` 文件
-            const aiLearnDocRef = doc(db, "ai learn", TARGET_USER_DOC_ID);
-
-            try {
-                // 確保頂層文件存在，同步寫入基本資訊
+                // 2. 在頂層 `ai learn` 建立對應使用者的獨立檔案
                 await setDoc(aiLearnDocRef, {
-                    accountKey: TARGET_USER_DOC_ID,
+                    accountKey: uid,
                     displayName: userName,
                     lastActive: new Date()
                 }, { merge: true });
 
-                // 載入該文件下的對話歷史子集合 `chats`
-                await loadChatHistory();
+                updateStatusDisplay();
+
+                // 3. 載入該使用者的頂層 `ai learn/{uid}/chats` 歷史對話
+                await loadChatHistory(uid);
 
             } catch (e) {
-                console.error("頂層 ai learn 初始化失敗:", e);
+                console.error("初始化通用使用者資料失敗:", e);
             }
         }
 
-        // 載入歷史紀錄：`ai learn/3323jaydenjayden_gmail_com/chats`
-        async function loadChatHistory() {
+        async function loadChatHistory(uid) {
             try {
-                const chatRef = collection(db, "ai learn", TARGET_USER_DOC_ID, "chats");
+                const chatRef = collection(db, "ai learn", uid, "chats");
                 const q = query(chatRef, orderBy("timestamp", "asc"));
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
                     const chatContainer = document.getElementById('chatContainer');
-                    chatContainer.innerHTML = ''; // 清空預設訊息
+                    chatContainer.innerHTML = ''; 
 
                     querySnapshot.forEach((docSnap) => {
                         const chatData = docSnap.data();
@@ -431,12 +448,12 @@
                     });
                 }
             } catch (err) {
-                console.error("載入聊天歷史失敗:", err);
+                console.error("載入個人歷史對話失敗:", err);
             }
         }
 
         function updateStatusDisplay() {
-            document.getElementById('userStatus').innerText = `連線成功 (${userName}) | 額度: ${userUsage}/${userMaxLimit}`;
+            document.getElementById('userStatus').innerText = `連線狀態: 正常 | 額度: ${userUsage}/${userMaxLimit}`;
         }
 
         window.handleFileSelect = function(event) {
@@ -465,9 +482,23 @@
         };
 
         window.sendMessage = async function() {
+            if (!activeUserId) {
+                alert("正在連線中，請稍候再試...");
+                return;
+            }
+
             const inputEl = document.getElementById('userInput');
             const text = inputEl.value.trim();
             if (!text && !currentBase64Image) return;
+
+            // 即時檢查最新額度
+            const userDocRef = doc(db, "users", activeUserId);
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                userUsage = data.usage || 0;
+                userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
+            }
 
             if (userUsage >= userMaxLimit) {
                 appendMessageUI('assistant', `⚠️ 您的對話次數已達上限 (${userUsage}/${userMaxLimit})，請聯繫管理員。`);
@@ -477,7 +508,6 @@
             const selectedModel = document.getElementById('modelSelect').value;
             const sendBtn = document.getElementById('sendBtn');
 
-            // 渲染 UI
             appendMessageUI('user', text, currentBase64Image);
             inputEl.value = '';
             const tempImage = currentBase64Image;
@@ -486,9 +516,9 @@
             userUsage++;
             updateStatusDisplay();
 
-            // 1. 寫入使用者發送的訊息到頂層 `ai learn/3323jaydenjayden_gmail_com/chats` 子集合
+            // 1. 儲存至頂層 `ai learn/{activeUserId}/chats` 與 `users/{activeUserId}`
             try {
-                const chatRef = collection(db, "ai learn", TARGET_USER_DOC_ID, "chats");
+                const chatRef = collection(db, "ai learn", activeUserId, "chats");
                 await addDoc(chatRef, {
                     role: 'user',
                     text: text || "[圖片訊息]",
@@ -496,8 +526,6 @@
                     timestamp: new Date()
                 });
 
-                // 同步更新 users 主文件的用量紀錄
-                const userDocRef = doc(db, "users", TARGET_USER_DOC_ID);
                 await setDoc(userDocRef, {
                     usage: increment(1),
                     lastActive: new Date(),
@@ -505,10 +533,10 @@
                 }, { merge: true });
 
             } catch (err) {
-                console.error("儲存至 ai learn 失敗:", err);
+                console.error("儲存對話失敗:", err);
             }
 
-            // 2. 發送給 Groq AI API
+            // 2. 發送給 Groq AI
             let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
             conversationHistory.push({ role: "user", content: userContent });
 
@@ -536,8 +564,8 @@
                 conversationHistory.push({ role: "assistant", content: aiReply });
                 appendMessageUI('assistant', aiReply);
 
-                // 3. 寫入 AI 的回覆到頂層 `ai learn/3323jaydenjayden_gmail_com/chats` 子集合
-                const chatRef = collection(db, "ai learn", TARGET_USER_DOC_ID, "chats");
+                // 3. 儲存 AI 回覆至該使用者的頂層 `ai learn` 紀錄
+                const chatRef = collection(db, "ai learn", activeUserId, "chats");
                 await addDoc(chatRef, {
                     role: 'assistant',
                     text: aiReply,
@@ -576,9 +604,6 @@
                 </div>
             `;
         };
-
-        // 啟動資料載入
-        initData();
     </script>
 </head>
 <body>
@@ -590,9 +615,8 @@
             <h2>Cale Study</h2>
         </div>
         
-        <!-- 使用者名稱顯示區域 -->
         <div class="user-welcome" id="userDisplayName">
-            👋 歡迎，讀取中...
+            👋 歡迎，連線中...
         </div>
 
         <button class="new-chat-btn" onclick="startNewChat()">＋ 新增學習對話</button>
