@@ -12,6 +12,7 @@
             --border-color: #30363d;
             --accent-color: #58a6ff;
             --danger-color: #ff7b72;
+            --warning-color: #d29922;
         }
 
         * {
@@ -32,7 +33,7 @@
 
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 950px;
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
@@ -63,21 +64,38 @@
             background: rgba(255, 255, 255, 0.02);
         }
 
-        .btn-reset {
-            background-color: var(--danger-color);
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-edit {
+            background-color: var(--warning-color);
             color: #ffffff;
             border: none;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.8rem;
             font-weight: bold;
         }
 
-        .btn-reset:hover {
-            opacity: 0.8;
+        .btn-edit:hover { opacity: 0.8; }
+
+        .btn-reset {
+            background-color: var(--danger-color);
+            color: #ffffff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
 
+        .btn-reset:hover { opacity: 0.8; }
+
+        /* 登入遮罩 */
         .login-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -163,7 +181,6 @@
                     return;
                 }
 
-                // 注意這裡改用 docSnap 避免與內建 document 衝突
                 querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const tr = document.createElement('tr');
@@ -176,7 +193,12 @@
                         <td><code>${displayUid}</code></td>
                         <td><b>${usageCount}</b> / 50</td>
                         <td>${lastMsg}</td>
-                        <td><button class="btn-reset" onclick="resetUser('${docSnap.id}')">重置次數</button></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-edit" onclick="editUserUsage('${docSnap.id}', ${usageCount})">✏️ 調整</button>
+                                <button class="btn-reset" onclick="resetUser('${docSnap.id}')">歸零</button>
+                            </div>
+                        </td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -186,12 +208,33 @@
             }
         }
 
+        // 新增：手動調整次數功能
+        window.editUserUsage = async function(docId, currentUsage) {
+            const input = prompt(`請輸入 ${docId} 的新使用次數（目前為 ${currentUsage}）：`, currentUsage);
+            if (input === null) return; // 按取消
+
+            const newUsage = parseInt(input, 10);
+            if (isNaN(newUsage) || newUsage < 0) {
+                alert("❌ 請輸入有效的數字（0 或更大）！");
+                return;
+            }
+
+            try {
+                const userRef = doc(db, "users", docId);
+                await updateDoc(userRef, { usage: newUsage });
+                alert(`✅ 成功將次數調整為 ${newUsage} 次！`);
+                loadUsers();
+            } catch (e) {
+                alert("❌ 調整失敗: " + e.message);
+            }
+        };
+
         window.resetUser = async function(docId) {
             if (!confirm(`確定要將 ${docId} 的使用次數歸零嗎？`)) return;
             try {
                 const userRef = doc(db, "users", docId);
                 await updateDoc(userRef, { usage: 0 });
-                alert("✅ 已成功重置！");
+                alert("✅ 已成功重置為 0 次！");
                 loadUsers();
             } catch (e) {
                 alert("❌ 重置失敗: " + e.message);
@@ -213,7 +256,7 @@
     <!-- 後台主畫面 -->
     <div class="container">
         <h1>⚙️ Cale Study App — 所有使用者管理面板</h1>
-        <p style="font-size: 0.9rem; color: #8b949e;">在此可即時檢視所有連線學生的使用次數與狀態並進行管理。</p>
+        <p style="font-size: 0.9rem; color: #8b949e;">在此可即時檢視所有連線學生的使用次數與狀態，並可自由調整或歸零次數。</p>
         
         <table>
             <thead>
