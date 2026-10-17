@@ -37,20 +37,20 @@
 
         /* 側邊欄 */
         sidebar {
-            width: 260px;
+            width: 280px;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             padding: 1rem;
-            gap: 1rem;
+            gap: 0.8rem;
         }
 
         .sidebar-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding-bottom: 1rem;
+            padding-bottom: 0.8rem;
             border-bottom: 1px solid var(--border-color);
         }
 
@@ -66,7 +66,7 @@
         }
 
         .user-welcome {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--accent-color);
             font-weight: 600;
             background: rgba(96, 165, 250, 0.1);
@@ -79,7 +79,7 @@
             align-items: center;
         }
 
-        .edit-name-btn {
+        .action-btn-sm {
             background: none;
             border: none;
             color: var(--accent-color);
@@ -105,6 +105,15 @@
 
         .new-chat-btn:hover { opacity: 0.9; }
 
+        .chat-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
         .chat-history-list {
             flex: 1;
             overflow-y: auto;
@@ -114,20 +123,44 @@
         }
 
         .history-item {
-            padding: 10px;
+            padding: 8px 10px;
             border-radius: 6px;
             font-size: 0.85rem;
             color: var(--text-secondary);
             cursor: pointer;
             transition: background 0.2s, color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover, .history-item.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+
+        .history-item .title-text {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 180px;
         }
 
-        .history-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-color);
+        .delete-room-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .delete-room-btn:hover {
+            color: var(--danger-color);
+            opacity: 1;
         }
 
         .sidebar-footer {
@@ -341,11 +374,11 @@
         }
     </style>
 
-    <!-- Firebase SDK 模組引入 -->
+    <!-- Firebase SDK 與聊天室模組 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs, query, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc, collection, getDocs, query, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
@@ -365,16 +398,16 @@
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
 
         let currentUsername = localStorage.getItem('cale_custom_username') || "";
+        let customPromptText = "";
         let userUsage = 0;
         let userMaxLimit = 50;
         let currentBase64Image = "";
 
-        const systemPrompt = {
-            role: "system",
-            content: "你是 Cale Study App 的 AI 對話學習助手，專為學生提供親切、清晰且有條理的學習解答與解題輔導。請優先使用繁體中文回答。"
-        };
+        let activeRoomId = null;
+        let roomList = [];
 
-        let conversationHistory = [systemPrompt];
+        const defaultSystemPrompt = "你是 Cale Study App 的 AI 對話學習助手，專為學生提供親切、清晰且有條理的學習解答與解題輔導。請優先使用繁體中文回答。";
+        let conversationHistory = [];
 
         signInAnonymously(auth).catch(err => console.error("匿名登入失敗:", err));
 
@@ -412,37 +445,43 @@
                 const docSnap = await getDoc(userDocRef);
                 return docSnap.exists();
             } catch (e) {
-                console.error("檢查名稱失敗:", e);
                 return false;
             }
         }
 
         async function initUserSession(username) {
-            document.getElementById('userDisplayName').innerHTML = `👋 ${username} <button class="edit-name-btn" onclick="promptForUsername()">修改</button>`;
+            document.getElementById('userDisplayName').innerHTML = `
+                <span>👋 ${username}</span>
+                <div>
+                    <button class="action-btn-sm" onclick="promptForUsername()">改名</button>
+                    <button class="action-btn-sm" onclick="editCustomPrompt()" style="margin-left: 4px;">⚙️給AI的話</button>
+                </div>
+            `;
             
             const userDocRef = doc(db, "users", username);
             const aiLearnDocRef = doc(db, "ai learn", username);
 
             try {
-                // 1. 初始化 users 集合
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     userUsage = data.usage || 0;
                     userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
+                    customPromptText = data.customPrompt || "";
                 } else {
                     userUsage = 0;
                     userMaxLimit = 50;
+                    customPromptText = "";
                     await setDoc(userDocRef, {
                         uid: username,
                         displayName: username,
                         usage: 0,
                         maxLimit: 50,
+                        customPrompt: "",
                         lastActive: new Date()
                     }, { merge: true });
                 }
 
-                // 2. 強制建立頂層 ai learn 集合文件
                 await setDoc(aiLearnDocRef, {
                     accountKey: username,
                     displayName: username,
@@ -450,24 +489,134 @@
                 }, { merge: true });
 
                 updateStatusDisplay();
-                await loadChatHistory(username);
+                await loadRooms(username);
 
             } catch (e) {
-                console.error("初始化 session 失敗:", e);
+                console.error("初始化失敗:", e);
             }
         }
 
-        async function loadChatHistory(username) {
+        // 編輯給 AI 的專屬指令 (個人化服務)
+        window.editCustomPrompt = async function() {
+            const input = prompt("【個人化服務】請輸入你想給 AI 的特別指令/設定（例如：我是國中生、請用親切大哥哥口吻解答、數學請多舉例）：", customPromptText);
+            if (input === null) return;
+
+            customPromptText = input.trim();
             try {
-                const chatRef = collection(db, "ai learn", username, "chats");
-                const q = query(chatRef, orderBy("timestamp", "asc"));
+                const userDocRef = doc(db, "users", currentUsername);
+                await setDoc(userDocRef, { customPrompt: customPromptText }, { merge: true });
+                alert("✅ 已成功儲存個人化設定！小助手會在接下來的對話中記住你。");
+            } catch (e) {
+                alert("❌ 設定儲存失敗: " + e.message);
+            }
+        };
+
+        // 載入多個聊天室 (最多10個)
+        async function loadRooms(username) {
+            try {
+                const roomsRef = collection(db, "ai learn", username, "rooms");
+                const q = query(roomsRef, orderBy("createdAt", "asc"));
                 const querySnapshot = await getDocs(q);
 
-                if (!querySnapshot.empty) {
-                    const chatContainer = document.getElementById('chatContainer');
-                    chatContainer.innerHTML = ''; 
-                    conversationHistory = [systemPrompt]; 
+                roomList = [];
+                querySnapshot.forEach(docSnap => {
+                    roomList.push({ id: docSnap.id, ...docSnap.data() });
+                });
 
+                if (roomList.length === 0) {
+                    await createNewRoom(false);
+                } else {
+                    activeRoomId = roomList[roomList.length - 1].id;
+                    renderRoomListUI();
+                    await loadRoomMessages(activeRoomId);
+                }
+            } catch (err) {
+                console.error("載入聊天室失敗:", err);
+            }
+        }
+
+        function renderRoomListUI() {
+            const historyListEl = document.getElementById('chatHistoryList');
+            document.getElementById('roomCountText').innerText = `${roomList.length}/10`;
+            historyListEl.innerHTML = '';
+
+            roomList.forEach((room, index) => {
+                const item = document.createElement('div');
+                item.className = `history-item ${room.id === activeRoomId ? 'active' : ''}`;
+                item.onclick = () => switchRoom(room.id);
+
+                item.innerHTML = `
+                    <span class="title-text">💬 ${room.title || '學習對話 ' + (index + 1)}</span>
+                    <button class="delete-room-btn" onclick="deleteRoom(event, '${room.id}')" title="刪除聊天室">🗑️</button>
+                `;
+                historyListEl.appendChild(item);
+            });
+        }
+
+        window.createNewRoom = async function(showAlert = true) {
+            if (roomList.length >= 10) {
+                alert("⚠️ 您最多只能建立 10 個聊天室，請先刪除舊的聊天室！");
+                return;
+            }
+
+            const roomTitle = prompt("請輸入新聊天室主題：", `學習主題 ${roomList.length + 1}`) || `學習對話 ${roomList.length + 1}`;
+            
+            try {
+                const roomsRef = collection(db, "ai learn", currentUsername, "rooms");
+                const newDoc = await addDoc(roomsRef, {
+                    title: roomTitle,
+                    createdAt: new Date()
+                });
+
+                activeRoomId = newDoc.id;
+                await loadRooms(currentUsername);
+
+            } catch (e) {
+                console.error("建立新聊天室失敗:", e);
+            }
+        };
+
+        async function switchRoom(roomId) {
+            activeRoomId = roomId;
+            renderRoomListUI();
+            await loadRoomMessages(roomId);
+        }
+
+        window.deleteRoom = async function(event, roomId) {
+            event.stopPropagation();
+            if (roomList.length <= 1) {
+                alert("⚠️ 至少需要保留 1 個聊天室！");
+                return;
+            }
+            if (!confirm("確定要刪除這個聊天室及其歷史對話嗎？")) return;
+
+            try {
+                const roomDocRef = doc(db, "ai learn", currentUsername, "rooms", roomId);
+                await deleteDoc(roomDocRef);
+                await loadRooms(currentUsername);
+            } catch (e) {
+                alert("❌ 刪除失敗: " + e.message);
+            }
+        };
+
+        async function loadRoomMessages(roomId) {
+            try {
+                const msgRef = collection(db, "ai learn", currentUsername, "rooms", roomId, "messages");
+                const q = query(msgRef, orderBy("timestamp", "asc"));
+                const querySnapshot = await getDocs(q);
+
+                const chatContainer = document.getElementById('chatContainer');
+                chatContainer.innerHTML = ''; 
+
+                // 初始化 System Prompt（融合預設 + 個人化自訂）
+                let combinedSystemPrompt = defaultSystemPrompt;
+                if (customPromptText) {
+                    combinedSystemPrompt += `\n【使用者個人化特色與要求】：${customPromptText}`;
+                }
+
+                conversationHistory = [{ role: "system", content: combinedSystemPrompt }];
+
+                if (!querySnapshot.empty) {
                     querySnapshot.forEach((docSnap) => {
                         const chatData = docSnap.data();
                         appendMessageUI(chatData.role, chatData.text, chatData.imgSrc);
@@ -477,9 +626,11 @@
                             content: chatData.text
                         });
                     });
+                } else {
+                    appendMessageUI('assistant', '你好！我是你的 Cale Study App AI 學習助手，請隨時跟我對話或上傳題目照片！');
                 }
             } catch (err) {
-                console.error("載入對話歷史失敗:", err);
+                console.error("載入訊息失敗:", err);
             }
         }
 
@@ -513,8 +664,8 @@
         };
 
         window.sendMessage = async function() {
-            if (!currentUsername) {
-                alert("請先設定使用者名稱！");
+            if (!currentUsername || !activeRoomId) {
+                alert("請先設定使用者名稱並開啟聊天室！");
                 return;
             }
 
@@ -546,17 +697,10 @@
             userUsage++;
             updateStatusDisplay();
 
-            // 1. 強制確保頂層 ai learn/{username} 文件存在，並寫入 chats
+            // 寫入當前聊天室的 messages 集合
             try {
-                const aiLearnDocRef = doc(db, "ai learn", currentUsername);
-                await setDoc(aiLearnDocRef, {
-                    accountKey: currentUsername,
-                    displayName: currentUsername,
-                    lastActive: new Date()
-                }, { merge: true });
-
-                const chatRef = collection(db, "ai learn", currentUsername, "chats");
-                await addDoc(chatRef, {
+                const msgRef = collection(db, "ai learn", currentUsername, "rooms", activeRoomId, "messages");
+                await addDoc(msgRef, {
                     role: 'user',
                     text: text || "[圖片訊息]",
                     imgSrc: tempImage || null,
@@ -600,9 +744,9 @@
                 conversationHistory.push({ role: "assistant", content: aiReply });
                 appendMessageUI('assistant', aiReply);
 
-                // 2. 寫入 AI 回覆至 ai learn/{username}/chats
-                const chatRef = collection(db, "ai learn", currentUsername, "chats");
-                await addDoc(chatRef, {
+                // 寫入 AI 回覆
+                const msgRef = collection(db, "ai learn", currentUsername, "rooms", activeRoomId, "messages");
+                await addDoc(msgRef, {
                     role: 'assistant',
                     text: aiReply,
                     imgSrc: null,
@@ -631,15 +775,6 @@
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
-
-        window.startNewChat = function() {
-            conversationHistory = [systemPrompt];
-            document.getElementById('chatContainer').innerHTML = `
-                <div class="message assistant">
-                    <div class="msg-bubble">你好！我是你的 Cale Study App AI 學習助手，已開啟新的對話，請問今天想解決什麼科目或題目呢？</div>
-                </div>
-            `;
-        };
     </script>
 </head>
 <body>
@@ -654,12 +789,17 @@
             👋 設定中...
         </div>
 
-        <button class="new-chat-btn" onclick="startNewChat()">＋ 新增學習對話</button>
-        <div class="chat-history-list">
-            <div class="history-item">📖 英文文法與單字複習</div>
-            <div class="history-item">📐 數學多項式與幾何題</div>
-            <div class="history-item">🔬 理化實驗原理解析</div>
+        <button class="new-chat-btn" onclick="createNewRoom()">＋ 新增學習對話</button>
+
+        <div class="chat-history-header">
+            <span>我的學習聊天室</span>
+            <span id="roomCountText">0/10</span>
         </div>
+
+        <div class="chat-history-list" id="chatHistoryList">
+            <!-- 動態載入聊天室 -->
+        </div>
+
         <div class="sidebar-footer">
             <span id="userStatus">初始化連線中...</span>
             <span>系統狀態：正常運行</span>
@@ -680,9 +820,7 @@
         </header>
 
         <div class="chat-container" id="chatContainer">
-            <div class="message assistant">
-                <div class="msg-bubble">你好！我是你的 Cale Study App AI 學習助手，請隨時跟我對話或上傳題目照片！</div>
-            </div>
+            <!-- 聊天內容動態載入 -->
         </div>
 
         <div class="input-container">
