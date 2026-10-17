@@ -313,17 +313,17 @@
             cursor: not-allowed;
         }
 
-        /* 響應式微調 */
         @media (max-width: 768px) {
             sidebar { display: none; }
         }
     </style>
 
-    <!-- Firebase SDK 模組與核心邏輯 -->
+    <!-- 使用你提供的標準 Firebase SDK 模組與初始化格式 -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
@@ -335,7 +335,10 @@
             measurementId: "G-GP1XCE9W5E"
         };
 
+        // Initialize Firebase & Analytics
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        
         const auth = getAuth(app);
         const db = getFirestore(app);
 
@@ -347,6 +350,7 @@
         let userMaxLimit = 50;
         let currentBase64Image = "";
 
+        // 設定 System Prompt 告知 AI 身分與職責
         const systemPrompt = {
             role: "system",
             content: "你是 Cale Study App 的 AI 對話學習助手，專為學生提供親切、清晰且有條理的學習解答與解題輔導。請優先使用繁體中文回答。"
@@ -354,6 +358,7 @@
 
         let conversationHistory = [systemPrompt];
 
+        // 匿名登入
         signInAnonymously(auth).catch((error) => {
             console.error("Firebase 登入失敗:", error);
             document.getElementById('userStatus').innerText = "連線異常";
