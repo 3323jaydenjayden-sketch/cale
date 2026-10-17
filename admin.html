@@ -126,7 +126,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 套用你的 Firebase 專案設定
         const firebaseConfig = {
             apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
             authDomain: "cale-study-app-41b9b.firebaseapp.com",
@@ -140,7 +139,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const ADMIN_PASSWORD = "admin123"; // 可自行更改後台密碼
+        const ADMIN_PASSWORD = "admin123";
 
         window.verifyAdmin = function() {
             const pwd = document.getElementById('adminPwd').value;
@@ -154,37 +153,41 @@
 
         async function loadUsers() {
             const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">正在向資料庫查詢使用者...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">正在載入資料庫使用者...</td></tr>';
 
             try {
                 const querySnapshot = await getDocs(collection(db, "users"));
                 tbody.innerHTML = '';
-                
+
                 if (querySnapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#8b949e;">目前尚無任何使用者記錄（請先讓學生在 index.html 傳送訊息）</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#8b949e;">目前尚無使用者記錄</td></tr>';
                     return;
                 }
 
-                querySnapshot.forEach((document) => {
-                    const data = document.data();
+                querySnapshot.forEach((documentSnap) => {
+                    const data = documentSnap.data();
                     const tr = document.createElement('tr');
                     
+                    const displayUid = data.uid || documentSnap.id;
+                    const usageCount = data.usage !== undefined ? data.usage : 0;
+                    const lastMsg = data.lastMessage || '無紀錄';
+
                     tr.innerHTML = `
-                        <td><code>${data.uid || document.id}</code></td>
-                        <td><b>${data.usage || 0}</b> / 50</td>
-                        <td>${data.lastMessage || '無紀錄'}</td>
-                        <td><button class="btn-reset" onclick="resetUser('${document.id}')">重置次數</button></td>
+                        <td><code>${displayUid}</code></td>
+                        <td><b>${usageCount}</b> / 50</td>
+                        <td>${lastMsg}</td>
+                        <td><button class="btn-reset" onclick="resetUser('${documentSnap.id}')">重置次數</button></td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (e) {
                 console.error("載入失敗:", e);
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">載入失敗: ${e.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">❌ 載入失敗 (請檢查 Rules 權限)：${e.message}</td></tr>`;
             }
         }
 
         window.resetUser = async function(docId) {
-            if (!confirm("確定要將此使用者的次數歸零嗎？")) return;
+            if (!confirm(`確定要將 ${docId} 的使用次數歸零嗎？`)) return;
             try {
                 const userRef = doc(db, "users", docId);
                 await updateDoc(userRef, { usage: 0 });
