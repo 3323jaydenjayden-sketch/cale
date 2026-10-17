@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cale study app - AI 對話學習助手</title>
+    <title>Cale Study App - AI 智能學習助手</title>
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
     <style>
         :root {
-            --bg-color: #0d1117;
-            --chat-bg: #161b22;
-            --user-msg: #1f6feb;
-            --ai-msg: #21262d;
-            --text-color: #c9d1d9;
-            --border-color: #30363d;
-            --accent-color: #58a6ff;
+            --bg-color: #0b0f19;
+            --sidebar-bg: #111827;
+            --chat-bg: #0f172a;
+            --panel-bg: #1e293b;
+            --user-msg: #3b82f6;
+            --ai-msg: #1e293b;
+            --text-color: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --accent-color: #60a5fa;
+            --danger-color: #ef4444;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
         }
 
         body {
@@ -28,65 +32,137 @@
             color: var(--text-color);
             height: 100vh;
             display: flex;
+            overflow: hidden;
+        }
+
+        /* 側邊欄 (Sidebar) */
+        sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
             flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1rem;
+            color: #ffffff;
+        }
+
+        .new-chat-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .new-chat-btn:hover { opacity: 0.9; }
+
+        .chat-history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+        }
+
+        .sidebar-footer {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* 主畫面聊天區 (Main Chat Area) */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--chat-bg);
+            height: 100vh;
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.8rem 1.5rem;
-            background-color: var(--chat-bg);
+            padding: 1rem 2rem;
+            background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
         }
 
-        .logo-container {
+        .model-selector-wrapper {
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .logo-container img {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-        }
-
-        .logo-container h1 {
-            font-size: 1.1rem;
-            color: #f0f6fc;
-        }
-
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
         }
 
         select.model-select {
-            background-color: #0d1117;
+            background-color: var(--panel-bg);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            padding: 6px 12px;
-            border-radius: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
             font-size: 0.85rem;
             outline: none;
             cursor: pointer;
         }
 
-        .user-status {
-            font-size: 0.85rem;
-            color: #8b949e;
-        }
-
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 1.5rem;
+            padding: 2rem;
             display: flex;
             flex-direction: column;
-            gap: 1.2rem;
-            max-width: 800px;
+            gap: 1.5rem;
+            max-width: 900px;
             width: 100%;
             margin: 0 auto;
         }
@@ -95,15 +171,21 @@
             display: flex;
             flex-direction: column;
             max-width: 80%;
-            line-height: 1.5;
+            line-height: 1.6;
             font-size: 0.95rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .message.user { align-self: flex-end; }
-        .message.assistant { align-self: flex-start; }
+        .message.assistant { align-self: flex-start; width: 100%; max-width: 100%; }
 
         .msg-bubble {
-            padding: 0.8rem 1.1rem;
+            padding: 1rem 1.2rem;
             border-radius: 12px;
             word-wrap: break-word;
             white-space: pre-wrap;
@@ -112,70 +194,74 @@
         .user .msg-bubble {
             background-color: var(--user-msg);
             color: #ffffff;
-            border-bottom-right-radius: 2px;
+            border-bottom-right-radius: 4px;
         }
 
         .assistant .msg-bubble {
             background-color: var(--ai-msg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
-            border-bottom-left-radius: 2px;
+            border-bottom-left-radius: 4px;
         }
 
         .msg-image {
-            max-width: 200px;
-            max-height: 200px;
+            max-width: 240px;
+            max-height: 240px;
             border-radius: 8px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
         }
 
+        /* 底部輸入列 (Input Area) */
         .input-container {
-            padding: 1rem 1.5rem;
-            background-color: var(--bg-color);
-            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            background: linear-gradient(to top, var(--chat-bg) 80%, transparent);
         }
 
         .input-wrapper {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            background-color: var(--chat-bg);
+            background-color: var(--panel-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 8px 12px;
+            border-radius: 14px;
+            padding: 10px 14px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         }
 
         .image-preview-bar {
             display: none;
             align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 4px 8px;
-            border-radius: 6px;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px 10px;
+            border-radius: 8px;
             width: fit-content;
+            border: 1px solid var(--border-color);
         }
 
         .image-preview-bar img {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             object-fit: cover;
-            border-radius: 4px;
+            border-radius: 6px;
         }
 
         .remove-img-btn {
             background: none;
             border: none;
-            color: #ff7b72;
+            color: var(--danger-color);
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
         .input-row {
             display: flex;
             align-items: flex-end;
-            gap: 8px;
+            gap: 10px;
         }
 
         textarea {
@@ -185,54 +271,68 @@
             color: var(--text-color);
             font-size: 0.95rem;
             resize: none;
-            max-height: 120px;
+            max-height: 140px;
             outline: none;
-            padding: 4px;
+            padding: 6px;
+            line-height: 1.5;
         }
 
         .icon-btn {
             background: none;
             border: none;
-            color: #8b949e;
+            color: var(--text-secondary);
             cursor: pointer;
-            padding: 6px;
-            border-radius: 6px;
-            transition: color 0.2s;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .icon-btn:hover { color: var(--text-color); }
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+        }
 
         .send-btn {
             background-color: var(--accent-color);
-            color: #0d1117;
+            color: #0b0f19;
             font-weight: bold;
-            padding: 6px 12px;
-            border-radius: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
+            transition: opacity 0.2s;
         }
 
+        .send-btn:hover { opacity: 0.9; }
         .send-btn:disabled {
-            background-color: #30363d;
-            color: #484f58;
+            background-color: var(--border-color);
+            color: var(--text-secondary);
             cursor: not-allowed;
+        }
+
+        /* 響應式微調 */
+        @media (max-width: 768px) {
+            sidebar { display: none; }
         }
     </style>
 
-    <!-- Firebase SDK 引入 -->
+    <!-- Firebase SDK 模組與核心邏輯 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // TODO: 替換為你的 Firebase 專案設定
         const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
+            apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
+            authDomain: "cale-study-app-41b9b.firebaseapp.com",
+            projectId: "cale-study-app-41b9b",
+            storageBucket: "cale-study-app-41b9b.firebasestorage.app",
+            messagingSenderId: "819450732167",
+            appId: "1:819450732167:web:a727579df57eb9da33e222",
+            measurementId: "G-GP1XCE9W5E"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -241,40 +341,56 @@
 
         const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
-        const MAX_LIMIT = 50;
 
         let currentUser = null;
         let userUsage = 0;
+        let userMaxLimit = 50;
         let currentBase64Image = "";
-        let conversationHistory = [];
 
-        // 匿名登入或記錄使用者
+        const systemPrompt = {
+            role: "system",
+            content: "你是 Cale Study App 的 AI 對話學習助手，專為學生提供親切、清晰且有條理的學習解答與解題輔導。請優先使用繁體中文回答。"
+        };
+
+        let conversationHistory = [systemPrompt];
+
         signInAnonymously(auth).catch((error) => {
             console.error("Firebase 登入失敗:", error);
+            document.getElementById('userStatus').innerText = "連線異常";
         });
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById('userStatus').innerText = `已連線 (ID: ${user.uid.substring(0, 6)}...)`;
-                
-                // 檢查 Firestore 是否已有該使用者紀錄
                 const userDocRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(userDocRef);
-                
-                if (docSnap.exists()) {
-                    userUsage = docSnap.data().usage || 0;
-                } else {
-                    // 初始化使用者資料
-                    await setDoc(userDocRef, {
-                        uid: user.uid,
-                        usage: 0,
-                        lastActive: new Date()
-                    });
-                    userUsage = 0;
+                try {
+                    const docSnap = await getDoc(userDocRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        userUsage = data.usage || 0;
+                        userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
+                    } else {
+                        userUsage = 0;
+                        userMaxLimit = 50;
+                        await setDoc(userDocRef, {
+                            uid: user.uid,
+                            usage: 0,
+                            maxLimit: 50,
+                            lastActive: new Date()
+                        }, { merge: true });
+                    }
+                    updateStatusDisplay();
+                } catch (e) {
+                    console.error("讀取失敗:", e);
                 }
             }
         });
+
+        function updateStatusDisplay() {
+            if (currentUser) {
+                document.getElementById('userStatus').innerText = `已連線 | 額度: ${userUsage}/${userMaxLimit}`;
+            }
+        }
 
         window.handleFileSelect = function(event) {
             const file = event.target.files[0];
@@ -306,8 +422,18 @@
             const text = inputEl.value.trim();
             if (!text && !currentBase64Image) return;
 
-            if (userUsage >= MAX_LIMIT) {
-                appendMessage('assistant', '⚠️ 您的對話次數已達 50 次上限。');
+            if (currentUser) {
+                const userDocRef = doc(db, "users", currentUser.uid);
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    userUsage = data.usage || 0;
+                    userMaxLimit = data.maxLimit !== undefined ? data.maxLimit : 50;
+                }
+            }
+
+            if (userUsage >= userMaxLimit) {
+                appendMessage('assistant', `⚠️ 您的對話次數已達上限 (${userUsage}/${userMaxLimit})，請聯繫管理員。`);
                 return;
             }
 
@@ -319,19 +445,26 @@
             const tempImage = currentBase64Image;
             removeImage();
 
+            userUsage++;
+            updateStatusDisplay();
+
+            if (currentUser) {
+                try {
+                    const userDocRef = doc(db, "users", currentUser.uid);
+                    await setDoc(userDocRef, {
+                        uid: currentUser.uid,
+                        usage: increment(1),
+                        maxLimit: userMaxLimit,
+                        lastActive: new Date(),
+                        lastMessage: text || "[圖片訊息]"
+                    }, { merge: true });
+                } catch (err) {
+                    console.error("Firestore 寫入失敗:", err);
+                }
+            }
+
             let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
             conversationHistory.push({ role: "user", content: userContent });
-
-            // 更新 Firestore 用量
-            userUsage++;
-            if (currentUser) {
-                const userDocRef = doc(db, "users", currentUser.uid);
-                await updateDoc(userDocRef, {
-                    usage: increment(1),
-                    lastActive: new Date(),
-                    lastMessage: text || "[圖片訊息]"
-                });
-            }
 
             sendBtn.disabled = true;
 
@@ -379,43 +512,72 @@
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
+
+        window.startNewChat = function() {
+            conversationHistory = [systemPrompt];
+            document.getElementById('chatContainer').innerHTML = `
+                <div class="message assistant">
+                    <div class="msg-bubble">你好！我是你的 Cale Study App AI 學習助手，已開啟新的對話，請問今天想解決什麼科目或題目呢？</div>
+                </div>
+            `;
+        }
     </script>
 </head>
 <body>
-    <header>
-        <div class="logo-container">
+
+    <!-- 左側導覽列 -->
+    <sidebar>
+        <div class="sidebar-header">
             <img src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png" alt="Logo">
-            <h1>cale study app</h1>
+            <h2>Cale Study</h2>
         </div>
-        <div class="header-controls">
-            <span class="user-status" id="userStatus">連線中...</span>
-            <select class="model-select" id="modelSelect">
-                <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (視覺推理)</option>
-                <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout</option>
-                <option value="openai/gpt-oss-120b">GPT OSS 120B</option>
-            </select>
+        <button class="new-chat-btn" onclick="startNewChat()">＋ 新增學習對話</button>
+        <div class="chat-history-list">
+            <div class="history-item">📖 英文文法與單字複習</div>
+            <div class="history-item">📐 數學多項式與幾何題</div>
+            <div class="history-item">🔬 理化實驗原理解析</div>
         </div>
-    </header>
+        <div class="sidebar-footer">
+            <span id="userStatus">連線中...</span>
+            <span>系統狀態：正常運行</span>
+        </div>
+    </sidebar>
 
-    <div class="chat-container" id="chatContainer">
-        <div class="message assistant">
-            <div class="msg-bubble">你好！我是你的 AI 學習助手，請隨時跟我對話或上傳題目照片！</div>
+    <!-- 右側主聊天介面 -->
+    <div class="main-content">
+        <header>
+            <div style="font-size: 1.05rem; font-weight: 600; color: #f8fafc;">AI 智能學習對話室</div>
+            <div class="model-selector-wrapper">
+                <span>模型：</span>
+                <select class="model-select" id="modelSelect">
+                    <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (視覺與推理)</option>
+                    <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout (綜合對話)</option>
+                    <option value="openai/gpt-oss-120b">GPT OSS 120B (核心大腦)</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message assistant">
+                <div class="msg-bubble">你好！我是你的 Cale Study App AI 學習助手，請隨時跟我對話或上傳題目照片！</div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <div class="image-preview-bar" id="imagePreviewBar">
+                    <img id="imagePreview" src="" alt="預覽">
+                    <button class="remove-img-btn" onclick="removeImage()">✕ 移除圖片</button>
+                </div>
+                <div class="input-row">
+                    <button class="icon-btn" onclick="document.getElementById('fileInput').click()" title="上傳題目照片">📷</button>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                    <textarea id="userInput" placeholder="輸入你想問的學習問題，按 Enter 發送..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">發送</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="input-container">
-        <div class="input-wrapper">
-            <div class="image-preview-bar" id="imagePreviewBar">
-                <img id="imagePreview" src="" alt="預覽">
-                <button class="remove-img-btn" onclick="removeImage()">✕ 移除圖片</button>
-            </div>
-            <div class="input-row">
-                <button class="icon-btn" onclick="document.getElementById('fileInput').click()" title="上傳照片">📷</button>
-                <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
-                <textarea id="userInput" placeholder="輸入訊息，按 Enter 發送..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
-                <button class="send-btn" id="sendBtn" onclick="sendMessage()">發送</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
