@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>國文與文言文 - Cale Study</title>
+    <title>國文與文言文 - 萬聖節魔法版 🎃</title>
     <!-- 網站 Favicon 圖示 -->
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
     <!-- Bootstrap 5 CSS -->
@@ -13,29 +13,53 @@
     <!-- Canvas Confetti 彩帶套件 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <!-- 引入 Firebase SDK (Compat 版本) -->
+    <!-- 引入 Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         body {
-            background-color: #0b0f19;
+            background-color: #0d0914; /* 萬聖幽暗夜空紫 */
             color: #f1f5f9;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .spooky-float {
+            position: absolute;
+            font-size: 1.8rem;
+            opacity: 0.12;
+            pointer-events: none;
+            user-select: none;
+            animation: floatAnim 10s infinite ease-in-out alternate;
+            z-index: 0;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(12deg); }
+            100% { transform: translateY(10px) rotate(-12deg); }
+        }
+
+        .container {
+            z-index: 10;
+            position: relative;
         }
 
         .main-card {
-            background-color: #161e2e;
-            border: 1px solid #273549;
+            background-color: #1c132b;
+            border: 1px solid rgba(255, 117, 24, 0.3);
             border-radius: 16px;
             position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         /* XP 標籤 */
         .xp-badge {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            color: #f59e0b;
+            background-color: #1c132b;
+            border: 1px solid rgba(255, 117, 24, 0.4);
+            color: #ff9f43;
             padding: 6px 14px;
             border-radius: 20px;
             font-weight: bold;
@@ -43,12 +67,13 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         /* 下拉選單風格 */
         .custom-dropdown-btn {
-            background-color: #1e293b;
-            border: 1px solid #3b82f6;
+            background-color: #1c132b;
+            border: 1px solid #ff7518;
             color: #ffffff;
             border-radius: 14px;
             padding: 12px 20px;
@@ -62,22 +87,22 @@
         }
 
         .custom-dropdown-menu {
-            background-color: #1e293b;
-            border: 1px solid #334155;
+            background-color: #1c132b;
+            border: 1px solid rgba(255, 117, 24, 0.4);
             border-radius: 14px;
             width: 100%;
             max-height: 320px;
             overflow-y: auto;
             margin-top: 8px;
             padding: 8px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
             display: none;
             position: absolute;
             z-index: 1000;
         }
 
         .custom-dropdown-item {
-            color: #e2e8f0;
+            color: #d1c4e9;
             padding: 10px 16px;
             border-radius: 8px;
             cursor: pointer;
@@ -88,31 +113,32 @@
         }
 
         .custom-dropdown-item:hover {
-            background-color: #334155;
-            color: #ffffff;
+            background-color: rgba(255, 117, 24, 0.2);
+            color: #ff9f43;
         }
 
         .custom-dropdown-item.active {
-            background-color: #2563eb;
-            color: #ffffff;
+            background-color: #ff7518;
+            color: #0d0914;
+            font-weight: bold;
         }
 
         /* 內容區塊 */
         .content-box {
-            background-color: #0f172a;
-            border: 1px solid #1e293b;
+            background-color: #0d0914;
+            border: 1px solid rgba(255, 117, 24, 0.2);
             border-radius: 12px;
             padding: 16px;
         }
 
         .text-highlight {
-            color: #60a5fa;
+            color: #ff9f43;
         }
 
         /* 測驗選項風格 */
         .quiz-option {
-            background-color: #1e293b;
-            border: 1px solid #334155;
+            background-color: #1c132b;
+            border: 1px solid rgba(255, 117, 24, 0.3);
             color: #e2e8f0;
             border-radius: 12px;
             padding: 14px 18px;
@@ -123,19 +149,19 @@
         }
 
         .quiz-option:hover:not(:disabled) {
-            border-color: #3b82f6;
-            background-color: #273549;
+            border-color: #ff7518;
+            background-color: rgba(255, 117, 24, 0.15);
         }
 
         .quiz-option.correct {
-            background-color: rgba(34, 197, 94, 0.15) !important;
+            background-color: rgba(34, 197, 94, 0.25) !important;
             border: 2px solid #22c55e !important;
             color: #4ade80 !important;
             font-weight: bold;
         }
 
         .quiz-option.wrong {
-            background-color: rgba(239, 68, 68, 0.15) !important;
+            background-color: rgba(239, 68, 68, 0.25) !important;
             border: 2px solid #ef4444 !important;
             color: #f87171 !important;
         }
@@ -152,8 +178,8 @@
 
         /* 下一題按鈕 */
         .btn-next {
-            background-color: #38bdf8;
-            color: #0f172a;
+            background-color: #ff7518;
+            color: #0d0914;
             font-weight: bold;
             border-radius: 12px;
             padding: 12px;
@@ -162,10 +188,11 @@
             margin-top: 15px;
             font-size: 1.05rem;
             transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(255, 117, 24, 0.3);
         }
 
         .btn-next:hover {
-            background-color: #7dd3fc;
+            background-color: #ffa726;
         }
 
         /* 浮動 XP 動畫 */
@@ -173,7 +200,7 @@
             position: absolute;
             top: 20px;
             right: 25px;
-            color: #fbbf24;
+            color: #ff9f43;
             font-size: 1.4rem;
             font-weight: 800;
             pointer-events: none;
@@ -183,8 +210,8 @@
 
         /* AI 發問區塊樣式 */
         .ai-chat-box {
-            background-color: #0f172a;
-            border: 1px solid #334155;
+            background-color: #0d0914;
+            border: 1px solid rgba(168, 85, 247, 0.4);
             border-radius: 12px;
             padding: 16px;
             margin-top: 25px;
@@ -208,16 +235,17 @@
         }
 
         .chat-msg.user {
-            background-color: #2563eb;
-            color: #ffffff;
+            background-color: #ff7518;
+            color: #0d0914;
+            font-weight: 600;
             align-self: flex-end;
             border-bottom-right-radius: 2px;
         }
 
         .chat-msg.ai {
-            background-color: #1e293b;
-            color: #e2e8f0;
-            border: 1px solid #334155;
+            background-color: rgba(168, 85, 247, 0.2);
+            color: #d8b4fe;
+            border: 1px solid #a855f7;
             align-self: flex-start;
             border-bottom-left-radius: 2px;
         }
@@ -236,24 +264,29 @@
 </head>
 <body>
 
+    <!-- 萬聖節飄浮裝飾 🎃👻🦇 -->
+    <div class="spooky-float" style="top: 8%; left: 8%;">🎃</div>
+    <div class="spooky-float" style="top: 80%; left: 90%; animation-delay: -3s;">👻</div>
+    <div class="spooky-float" style="top: 25%; right: 5%; animation-delay: -5s;">🦇</div>
+
     <div class="container py-4" style="max-width: 600px;">
         
         <!-- 頂部導覽列 + XP 顯示 -->
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
-                <a href="dashboard.html" class="text-secondary me-3 fs-4"><i class="bi bi-chevron-left"></i></a>
-                <h4 class="mb-0 fw-bold">國文與文言文</h4>
+                <a href="dashboard.html" class="text-warning me-3 fs-4"><i class="bi bi-chevron-left"></i></a>
+                <h4 class="mb-0 fw-bold">🎃 國文與文言文魔法館</h4>
             </div>
             <div class="xp-badge">
-                ⚡ <span id="xpCount">0</span> XP
+                🎃 <span id="xpCount">0</span> XP
             </div>
         </div>
 
         <!-- 文章選單 -->
         <div class="position-relative mb-4">
             <button class="custom-dropdown-btn" type="button" id="articleDropdown" onclick="toggleDropdown()">
-                <span>📘 <span id="selected-title">載入中...</span></span>
-                <i class="bi bi-caret-down-fill text-secondary"></i>
+                <span>📘 <span id="selected-title">載入魔法文章中...</span></span>
+                <i class="bi bi-caret-down-fill text-warning"></i>
             </button>
             <div class="custom-dropdown-menu" id="dropdown-list"></div>
         </div>
@@ -267,14 +300,12 @@
     <script src="ch50.js?v=2"></script>
 
     <script>
-        // 你的 Groq API Key (拆成 api1 + api2 避開 GitHub 告警)
         function getAiApiKey() {
             const api1 = "gsk_9FLcICTwhme8EicODLks";
             const api2 = "WGdyb3FYwEp5SAE6e5QTuCNmMF9MCW5k";
             return api1 + api2;
         }
 
-        // 初始化 Firebase 設定
         const firebaseConfig = {
             apiKey: "AIzaSyChKI6znPkXg-lAKilYx2ezDmmTUM6_f7s",
             authDomain: "cale-study-app-41b9b.firebaseapp.com",
@@ -439,7 +470,7 @@
 
             listContainer.innerHTML = currentArticles.map((art, index) => `
                 <div class="custom-dropdown-item ${index === 0 ? 'active' : ''}" onclick="selectArticle(${index})">
-                    📘 ${art.title}
+                    🎃 ${art.title}
                 </div>
             `).join('');
 
@@ -478,29 +509,29 @@
                 <div class="main-card p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="fw-bold mb-0 text-white">${art.title}</h4>
-                        <span class="badge bg-primary px-3 py-2 rounded-pill">${art.author}</span>
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">${art.author}</span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="text-secondary small fw-bold mb-1">【原文】</label>
+                        <label class="text-warning small fw-bold mb-1">【原文】</label>
                         <div class="content-box fs-5 lh-lg text-white">
                             ${art.content}
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="text-secondary small fw-bold mb-1">【白話文翻譯】</label>
-                        <div class="content-box text-secondary fs-6 lh-base" style="background-color: #121926;">
+                        <label class="text-warning small fw-bold mb-1">【白話文翻譯】</label>
+                        <div class="content-box text-light fs-6 lh-base" style="background-color: #0d0914;">
                             ${art.translation}
                         </div>
                     </div>
 
                     ${art.notes && art.notes.length > 0 ? `
                         <div class="mb-3">
-                            <label class="text-secondary small fw-bold mb-2">【字詞釋義】</label>
+                            <label class="text-warning small fw-bold mb-2">【字詞釋義】</label>
                             <div class="d-flex flex-wrap gap-2">
                                 ${art.notes.map(n => `
-                                    <span class="badge bg-dark text-light border border-secondary p-2 font-monospace fs-6">
+                                    <span class="badge bg-dark text-light border border-warning p-2 font-monospace fs-6">
                                         <span class="text-highlight">${n.word}</span>：${n.detail}
                                     </span>
                                 `).join('')}
@@ -509,16 +540,16 @@
                     ` : ''}
 
                     ${currentQ ? `
-                        <div class="mt-4 pt-3 border-top border-secondary" id="quiz-section">
+                        <div class="mt-4 pt-3 border-top border-warning" id="quiz-section">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="text-warning small fw-bold mb-0"><i class="bi bi-pencil-square"></i> 隨堂測驗</label>
+                                <label class="text-warning small fw-bold mb-0"><i class="bi bi-pencil-square"></i> 萬聖隨堂測驗</label>
                                 <span class="badge bg-secondary">第 ${currentQuestionIndex + 1} /${totalQuestions} 題</span>
                             </div>
                             <p class="fw-bold mb-3 text-white fs-5">${currentQ.q}</p>
                             <div class="d-grid gap-2" id="quiz-container">
                                 ${currentQ.options.map((opt, optIndex) => `
                                     <button class="quiz-option" onclick="checkAnswer(${optIndex}, ${currentQ.answer}, this)">
-                                        ${String.fromCharCode(65 + optIndex)}.${opt}
+                                        ${String.fromCharCode(65 + optIndex)}. ${opt}
                                     </button>
                                 `).join('')}
                             </div>
@@ -529,14 +560,14 @@
                     <!-- AI 發問互動區 -->
                     <div class="ai-chat-box">
                         <label class="text-info small fw-bold mb-2 d-flex align-items-center gap-2">
-                            <i class="bi bi-robot"></i> AI 國文助教提問
+                            <i class="bi bi-robot"></i> 萬聖節 AI 國文助教提問
                         </label>
                         <div class="ai-chat-history" id="aiChatHistory">
-                            <div class="chat-msg ai">你好！關於《${art.title}》有什麼不懂的修辭、字詞或課文背景，都可以發問喔！</div>
+                            <div class="chat-msg ai">Trick or Treat! 🎃 關於《${art.title}》有什麼不懂的修辭、字詞或背景，都可以問我喔！</div>
                         </div>
                         <div class="input-group">
-                            <input type="text" id="aiInput" class="form-control bg-dark text-white border-secondary" placeholder="請輸入對文章的疑問..." onkeypress="if(event.key==='Enter') askAI()">
-                            <button class="btn btn-primary" onclick="askAI()">發問</button>
+                            <input type="text" id="aiInput" class="form-control bg-dark text-white border-warning" placeholder="請輸入對文章的疑問..." onkeypress="if(event.key==='Enter') askAI()">
+                            <button class="btn btn-warning fw-bold text-dark" onclick="askAI()">發問</button>
                         </div>
                     </div>
                 </div>
@@ -574,22 +605,22 @@
                     updateXPDisplay();
 
                     markQuestionSolved(questionId);
-                    showFloatingXP(`+${addedXP} XP`);
-                    feedbackHTML = `<div class="feedback-msg">🎉 答對了！(+${addedXP} XP)</div>`;
+                    showFloatingXP(`+${addedXP} XP 🎃`);
+                    feedbackHTML = `<div class="feedback-msg">🎃 太棒了答對！(+${addedXP} XP)</div>`;
                 } else {
                     feedbackHTML = `<div class="feedback-msg text-info">🎉 答對了！（此題已完成過，不重複加分）</div>`;
                 }
             } else {
                 btn.classList.add('wrong');
                 buttons[correctIndex].classList.add('correct');
-                feedbackHTML = `<div class="feedback-msg text-danger">❌ 答錯了，再接再勵！</div>`;
+                feedbackHTML = `<div class="feedback-msg text-danger">👻 答錯囉，正確答案是上方綠色選項！</div>`;
             }
 
             if (isLastQuestion) {
                 triggerConfetti();
                 feedbackHTML += `
                     <button class="btn-next" style="background-color: #22c55e; color: #fff;" onclick="nextArticle()">
-                        🎉 完成本篇，下一篇 ➔
+                        🎉 完成本篇，前往下一篇 ➔
                     </button>
                 `;
             } else {
@@ -601,7 +632,6 @@
             feedbackDiv.innerHTML = feedbackHTML;
         }
 
-        // 發問 AI 助教的邏輯 (使用 Groq API)
         async function askAI() {
             const inputEl = document.getElementById("aiInput");
             const userQuery = inputEl.value.trim();
@@ -609,7 +639,6 @@
 
             const chatHistory = document.getElementById("aiChatHistory");
 
-            // 1. 渲染使用者發問
             const userMsgDiv = document.createElement("div");
             userMsgDiv.className = "chat-msg user";
             userMsgDiv.innerText = userQuery;
@@ -618,20 +647,17 @@
             inputEl.value = "";
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // 2. 顯示 AI 思考中
             const aiLoadingDiv = document.createElement("div");
             aiLoadingDiv.className = "chat-msg ai";
-            aiLoadingDiv.innerText = "思考中...";
+            aiLoadingDiv.innerText = "🧙‍♂️ 魔法思考中...";
             chatHistory.appendChild(aiLoadingDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // 3. 打包Prompt與背景知識
             const art = currentArticles[currentArticleIndex];
             
             const promptContext = `
-【系統指令】你是一位親切、專業的國文與文言文 AI 助教。
-請根據下方提供的文章內容與背景知識，回答學生的提問。
-嚴禁洩漏或討論任何隨堂測驗的題目與答案！請用繁體中文回答。
+【系統指令】你是一位萬聖節風格的國文與文言文 AI 助教 🎃。
+請根據下方提供的文章內容與背景知識，回答學生的提問。請用繁體中文回答。
 
 【文章篇名】：${art.title}
 【作者】：${art.author}
@@ -644,7 +670,6 @@ ${art.content}
             try {
                 const apiKey = getAiApiKey();
 
-                // 呼叫 Groq API 端點
                 const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -652,7 +677,7 @@ ${art.content}
                         "Authorization": "Bearer " + apiKey
                     },
                     body: JSON.stringify({
-                        model: "openai/gpt-oss-120b", // 使用 Groq 強大的 Llama 3.3 70B 模型
+                        model: "openai/gpt-oss-120b",
                         messages: [{ role: "user", content: promptContext }]
                     })
                 });
