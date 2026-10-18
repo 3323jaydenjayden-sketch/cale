@@ -452,7 +452,13 @@
         const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
 
-        let currentUsername = localStorage.getItem('cale_custom_username') || "";
+       // 直接自動抓取儀表板登入時的帳號身分，不再彈出 prompt 重複詢問
+        let currentUsername = localStorage.getItem("currentUser") 
+                           || localStorage.getItem("userEmail") 
+                           || localStorage.getItem("accountKey") 
+                           || localStorage.getItem('cale_custom_username') 
+                           || "";
+
         let customPromptText = "";
         let userUsage = 0;
         let userMaxLimit = 50;
@@ -469,26 +475,29 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             if (!currentUsername) {
-                await promptForUsername();
+                // 如果抓不到登入身分，直接導回登入頁面確保安全
+                window.location.replace("login.html");
+                return;
             } else {
+                // 自動以抓到的身分直接初始化會話
                 await initUserSession(currentUsername);
             }
         });
 
+        // 保留函數以防使用者點擊左上角「改名」按鈕時使用
         window.promptForUsername = async function() {
             while (true) {
-                let inputName = prompt("🎃 歡迎來到萬聖節 Cale Study！請輸入您的專屬名稱：", currentUsername || "");
-                if (!inputName) {
-                    inputName = "小幽靈_" + Math.random().toString(36).substring(2, 6);
-                }
+                let inputName = prompt("🎃 歡迎來到萬聖節 Cale Study！請輸入您的專屬新名稱：", currentUsername || "");
+                if (!inputName) break;
                 inputName = inputName.trim();
 
                 const isTaken = await checkNameExistsInFirestore(inputName);
-                if (isTaken) {
+                if (isTaken && inputName !== currentUsername) {
                     alert(`❌ 名稱「${inputName}」已經被其他人使用了，請換一個新名稱！`);
                 } else {
                     currentUsername = inputName;
                     localStorage.setItem('cale_custom_username', currentUsername);
+                    localStorage.setItem('currentUser', currentUsername);
                     await initUserSession(currentUsername);
                     break;
                 }
