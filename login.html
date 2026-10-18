@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cale study app - 登入</title>
+    <title>Cale Study App - 萬聖節登入 🎃</title>
     
     <!-- 網站 Favicon 圖示 -->
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
@@ -20,38 +20,59 @@
         }
 
         body {
-            background-color: #0b0f19;
+            background-color: #0d0914; /* 萬聖節幽暗夜空紫 */
             color: #ffffff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spooky-float {
+            position: absolute;
+            font-size: 1.8rem;
+            opacity: 0.12;
+            pointer-events: none;
+            user-select: none;
+            animation: floatAnim 10s infinite ease-in-out alternate;
+            z-index: 0;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(12deg); }
+            100% { transform: translateY(10px) rotate(-12deg); }
         }
 
         .login-card {
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(28, 19, 43, 0.75);
+            border: 1px solid rgba(255, 117, 24, 0.3);
             backdrop-filter: blur(16px);
             border-radius: 24px;
             padding: 2.5rem 2rem;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
             text-align: center;
+            z-index: 10;
+            position: relative;
         }
 
         .brand-title {
             font-size: 2rem;
             font-weight: 700;
-            color: #38bdf8;
+            color: #ff7518; /* 南瓜橘 */
             margin-bottom: 0.3rem;
             letter-spacing: -0.5px;
+            text-shadow: 0 0 10px rgba(255, 117, 24, 0.3);
         }
 
         .subtitle {
             font-size: 0.9rem;
-            color: #94a3b8;
+            color: #a799be;
             margin-bottom: 1.8rem;
         }
 
@@ -66,7 +87,7 @@
         .divider {
             display: flex;
             align-items: center;
-            color: #64748b;
+            color: #7c6899;
             font-size: 0.8rem;
             margin-bottom: 1.5rem;
         }
@@ -75,7 +96,7 @@
             content: "";
             flex: 1;
             height: 1px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 117, 24, 0.2);
         }
 
         .divider span {
@@ -90,15 +111,15 @@
         .form-group label {
             display: block;
             font-size: 0.85rem;
-            color: #cbd5e1;
+            color: #d1c4e9;
             margin-bottom: 0.4rem;
         }
 
         .form-control {
             width: 100%;
             padding: 0.8rem 1rem;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(13, 9, 20, 0.85);
+            border: 1px solid rgba(255, 117, 24, 0.25);
             border-radius: 12px;
             color: #ffffff;
             font-size: 0.95rem;
@@ -107,15 +128,15 @@
         }
 
         .form-control:focus {
-            border-color: #38bdf8;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+            border-color: #ff7518;
+            box-shadow: 0 0 10px rgba(255, 117, 24, 0.3);
         }
 
         .btn-primary {
             width: 100%;
             padding: 0.85rem;
-            background: #38bdf8;
-            color: #0b0f19;
+            background: #ff7518;
+            color: #0d0914;
             border: none;
             border-radius: 12px;
             font-size: 1rem;
@@ -123,28 +144,29 @@
             cursor: pointer;
             margin-top: 0.5rem;
             transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(255, 117, 24, 0.3);
         }
 
         .btn-primary:hover {
-            background: #0284c7;
+            background: #e6640e;
             color: #ffffff;
         }
 
         .toggle-mode {
             margin-top: 1.5rem;
             font-size: 0.85rem;
-            color: #94a3b8;
+            color: #a799be;
         }
 
         .toggle-mode span {
-            color: #38bdf8;
+            color: #ff7518;
             cursor: pointer;
             text-decoration: underline;
             margin-left: 0.3rem;
         }
 
         .error-msg {
-            color: #f87171;
+            color: #ff4757;
             font-size: 0.85rem;
             margin-top: 1rem;
             min-height: 1.2rem;
@@ -153,11 +175,16 @@
 </head>
 <body>
 
-    <div class="login-card">
-        <h1 class="brand-title">cale study app</h1>
-        <p class="subtitle" id="pageSubTitle">歡迎回來！請選擇登入方式</p>
+    <!-- 萬聖節飄浮裝飾 🎃👻🦇 -->
+    <div class="spooky-float" style="top: 10%; left: 10%;">🎃</div>
+    <div class="spooky-float" style="top: 80%; left: 88%; animation-delay: -3s;">👻</div>
+    <div class="spooky-float" style="top: 30%; right: 8%; animation-delay: -5s;">🦇</div>
 
-        <!-- 1. Google .快捷登入區域 -->
+    <div class="login-card">
+        <h1 class="brand-title">Cale Study 🎃</h1>
+        <p class="subtitle" id="pageSubTitle">歡迎來到萬聖節魔法學院！請選擇登入方式</p>
+
+        <!-- 1. Google 快捷登入區域 -->
         <div class="google-btn-wrapper">
             <div id="g_id_onload"
                 data-client_id="48507491429-i6c5cac9cr358iqbp8sv0mv3h67h051t.apps.googleusercontent.com"
@@ -175,31 +202,31 @@
         </div>
 
         <div class="divider">
-            <span>或使用一般帳號</span>
+            <span>或使用萬聖魔法帳號</span>
         </div>
 
         <!-- 2. 一般帳密登入表單 -->
         <form id="authForm">
             <div class="form-group">
-                <label for="username">帳號</label>
+                <label for="username">魔法帳號</label>
                 <input type="text" id="username" class="form-control" placeholder="請輸入帳號" required>
             </div>
             <div class="form-group">
-                <label for="password">密碼</label>
+                <label for="password">安全咒語 (密碼)</label>
                 <input type="password" id="password" class="form-control" placeholder="請輸入密碼" required>
             </div>
 
-            <button type="submit" class="btn-primary" id="submitBtn">登入</button>
+            <button type="submit" class="btn-primary" id="submitBtn">進入魔法世界 🎃</button>
         </form>
 
         <div class="error-msg" id="errorMsg"></div>
 
         <div class="toggle-mode" id="toggleText">
-            還沒有帳號嗎？<span onclick="toggleMode()">立即註冊</span>
+            還沒有魔法帳號嗎？<span onclick="toggleMode()">立即註冊</span>
         </div>
     </div>
 
-    <!-- 載入 Firebase 模組 (App, Analytics, Firestore) -->
+    <!-- 載入 Firebase 模組 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
@@ -215,24 +242,20 @@
             measurementId: "G-GP1XCE9W5E"
         };
 
-        // 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
-        // 將文件識別碼清理成安全的格式
         function getSafeDocId(key) {
             return key.replace(/[^a-zA-Z0-9_-]/g, "_");
         }
 
         window.isLoginMode = true;
 
-        // 若已經登入，自動前往 dashboard
         if (localStorage.getItem("isLoggedIn") === "true") {
             window.location.href = "dashboard.html";
         }
 
-        // 解析 Google 回傳的 JWT Token 資訊
         function parseJwt(token) {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -242,7 +265,6 @@
             return JSON.parse(jsonPayload);
         }
 
-        // Google 登入成功後的回調函數
         window.handleCredentialResponse = async function(response) {
             const responsePayload = parseJwt(response.credential);
             const userEmail = responsePayload.email;
@@ -253,7 +275,6 @@
             localStorage.setItem("userEmail", userEmail);
             localStorage.setItem("accountKey", userEmail);
 
-            // 雲端記錄 Google 登入資訊
             const safeDocId = getSafeDocId(userEmail);
             const userRef = doc(db, "users", safeDocId);
             const userSnap = await getDoc(userRef);
@@ -274,10 +295,10 @@
 
         window.toggleMode = function() {
             window.isLoginMode = !window.isLoginMode;
-            document.getElementById("pageSubTitle").innerText = window.isLoginMode ? "歡迎回來！請選擇登入方式" : "建立新帳號以開始學習";
-            document.getElementById("submitBtn").innerText = window.isLoginMode ? "登入" : "註冊帳號";
+            document.getElementById("pageSubTitle").innerText = window.isLoginMode ? "歡迎來到萬聖節魔法學院！請選擇登入方式" : "建立新帳號以開始萬聖學習";
+            document.getElementById("submitBtn").innerText = window.isLoginMode ? "進入魔法世界 🎃" : "註冊魔法帳號 🍬";
             document.getElementById("toggleText").innerHTML = window.isLoginMode 
-                ? '還沒有帳號嗎？<span onclick="toggleMode()">立即註冊</span>' 
+                ? '還沒有魔法帳號嗎？<span onclick="toggleMode()">立即註冊</span>' 
                 : '已有帳號？<span onclick="toggleMode()">返回登入</span>';
             document.getElementById("errorMsg").innerText = "";
         };
@@ -298,17 +319,15 @@
             const userRef = doc(db, "users", safeDocId);
 
             submitBtn.disabled = true;
-            submitBtn.innerText = "連線驗證中...";
+            submitBtn.innerText = "魔法連線中...";
 
             try {
                 const userSnap = await getDoc(userRef);
 
                 if (window.isLoginMode) {
-                    // === 雲端登入驗證 ===
                     if (userSnap.exists()) {
                         const userData = userSnap.data();
                         
-                        // 比對 Firebase 雲端上的密碼
                         if (userData.password === pass) {
                             localStorage.setItem("isLoggedIn", "true");
                             localStorage.setItem("currentUser", user);
@@ -319,10 +338,9 @@
 
                             window.location.href = "dashboard.html";
                         } else {
-                            errorMsg.innerText = "密碼錯誤！";
+                            errorMsg.innerText = "安全咒語 (密碼) 錯誤！";
                         }
                     } else {
-                        // 相容預設測試帳號 cale
                         if (user === "cale" && pass === "123456") {
                             localStorage.setItem("isLoggedIn", "true");
                             localStorage.setItem("currentUser", user);
@@ -333,15 +351,13 @@
                         }
                     }
                 } else {
-                    // === 雲端註冊 ===
                     if (userSnap.exists()) {
-                        errorMsg.innerText = "該帳號已被註冊！";
+                        errorMsg.innerText = "該帳號已被其他人註冊！";
                     } else {
-                        // 正式將新帳號與密碼寫入 Firebase Firestore
                         await setDoc(userRef, {
                             displayName: user,
                             accountKey: user,
-                            password: pass, // 儲存至雲端，達成跨裝置同步登入
+                            password: pass,
                             level: 1,
                             xp: 0,
                             totalXp: 0,
@@ -355,7 +371,7 @@
                         localStorage.removeItem("userPicture");
                         localStorage.removeItem("userEmail");
 
-                        alert("註冊成功！已同步至雲端並自動登入");
+                        alert("註冊成功！已同步至雲端並自動登入 🎃");
                         window.location.href = "dashboard.html";
                     }
                 }
@@ -364,7 +380,7 @@
                 errorMsg.innerText = "連線失敗，請檢查網路連線。";
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerText = window.isLoginMode ? "登入" : "註冊帳號";
+                submitBtn.innerText = window.isLoginMode ? "進入魔法世界 🎃" : "註冊魔法帳號 🍬";
             }
         });
     </script>
