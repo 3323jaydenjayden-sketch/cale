@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cale study app - 等級與成就</title>
+    <title>Cale Study App - 萬聖節成就與等級 🎃</title>
     
     <!-- 網站 Favicon 圖示 -->
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png">
@@ -23,19 +23,39 @@
         }
 
         body {
-            display: none; /* 驗證通過前隱藏 */
-            background-color: #0b0f19;
+            display: none;
+            background-color: #0d0914; /* 萬聖幽暗夜空紫 */
             color: #ffffff;
             min-height: 100vh;
             padding: 2rem 1.2rem;
             flex-direction: column;
             align-items: center;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .spooky-float {
+            position: absolute;
+            font-size: 1.8rem;
+            opacity: 0.12;
+            pointer-events: none;
+            user-select: none;
+            animation: floatAnim 10s infinite ease-in-out alternate;
+            z-index: 0;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(12deg); }
+            100% { transform: translateY(10px) rotate(-12deg); }
         }
 
         .container {
             width: 100%;
             max-width: 650px;
+            z-index: 10;
+            position: relative;
         }
 
         /* 頂部導覽 */
@@ -47,9 +67,9 @@
         }
 
         .back-btn {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #38bdf8;
+            background: rgba(28, 19, 43, 0.85);
+            border: 1px solid rgba(255, 117, 24, 0.3);
+            color: #ff7518;
             padding: 0.5rem 1rem;
             border-radius: 12px;
             text-decoration: none;
@@ -59,22 +79,23 @@
         }
 
         .back-btn:hover {
-            background: rgba(56, 189, 248, 0.2);
+            background: rgba(255, 117, 24, 0.2);
         }
 
         .page-title {
             font-size: 1.3rem;
             font-weight: 700;
+            color: #ff9f43;
         }
 
         /* 等級總覽卡片 */
         .profile-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            background: linear-gradient(135deg, rgba(28, 19, 43, 0.85), rgba(15, 10, 24, 0.95));
+            border: 1px solid rgba(255, 117, 24, 0.35);
             border-radius: 24px;
             padding: 2rem 1.5rem;
             text-align: center;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
             margin-bottom: 1.5rem;
             position: relative;
             overflow: hidden;
@@ -91,16 +112,17 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 3px solid #38bdf8;
+            border: 3px solid #ff7518;
             object-fit: cover;
+            box-shadow: 0 0 12px rgba(255, 117, 24, 0.4);
         }
 
         .level-badge {
             position: absolute;
             bottom: -5px;
             right: -5px;
-            background: #38bdf8;
-            color: #0b0f19;
+            background: #ff7518;
+            color: #0d0914;
             font-size: 0.75rem;
             font-weight: 800;
             padding: 0.2rem 0.5rem;
@@ -116,7 +138,7 @@
 
         .user-title {
             font-size: 0.95rem;
-            color: #38bdf8;
+            color: #ff9f43;
             font-weight: 600;
             margin-bottom: 1.5rem;
         }
@@ -124,27 +146,28 @@
         /* XP 進度條 */
         .xp-bar-container {
             width: 100%;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(13, 9, 20, 0.9);
             border-radius: 10px;
             height: 14px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 117, 24, 0.2);
             margin-bottom: 0.8rem;
         }
 
         .xp-bar-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            background: linear-gradient(90deg, #ff7518, #7b2cbf);
             border-radius: 10px;
             transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(255, 117, 24, 0.5);
         }
 
         .xp-stats {
             display: flex;
             justify-content: space-between;
             font-size: 0.85rem;
-            color: #94a3b8;
+            color: #a799be;
         }
 
         /* 標題與分組區塊 */
@@ -152,7 +175,7 @@
             font-size: 1.1rem;
             font-weight: 700;
             margin: 1.5rem 0 1rem 0;
-            color: #f8fafc;
+            color: #ff9f43;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -173,8 +196,8 @@
         }
 
         .subject-card {
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(28, 19, 43, 0.65);
+            border: 1px solid rgba(255, 117, 24, 0.25);
             border-radius: 16px;
             padding: 1.2rem;
             display: flex;
@@ -198,19 +221,19 @@
         }
 
         .subject-xp {
-            color: #fbbf24;
+            color: #ff9f43;
             font-weight: 800;
             font-size: 1.1rem;
         }
 
         .subject-desc {
             font-size: 0.8rem;
-            color: #94a3b8;
+            color: #a799be;
         }
 
         .subject-link {
             text-decoration: none;
-            color: #38bdf8;
+            color: #ff7518;
             font-size: 0.85rem;
             font-weight: 600;
             display: flex;
@@ -221,7 +244,8 @@
         }
 
         .subject-link:hover {
-            color: #7dd3fc;
+            color: #ffa726;
+            text-decoration: underline;
         }
 
         /* 成就勳章區 */
@@ -238,8 +262,8 @@
         }
 
         .badge-card {
-            background: rgba(30, 41, 59, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(28, 19, 43, 0.4);
+            border: 1px solid rgba(255, 117, 24, 0.15);
             border-radius: 16px;
             padding: 1.2rem;
             display: flex;
@@ -249,8 +273,8 @@
         }
 
         .badge-card.unlocked {
-            background: rgba(30, 41, 59, 0.8);
-            border-color: rgba(56, 189, 248, 0.3);
+            background: rgba(28, 19, 43, 0.85);
+            border-color: rgba(255, 117, 24, 0.4);
         }
 
         .badge-card.locked {
@@ -260,7 +284,7 @@
 
         .badge-icon {
             font-size: 2.2rem;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(13, 9, 20, 0.8);
             width: 55px;
             height: 55px;
             display: flex;
@@ -268,6 +292,7 @@
             justify-content: center;
             border-radius: 14px;
             flex-shrink: 0;
+            border: 1px solid rgba(255, 117, 24, 0.2);
         }
 
         .badge-info {
@@ -284,25 +309,30 @@
 
         .badge-desc {
             font-size: 0.8rem;
-            color: #94a3b8;
+            color: #a799be;
             line-height: 1.3;
         }
 
         .footer-brand {
             margin-top: 3rem;
             font-size: 0.85rem;
-            color: #475569;
+            color: #614e7a;
             text-align: center;
         }
     </style>
 </head>
 <body>
 
+    <!-- 萬聖節飄浮裝飾 🎃👻🦇 -->
+    <div class="spooky-float" style="top: 5%; left: 12%;">🎃</div>
+    <div class="spooky-float" style="top: 85%; left: 88%; animation-delay: -3s;">👻</div>
+    <div class="spooky-float" style="top: 40%; right: 5%; animation-delay: -5s;">🦇</div>
+
     <div class="container">
         <!-- 頂部導覽 -->
         <div class="top-nav">
-            <a href="dashboard.html" class="back-btn">➔ 返回控制台</a>
-            <div class="page-title">個人成就與總成績</div>
+            <a href="dashboard.html" class="back-btn">➔ 返回萬聖控制台</a>
+            <div class="page-title">🎃 萬聖魔法成就與戰報</div>
             <div style="width: 80px;"></div>
         </div>
 
@@ -312,8 +342,8 @@
                 <img id="userAvatar" src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/nobg_image.png" alt="Avatar" class="user-avatar">
                 <div class="level-badge" id="levelBadge">Lv.1</div>
             </div>
-            <div class="username" id="username">學員</div>
-            <div class="user-title" id="userTitle">🌱 初學者</div>
+            <div class="username" id="username">小幽靈</div>
+            <div class="user-title" id="userTitle">🎃 萬聖學徒</div>
 
             <!-- XP 進度條 -->
             <div class="xp-bar-container">
@@ -321,20 +351,20 @@
             </div>
             <div class="xp-stats">
                 <span id="xpCurrentText">0 / 100 XP</span>
-                <span id="xpTotalText">累積總經驗：同步中...</span>
+                <span id="xpTotalText">累積魔法經驗：同步中...</span>
             </div>
         </div>
 
         <!-- 各科學習戰報 -->
         <div class="section-header">
-            📊 各科學習戰報
+            📊 萬聖各科學習戰報
         </div>
         <div class="subjects-grid">
             <!-- 英文科 -->
             <div class="subject-card">
                 <div>
                     <div class="subject-header">
-                        <span class="subject-title">🔤 英文單字</span>
+                        <span class="subject-title">🔤 萬聖單字魔法</span>
                         <span class="subject-xp" id="enXpDisplay">0 XP</span>
                     </div>
                     <div class="subject-desc" id="enDetailDisplay" style="margin-top: 0.4rem;">
@@ -361,14 +391,14 @@
 
         <!-- 成就勳章區 -->
         <div class="section-header">
-            🏆 成就勳章
+            🏆 萬聖節特別成就勳章
         </div>
         <div class="badges-grid" id="badgesContainer">
             <!-- 勳章會透過 JS 自動渲染 -->
         </div>
 
         <div class="footer-brand">
-            cale study app
+            🎃 beta cale study app (Halloween Edition)
         </div>
     </div>
 
@@ -390,12 +420,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 讀取本地各科分數與舊資料相容機制
     function getLocalSubjectsXP() {
         let enXP = parseInt(localStorage.getItem("xp_en") || "0", 10);
         let zhXP = parseInt(localStorage.getItem("xp_zh") || "0", 10);
 
-        // 如果還沒有分科資料，讀取舊版累積分數並預設歸入英文
         const oldXP = parseInt(localStorage.getItem("userXP") || localStorage.getItem("xp") || "0", 10);
         if (enXP === 0 && zhXP === 0 && oldXP > 0) {
             enXP = oldXP;
@@ -412,8 +440,7 @@
 
         document.body.style.display = "flex";
 
-        // 1. 載入個人資訊
-        const currentUser = localStorage.getItem("currentUser") || "學員";
+        const currentUser = localStorage.getItem("currentUser") || "小幽靈";
         const userPicture = localStorage.getItem("userPicture");
         const accountKey = localStorage.getItem("accountKey") || localStorage.getItem("userEmail") || currentUser;
         
@@ -423,10 +450,8 @@
             document.getElementById("userAvatar").src = userPicture;
         }
 
-        // 2. 本地讀取各科分數
         let { enXP, zhXP } = getLocalSubjectsXP();
 
-        // 3. 從 Firebase 抓取最新雲端各科 XP 數據
         try {
             const rawDocRef = doc(db, "users", accountKey);
             let userSnap = await getDoc(rawDocRef);
@@ -447,10 +472,8 @@
                 if (data.xp_zh !== undefined) zhXP = Math.max(zhXP, data.xp_zh);
             }
 
-            // 計算加總分數
             const totalXP = enXP + zhXP;
 
-            // 回寫同步到雲端與本地
             await setDoc(targetRef, { 
                 xp_en: enXP, 
                 xp_zh: zhXP, 
@@ -471,29 +494,26 @@
         }
     }
 
-    // 渲染 XP UI 畫面的函式
     function renderXPData(enXP, zhXP) {
-        // 自動加總各科分數
         const totalXP = enXP + zhXP;
 
         const xpPerLevel = 100;
         const level = Math.floor(totalXP / xpPerLevel) + 1;
         const currentXP = totalXP % xpPerLevel;
 
-        let title = "🌱 初學者";
-        if (level >= 3) title = "🌟 學習新星";
-        if (level >= 6) title = "⚡ 高效學員";
-        if (level >= 10) title = "👑 會考學霸";
+        let title = "🎃 萬聖學徒";
+        if (level >= 3) title = "👻 魔法單字使者";
+        if (level >= 6) title = "🍬 糖果收藏家";
+        if (level >= 10) title = "👑 萬聖學霸大魔王";
 
         document.getElementById("levelBadge").innerText = `Lv.${level}`;
         document.getElementById("userTitle").innerText = title;
         document.getElementById("xpCurrentText").innerText = `${currentXP} / ${xpPerLevel} XP`;
-        document.getElementById("xpTotalText").innerText = `累積總成績：${totalXP} XP`;
+        document.getElementById("xpTotalText").innerText = `累積總魔法經驗：${totalXP} XP`;
 
         const percent = (currentXP / xpPerLevel) * 100;
         document.getElementById("xpBarFill").style.width = `${percent}%`;
 
-        // 渲染各科詳細分數
         const todayCorrectCount = parseInt(localStorage.getItem("todayCorrectCount") || "0", 10);
         document.getElementById("enXpDisplay").innerText = `${enXP} XP`;
         document.getElementById("enDetailDisplay").innerText = `今日答對：${todayCorrectCount} 題`;
@@ -501,41 +521,40 @@
         document.getElementById("zhXpDisplay").innerText = `${zhXP} XP`;
         document.getElementById("zhDetailDisplay").innerText = `狀態：已與雲端同步`;
 
-        // 渲染成就勳章
         const badges = [
             {
-                icon: "🚀",
-                name: "起步走",
+                icon: "🎃",
+                name: "萬聖起步走",
                 desc: "總成績達到第一個 10 XP",
                 unlocked: totalXP >= 10
             },
             {
-                icon: "🔤",
-                name: "英文單字達人",
+                icon: "👻",
+                name: "萬聖單字使者",
                 desc: "英文科獲得 50 XP 以上",
                 unlocked: enXP >= 50
             },
             {
                 icon: "📖",
-                name: "國文文言文大師",
+                name: "古文魔法大師",
                 desc: "國文科獲得 50 XP 以上",
                 unlocked: zhXP >= 50
             },
             {
                 icon: "🔥",
-                name: "持之以恆",
+                name: "持之以恆的糖果",
                 desc: "總成績達到 100 XP (升至 Lv.2)",
                 unlocked: totalXP >= 100
             },
             {
-                icon: "📚",
-                name: "雙科全能",
+                icon: "🦇",
+                name: "雙科全能魔法師",
                 desc: "英、國兩科皆獲得 100 XP 以上",
                 unlocked: enXP >= 100 && zhXP >= 100
             },
             {
                 icon: "👑",
-                name: "會考學霸",
+                name: "萬聖學霸大魔王",
                 desc: "總成績達到 1000 XP (升至 Lv.11)",
                 unlocked: totalXP >= 1000
             }
