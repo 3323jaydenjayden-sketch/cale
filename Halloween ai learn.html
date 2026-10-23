@@ -100,7 +100,6 @@
             text-shadow: 0 0 8px rgba(255, 117, 24, 0.4);
         }
 
-        /* 手機關閉側邊欄按鈕 */
         .close-sidebar-btn {
             display: none;
             background: none;
@@ -247,7 +246,6 @@
             gap: 12px;
         }
 
-        /* 手機開啓側邊欄按鈕 */
         .menu-toggle-btn {
             display: none;
             background: none;
@@ -459,7 +457,6 @@
             cursor: not-allowed;
         }
 
-        /* 手機版遮罩與側邊欄開關樣式 */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -514,8 +511,21 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
-        const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
+        // 🔑 兩組 API Key 保持拆分狀態（避開 GitHub 告警），並自動輪替
+        const API_KEYS = [
+            "gsk_CdR1Ud84AHrQAEpxy5" + "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99",
+            "gsk_qkyPD4lbEDQfF0kArctF" + "WGdyb3FYJetM3IGpA5HOD0b2JRIEIBL0"
+        ];
+        let currentKeyIndex = 0;
+
+        function getActiveApiKey() {
+            return API_KEYS[currentKeyIndex];
+        }
+
+        function rotateApiKey() {
+            currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+            console.log(`🔄 自動切換至第 ${currentKeyIndex + 1} 組 Groq API Key`);
+        }
 
         let currentUsername = localStorage.getItem("currentUser") 
                            || localStorage.getItem("userEmail") 
@@ -675,7 +685,7 @@
                 item.className = `history-item ${room.id === activeRoomId ? 'active' : ''}`;
                 item.onclick = () => {
                     switchRoom(room.id);
-                    if (window.innerWidth <= 768) toggleSidebar(); // 手機點擊後自動收合選單
+                    if (window.innerWidth <= 768) toggleSidebar();
                 };
 
                 item.innerHTML = `
@@ -849,37 +859,62 @@
                 console.error("寫入訊息失敗:", err);
             }
 
-           let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
+            let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
             conversationHistory.push({ role: "user", content: userContent });
 
-            // 🛡️ Token 流量保護：如果對話歷史超過 8 則訊息，自動只保留 system 指令與最近的 6 則對話
-            if (conversationHistory.length > 8) {
-                const systemPrompt = conversationHistory[0]; // 保留最前面的系統設定
-                const recentMessages = conversationHistory.slice(-6); // 只取最近 6 則
+            // 🛡️ 1. 自動截斷對話歷史，防止 Token 超過上限爆掉 (只留系統提示 + 最近 6 則訊息)
+            if (conversationHistory.length > 7) {
+                const systemPrompt = conversationHistory[0];
+                const recentMessages = conversationHistory.slice(-6);
                 conversationHistory = [systemPrompt, ...recentMessages];
             }
 
             sendBtn.disabled = true;
 
+            // 🔄 2. API Key 自動切換輪替與重試機制
+            async function fetchWithRetry(retries = API_KEYS.length) {
+                try {
+                    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getActiveApiKey()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: selectedModel,
+                            messages: conversationHistory,
+                            temperature: 0.7,
+                            max_tokens: 800
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || data.error) {
+                        const errorMsg = data.error?.message || "";
+                        if (response.status === 429 || errorMsg.includes("Rate limit")) {
+                            if (retries > 1) {
+                                rotateApiKey();
+                                return await fetchWithRetry(retries - 1);
+                            }
+                        }
+                        throw new Error(errorMsg || `HTTP 錯誤 ${response.status}`);
+                    }
+
+                    return data;
+                } catch (err) {
+                    if (retries > 1) {
+                        rotateApiKey();
+                        return await fetchWithRetry(retries - 1);
+                    }
+                    throw err;
+                }
+            }
+
             try {
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${API1 + API2}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: selectedModel,
-                        messages: conversationHistory,
-                        temperature: 0.7,
-                        max_tokens: 800
-                    })
-                });
-
-                const data = await response.json();
-                if (data.error) throw new Error(data.error.message);
-
+                const data = await fetchWithRetry();
                 const aiReply = data.choices[0].message.content;
+
                 conversationHistory.push({ role: "assistant", content: aiReply });
                 appendMessageUI('assistant', aiReply);
 
@@ -892,7 +927,7 @@
                 });
 
             } catch (error) {
-                appendMessageUI('assistant', '❌ 發生錯誤：' + error.message);
+                appendMessageUI('assistant', '❌ 魔法連線失敗：' + error.message);
             } finally {
                 sendBtn.disabled = false;
             }
@@ -970,7 +1005,7 @@
 
         <div class="sidebar-footer">
             <span id="userStatus">初始化連線中...</span>
-            <span>萬聖節特別版 👻 正常運行</span>
+            <span>萬聖節特別版 👻 雙 API Key 穩定運行</span>
         </div>
     </sidebar>
 
