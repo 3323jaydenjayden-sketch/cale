@@ -849,8 +849,15 @@
                 console.error("寫入訊息失敗:", err);
             }
 
-            let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
+           let userContent = tempImage ? [{ type: "text", text: text }, { type: "image_url", image_url: { url: tempImage } }] : text;
             conversationHistory.push({ role: "user", content: userContent });
+
+            // 🛡️ Token 流量保護：如果對話歷史超過 8 則訊息，自動只保留 system 指令與最近的 6 則對話
+            if (conversationHistory.length > 8) {
+                const systemPrompt = conversationHistory[0]; // 保留最前面的系統設定
+                const recentMessages = conversationHistory.slice(-6); // 只取最近 6 則
+                conversationHistory = [systemPrompt, ...recentMessages];
+            }
 
             sendBtn.disabled = true;
 
