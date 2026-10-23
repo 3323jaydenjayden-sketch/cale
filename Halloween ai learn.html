@@ -45,7 +45,6 @@
             position: relative;
         }
 
-        /* 萬聖節飄浮裝飾動畫 (蝙蝠與幽靈) */
         .spooky-float {
             position: absolute;
             font-size: 1.5rem;
@@ -71,15 +70,22 @@
             flex-direction: column;
             padding: 1rem;
             gap: 0.8rem;
-            z-index: 10;
+            z-index: 100;
+            transition: transform 0.3s ease;
         }
 
         .sidebar-header {
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: space-between;
             padding-bottom: 0.8rem;
             border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .sidebar-header img {
@@ -92,6 +98,16 @@
             font-size: 1rem;
             color: var(--accent-color);
             text-shadow: 0 0 8px rgba(255, 117, 24, 0.4);
+        }
+
+        /* 手機關閉側邊欄按鈕 */
+        .close-sidebar-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
         }
 
         .user-welcome {
@@ -211,23 +227,43 @@
             background-color: var(--chat-bg);
             height: 100vh;
             z-index: 10;
+            min-width: 0;
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 2rem;
+            padding: 1rem 1.5rem;
             background-color: rgba(15, 10, 24, 0.85);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
+            gap: 10px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 手機開啓側邊欄按鈕 */
+        .menu-toggle-btn {
+            display: none;
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--accent-color);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
         }
 
         .model-selector-wrapper {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
+            gap: 8px;
+            font-size: 0.85rem;
             color: var(--text-secondary);
         }
 
@@ -235,17 +271,18 @@
             background-color: var(--panel-bg);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            padding: 8px 14px;
+            padding: 6px 10px;
             border-radius: 8px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             outline: none;
             cursor: pointer;
+            max-width: 140px;
         }
 
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 2rem;
+            padding: 1.5rem;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -277,7 +314,6 @@
             word-wrap: break-word;
         }
 
-        /* 美化 Markdown 排版 */
         .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
             margin-top: 0.6rem;
             margin-bottom: 0.4rem;
@@ -323,9 +359,8 @@
             border: 1px solid var(--border-color);
         }
 
-        /* 底部輸入列 */
         .input-container {
-            padding: 1.5rem 2rem;
+            padding: 1rem 1.5rem;
             background: linear-gradient(to top, var(--chat-bg) 80%, transparent);
         }
 
@@ -424,8 +459,38 @@
             cursor: not-allowed;
         }
 
+        /* 手機版遮罩與側邊欄開關樣式 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 90;
+        }
+
         @media (max-width: 768px) {
-            sidebar { display: none; }
+            sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+            }
+            sidebar.open {
+                transform: translateX(0);
+            }
+            .close-sidebar-btn {
+                display: block;
+            }
+            .menu-toggle-btn {
+                display: block;
+            }
+            .sidebar-overlay.open {
+                display: block;
+            }
         }
     </style>
 
@@ -452,7 +517,6 @@
         const API1 = "gsk_CdR1Ud84AHrQAEpxy5";
         const API2 = "ExWGdyb3FYU23LjWM9tFLdiRFZuDeErj99";
 
-       // 直接自動抓取儀表板登入時的帳號身分，不再彈出 prompt 重複詢問
         let currentUsername = localStorage.getItem("currentUser") 
                            || localStorage.getItem("userEmail") 
                            || localStorage.getItem("accountKey") 
@@ -467,7 +531,6 @@
         let activeRoomId = null;
         let roomList = [];
 
-        // 萬聖節特別 System Prompt 設定 🎃
         const defaultSystemPrompt = "你是 Cale Study App 的萬聖節 AI 學習魔法師 🎃🧙‍♂️，專為學生提供親切、清晰且有趣的學習解答與解題輔導。適當時候可以帶點萬聖節應景元素（如魔法、南瓜、小驚喜）。請優先使用繁體中文回答。";
         let conversationHistory = [];
 
@@ -475,16 +538,20 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             if (!currentUsername) {
-                // 如果抓不到登入身分，直接導回登入頁面確保安全
                 window.location.replace("login.html");
                 return;
             } else {
-                // 自動以抓到的身分直接初始化會話
                 await initUserSession(currentUsername);
             }
         });
 
-        // 保留函數以防使用者點擊左上角「改名」按鈕時使用
+        window.toggleSidebar = function() {
+            const sidebar = document.querySelector('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        };
+
         window.promptForUsername = async function() {
             while (true) {
                 let inputName = prompt("🎃 歡迎來到萬聖節 Cale Study！請輸入您的專屬新名稱：", currentUsername || "");
@@ -606,7 +673,10 @@
             roomList.forEach((room, index) => {
                 const item = document.createElement('div');
                 item.className = `history-item ${room.id === activeRoomId ? 'active' : ''}`;
-                item.onclick = () => switchRoom(room.id);
+                item.onclick = () => {
+                    switchRoom(room.id);
+                    if (window.innerWidth <= 768) toggleSidebar(); // 手機點擊後自動收合選單
+                };
 
                 item.innerHTML = `
                     <span class="title-text">🎃 ${room.title || '萬聖對話 ' + (index + 1)}</span>
@@ -633,6 +703,7 @@
 
                 activeRoomId = newDoc.id;
                 await loadRooms(currentUsername);
+                if (window.innerWidth <= 768) toggleSidebar();
 
             } catch (e) {
                 console.error("建立新聊天室失敗:", e);
@@ -864,10 +935,15 @@
     <div class="spooky-float" style="top: 25%; right: 12%; animation-delay: -5s;">🦇</div>
     <div class="spooky-float" style="top: 80%; right: 25%; animation-delay: -2s;">🕸️</div>
 
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
     <sidebar>
         <div class="sidebar-header">
-            <img src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png" alt="Logo">
-            <h2>Cale Study 🎃</h2>
+            <div class="sidebar-header-left">
+                <img src="https://raw.githubusercontent.com/3323jaydenjayden-sketch/cale/refs/heads/main/image.png" alt="Logo">
+                <h2>Cale Study 🎃</h2>
+            </div>
+            <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
         </div>
         
         <div class="user-welcome" id="userDisplayName">
@@ -893,13 +969,16 @@
 
     <div class="main-content">
         <header>
-            <div style="font-size: 1.05rem; font-weight: 600; color: #f8fafc;">萬聖 AI 學習對話室 🧙‍♂️</div>
+            <div class="header-left">
+                <button class="menu-toggle-btn" onclick="toggleSidebar()">☰ 選單</button>
+                <div style="font-size: 1.05rem; font-weight: 600; color: #f8fafc;">萬聖 AI 學習對話室 🧙‍♂️</div>
+            </div>
             <div class="model-selector-wrapper">
-                <span>魔法模型：</span>
+                <span>模型：</span>
                 <select class="model-select" id="modelSelect">
-                    <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (視覺與推理)</option>
-                    <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout (綜合對話)</option>
-                    <option value="openai/gpt-oss-120b">GPT OSS 120B (核心大腦)</option>
+                    <option value="qwen/qwen3.8-27b">Qwen 27B</option>
+                    <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4</option>
+                    <option value="openai/gpt-oss-120b">GPT OSS 120B</option>
                 </select>
             </div>
         </header>
